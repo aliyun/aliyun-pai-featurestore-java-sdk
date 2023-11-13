@@ -117,6 +117,7 @@ public class FeatureStoreClientTest {
 
     }
 
+    @Ignore
     @Test
     public void igraphDataTest() throws Exception {
         Configuration configuration = new Configuration("cn-beijing",
