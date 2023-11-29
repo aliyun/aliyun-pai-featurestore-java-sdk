@@ -32,10 +32,8 @@ public class InstanceApi {
 
         String instanceId = null;
         for (ListInstancesResponseBody.ListInstancesResponseBodyInstances instance : response.getBody().getInstances()) {
-            if (instance.getRegionId().equals(apiClient.getClient()._regionId)) {
-                instanceId = instance.getInstanceId();
-                break;
-            }
+            instanceId = instance.getInstanceId();
+            break;
         }
 
         if (StringUtils.isEmpty(instanceId)) {
