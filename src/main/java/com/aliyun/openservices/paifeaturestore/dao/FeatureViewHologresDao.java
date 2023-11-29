@@ -67,7 +67,15 @@ public class FeatureViewHologresDao implements FeatureViewDao{
             PreparedStatement statement = connection.prepareStatement(sql)) {
             int pos = 1;
             for (String key : keys) {
-                statement.setString(pos++, key);
+                if (this.fieldTypeMap.get(this.primaryKeyField) == FSType.FS_STRING) {
+                    statement.setString(pos++, key);
+                } else if (this.fieldTypeMap.get(this.primaryKeyField) == FSType.FS_INT64) {
+                    statement.setLong(pos++, Long.valueOf(key));
+                } else if (this.fieldTypeMap.get(this.primaryKeyField) == FSType.FS_INT32) {
+                    statement.setInt(pos++, Integer.valueOf(key));
+                } else {
+                    statement.setString(pos++, key);
+                }
             }
 
             try (ResultSet result = statement.executeQuery()) {
