@@ -155,7 +155,7 @@ public class Model {
                 String joinIdValue = joinIds.get(joinId).get(i);
                 for (FeatureResult result : joinIdFeaturesMap.get(joinId)) {
                     for (Map<String, Object> featureData : result.getFeatureData()) {
-                        if (joinIdValue.equals(featureData.get(joinId))) {
+                        if (joinIdValue.equals(String.valueOf(featureData.get(joinId)))) {
                             featuresMap.putAll(featureData);
                         }
                     }
@@ -215,7 +215,7 @@ public class Model {
             Map<String, Object> featuresMap = new HashMap<>();
             for (FeatureResult result : featureResults) {
                 for (Map<String, Object> featureData : result.getFeatureData()) {
-                    if (joinIdValue.equals(featureData.get(featureEntity.getFeatureEntity().getFeatureEntityJoinid()))) {
+                    if (joinIdValue.equals(String.valueOf(featureData.get(featureEntity.getFeatureEntity().getFeatureEntityJoinid())))) {
                         featuresMap.putAll(featureData);
                     }
                 }
