@@ -9,7 +9,7 @@ public class Constants {
     public static String host = "paifeaturestore.cn-beijing.aliyuncs.com";
 
     static {
-        accessId = System.getenv("AccessId");
-        accessKey = System.getenv("AccessKey");
+        accessId = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID");
+        accessKey = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
     }
 }
