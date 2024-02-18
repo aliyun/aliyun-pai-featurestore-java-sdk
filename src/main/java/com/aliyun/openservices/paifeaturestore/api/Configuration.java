@@ -1,6 +1,6 @@
 package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.teaopenapi.models.Config;
-
+/*  Configure the information class */
 public class Configuration {
     private String projectName;
 
@@ -8,6 +8,7 @@ public class Configuration {
 
     private Config config;
 
+    /*  Initial configuration information (region ID, AK account, AK password, and project name)    */
     public Configuration(String regionId, String accessKeyId, String accessKeySecret, String projectName) {
         this.config = new Config();
         this.config.setAccessKeyId(accessKeyId);

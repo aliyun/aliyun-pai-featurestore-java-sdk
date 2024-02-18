@@ -8,7 +8,8 @@ import com.aliyun.paifeaturestore20230621.models.ListProjectsResponseBody;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+ * This class contains information about the featurestore project.*/
 public class FsProjectApi {
     private ApiClient apiClient;
 
@@ -24,14 +25,13 @@ public class FsProjectApi {
         this.apiClient = apiClient;
     }
 
+    /*  Get a list of items
+    * @return ListProjectResponse,this class contains all the items currently under FeatureStore.*/
     public ListProjectResponse ListProjects() throws Exception {
         ListProjectsRequest request = new ListProjectsRequest();
         request.setName(apiClient.getConfiguration().getProjectName());
-
         ListProjectsResponse response = apiClient.getClient().listProjects(apiClient.getInstanceId(), request);
-
         List<Project> projects = new ArrayList<>();
-
         ListProjectResponse listProjectResponse = new ListProjectResponse();
 
         for (ListProjectsResponseBody.ListProjectsResponseBodyProjects projectItem : response.getBody().getProjects()) {
@@ -44,16 +44,16 @@ public class FsProjectApi {
                project.setOfflineDatasourceType(DatasourceType.Datasource_Type_MaxCompute);
             }
 
-            if ("Hologres".equals(projectItem.onlineDatasourceType)) {
+            if ("Hologres".equals(projectItem.onlineDatasourceType)) {//Hologres类型
                 project.setOnlineDatasourceType(DatasourceType.Datasource_Type_Hologres);
-            } else if ("GraphCompute".equals(projectItem.onlineDatasourceType)) {
+            } else if ("GraphCompute".equals(projectItem.onlineDatasourceType)) {//GraphCompute类型
                 project.setOnlineDatasourceType(DatasourceType.Datasource_Type_IGraph);
-            } else if ("Tablestore".equals(projectItem.onlineDatasourceType)) {
+            } else if ("Tablestore".equals(projectItem.onlineDatasourceType)) {//Tablestore类型
                 project.setOnlineDatasourceType(DatasourceType.Datasource_Type_TableStore);
             }
-
             projects.add(project);
         }
+
         listProjectResponse.setProjects(projects);
 
         return listProjectResponse;

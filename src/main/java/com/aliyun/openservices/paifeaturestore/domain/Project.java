@@ -14,22 +14,23 @@ public class Project {
 
     private final OnlineStore onlineStore;
 
-    private final Map<String, FeatureView> featureViewMap = new HashMap<>();
+    private final Map<String, IFeatureView> featureViewMap = new HashMap<>();
 
     private final Map<String, FeatureEntity> featureEntityMap = new HashMap<>();
 
     private final Map<String, Model> modelMap = new HashMap<>();
 
-    public Project(com.aliyun.openservices.paifeaturestore.model.Project project) throws Exception {
-        this.project = project;
+    private boolean usePublicAddress = false;
 
+    public Project(com.aliyun.openservices.paifeaturestore.model.Project project,boolean usePublicAddress) throws Exception {
+        this.project = project;
         switch (project.getOnlineDatasourceType()) {
             case Datasource_Type_Hologres:
                 HologresOnlinestore hologresOnlinestore = new HologresOnlinestore();
                 hologresOnlinestore.setDatasource(project.getOnlineDataSource());
                 this.onlineStore = hologresOnlinestore;
                 if (null == HologresFactory.get(this.onlineStore.getDatasourceName())) {
-                    Hologres hologres = new Hologres(hologresOnlinestore.getDatasource().generateDSN(DatasourceType.Datasource_Type_Hologres));
+                    Hologres hologres = new Hologres(hologresOnlinestore.getDatasource().generateDSN(DatasourceType.Datasource_Type_Hologres,usePublicAddress));
                     HologresFactory.register(this.onlineStore.getDatasourceName(), hologres);
                 }
                 break;
@@ -39,7 +40,7 @@ public class Project {
                 this.onlineStore = iGraphOnlineStore;
                 if (null == IGraphFactory.get(this.onlineStore.getDatasourceName())) {
                     IGraphFactory.register(this.onlineStore.getDatasourceName(),
-                            iGraphOnlineStore.getDatasource().generateIgraphClient());
+                            iGraphOnlineStore.getDatasource().generateIgraphClient(usePublicAddress));
                 }
                 break;
             case Datasource_Type_TableStore:
@@ -48,7 +49,7 @@ public class Project {
                 this.onlineStore = tableStoreOnlinestore;
                 if (null == TableStoreFactory.get(this.onlineStore.getDatasourceName())) {
                     TableStoreFactory.register(this.onlineStore.getDatasourceName(),
-                            tableStoreOnlinestore.getDatasource().generateOTSClient());
+                            tableStoreOnlinestore.getDatasource().generateOTSClient(usePublicAddress));
                 }
                 break;
             default:
@@ -56,8 +57,26 @@ public class Project {
         }
     }
 
+
+    public void setUsePublicAddress(boolean usePublicAddress) {
+        this.usePublicAddress = usePublicAddress;
+    }
+
     public FeatureView getFeatureView(String name) {
-        return this.featureViewMap.get(name);
+        IFeatureView featureView =  this.featureViewMap.get(name);
+        if (featureView instanceof FeatureView) {
+            return (FeatureView) featureView;
+        }
+
+        return null;
+    }
+
+    public SequenceFeatureView getSeqFeatureView(String name) {
+        IFeatureView featureView = this.featureViewMap.get(name);
+        if (featureView instanceof SequenceFeatureView) {
+            return (SequenceFeatureView) featureView;
+        }
+        return null;
     }
 
     public FeatureEntity getFeatureEntity(String name) {
@@ -80,9 +99,11 @@ public class Project {
         return onlineStore;
     }
 
-    public Map<String, FeatureView> getFeatureViewMap() {
+    public Map<String, IFeatureView> getFeatureViewMap() {
         return featureViewMap;
     }
+
+
 
     public Map<String, FeatureEntity> getFeatureEntityMap() {
         return featureEntityMap;
@@ -96,8 +117,9 @@ public class Project {
         this.featureEntityMap.put(featureEntityName, featureEntity);
     }
 
-    public void addFeatureView(String name, FeatureView domainFeatureView) {
+    public void addFeatureView(String name, IFeatureView domainFeatureView) {
         this.featureViewMap.put(name, domainFeatureView);
+
     }
 
     public void addModel(String name, Model domianModel) {

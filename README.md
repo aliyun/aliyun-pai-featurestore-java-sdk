@@ -21,8 +21,8 @@ public class Constants {
     public static String accessKey = "";
 
     static {
-        accessId = System.getenv("AccessId");
-        accessKey = System.getenv("AccessKey");
+        accessId = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID");
+        accessKey = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
     }
 }
 
@@ -34,7 +34,27 @@ FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient);
 
 由于 SDK 是直连 onlinestore 的， client 需要在 VPC 环境运行。 比如 hologres/graphcompute , 需要在指定的 VPC 才能连接。
 
+初始化FeatureStoreClient客户端时，默认入参false代表 VPC 环境运行。
+如果是本地调试（非vpc环境），入参改为true即可。
+```java
+// 如果是本地调试，vpc 连接不通的话，可以直接使用公网地址, 但生产环境，一定要用 vpc 地址 
+FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, true);  
+
+// FeatureStoreClient 也需要与 FeatureStore Server 进行交互，获取各种元数据信息。默认也是通过 vpc 进行连接，如果通过公网，可以显式的设置
+configuration.setDomain("FeatureStore Server 的公网地址");
+```
+
+| 地域              | vpc 地址                                     | 公网地址                                 |
+| ----------------- | -------------------------------------------- | ---------------------------------------- |
+| 北京(cn-beijing)  | paifeaturestore-vpc.cn-beijing.aliyuncs.com  | paifeaturestore.cn-beijing.aliyuncs.com  |
+| 杭州(cn-hangzhou) | paifeaturestore-vpc.cn-hangzhou.aliyuncs.com | paifeaturestore.cn-hangzhou.aliyuncs.com |
+| 上海(cn-shanghai) | paifeaturestore-vpc.cn-shanghai.aliyuncs.com | paifeaturestore.cn-shanghai.aliyuncs.com |
+| 深圳(cn-shenzhen) | paifeaturestore-vpc.cn-shenzhen.aliyuncs.com | paifeaturestore.cn-shenzhen.aliyuncs.com |
+
+
+
 ### 2. 获取 FeatureView 的特征数据
+
 ``` java
 // get project by name
 Project project=featureStoreClient.getProject("dec6");  
@@ -62,7 +82,36 @@ FeatureResult featureResult1 = featureView.getOnlineFeatures(new String[]{"10159
      System.out.println("---------------");
  }
 
+//get sequencefeature by name
+FeatureView hol_seq = dec15.getFeatureView("seq_test2");
+      if(hol_seq==null){
+          throw new RuntimeException("This featureView is not exist");
+      } 
 ```
+序列化特征数据
+                      
+```java
+//序列化特征
+SequenceFeatureView hol_seq = dec15.getSeqFeatureView("seq_test2");
+if (hol_seq==null) {
+    throw new RuntimeException("This featureView is not exist");
+}
+//获取序列化数据
+FeatureResult features2 = hol_seq.getOnlineFeatures(new String[]{"100433245", "100433233"});
+System.out.println("[");
+for (Map<String, String> m:features2.getSeqfeatureDataList()) {
+    System.out.println("{");
+    for (Object key:m.keySet()){
+        System.out.println(key+":"+m.get(key));
+        System.out.print(",");
+    }
+    System.out.println("}");
+}
+System.out.println("]");
+
+```
+
+
 
 
 

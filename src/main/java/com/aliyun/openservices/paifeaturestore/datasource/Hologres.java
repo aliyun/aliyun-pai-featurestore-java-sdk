@@ -5,7 +5,7 @@ import com.alibaba.druid.pool.DruidDataSourceFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Properties;
-
+/*  This class contains some Settings for the Hologres Configuration DataSource.*/
 public class Hologres {
     DataSource dataSource;
 
@@ -29,11 +29,11 @@ public class Hologres {
         properties.setProperty("filters", "stat");
         properties.setProperty("poolPreparedStatements", "true");
         properties.setProperty("maxPoolPreparedStatementPerConnectionSize", "10");
-
+        //Create a data source based on the configuration
         DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
 
         // first init connection
-        try (Connection connection = dataSource.getConnection()){
+        try (Connection connection = dataSource.getConnection()) {//获取连接
         } catch (Exception e) {
             throw  e;
         }

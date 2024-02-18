@@ -11,10 +11,13 @@ import com.aliyun.tea.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+ * This class contains information about the feature view.*/
 public class FeatureViewApi {
+
     private ApiClient apiClient;
 
+    /*  Initialize the construction method.*/
     public FeatureViewApi(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
@@ -27,18 +30,25 @@ public class FeatureViewApi {
         this.apiClient = apiClient;
     }
 
+    /* Gets a collection of feature views based on project id, number of pages, and size of each page
+    * @Param projectId(@code String)
+    * @Param pageNumber(@code int)
+    * @Param pageSize(@code int)
+    * @return ListFeatureViewsResponse,The class of ListFeatureViewsResponse the response characteristics of the view.*/
     public ListFeatureViewsResponse listFeatureViews(String projectId, int pageNumber, int pageSize) throws Exception {
         ListFeatureViewsResponse listFeatureViewsResponse = new ListFeatureViewsResponse();
-
         ListFeatureViewsRequest request = new ListFeatureViewsRequest();
         request.setProjectId(projectId);
         request.setPageSize(pageSize);
         request.setPageNumber(pageNumber);
-        com.aliyun.paifeaturestore20230621.models.ListFeatureViewsResponse response = this.apiClient.getClient().listFeatureViews(this.apiClient.getInstanceId(), request);
+
+        com.aliyun.paifeaturestore20230621.models.ListFeatureViewsResponse response = this.apiClient.getClient().listFeatureViews(
+                this.apiClient.getInstanceId(), request);
 
         List<FeatureView> featureViewList = new ArrayList<>();
 
         listFeatureViewsResponse.setTotalCount(response.getBody().totalCount);
+        //  Traverse all characteristic views of the response set.
         for (ListFeatureViewsResponseBody.ListFeatureViewsResponseBodyFeatureViews view: response.getBody().getFeatureViews()) {
             FeatureView featureView = new FeatureView();
             featureView.setFeatureViewId(Long.valueOf(view.getFeatureViewId()));
@@ -46,14 +56,15 @@ public class FeatureViewApi {
             featureView.setFeatureEntityName(view.getFeatureEntityName());
             featureView.setProjectName(view.getProjectName());
             featureView.setProjectId(Long.valueOf(view.getProjectId()));
-
             featureViewList.add(featureView);
         }
-
         listFeatureViewsResponse.setFeatureViews(featureViewList);
         return listFeatureViewsResponse;
     }
 
+    /*  Obtain the feature view information based on the feature view id.
+    * @Param featureViewId(@code String)
+    * @return FeatureView*/
     public FeatureView getFeatureViewById(String featureViewId) throws Exception {
         GetFeatureViewResponse response = this.apiClient.getClient().getFeatureView(this.apiClient.getInstanceId(), featureViewId);
         FeatureView featureView = new FeatureView();
@@ -68,25 +79,27 @@ public class FeatureViewApi {
         featureView.setFeatureEntityId(Integer.valueOf(response.getBody().getFeatureEntityId()));
         featureView.setFeatureEntityName(response.getBody().getFeatureEntityName());
 
+        // Check whether the registry information of the current response class exists.
         if (!StringUtils.isEmpty(response.getBody().getRegisterTable())) {
             featureView.setIsRegister(true);
             featureView.setRegisterTable(response.getBody().getRegisterTable());
         }
-
+       // Determines whether the registration data source id of the current response class exists.
         if (!StringUtils.isEmpty(response.getBody().getRegisterDatasourceId())) {
             featureView.setRegisterDatasourceId(Integer.valueOf(response.getBody().getRegisterDatasourceId()));
         }
-
+        //  Check whether the configuration class of the current response class exists.
         if (!StringUtils.isEmpty(response.getBody().getLastSyncConfig())) {
             featureView.setLastSyncConfig(response.getBody().getLastSyncConfig());
         }
-
+        // Creates a collection that holds the feature view request fields.
         List<FeatureViewRequestFields> fields = new ArrayList<>();
         int pos = 0;
         for (GetFeatureViewResponseBody.GetFeatureViewResponseBodyFields f : response.getBody().getFields()) {
             FeatureViewRequestFields field = new FeatureViewRequestFields();
             field.setPosition(++pos);
             field.setName( f.getName());
+
             if (f.getType().equals("STRING")) {
                 field.setType(FSType.FS_STRING);
             } else if (f.getType().equals("INT32")) {
@@ -117,12 +130,10 @@ public class FeatureViewApi {
                         field.setIsEventTime(true);
                     }
                 }
-
             }
 
             fields.add(field);
         }
-
         featureView.setFields(fields);
 
         return featureView;

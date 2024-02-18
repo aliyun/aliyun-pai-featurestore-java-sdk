@@ -6,10 +6,12 @@ import com.aliyun.paifeaturestore20230621.models.ListFeatureEntitiesResponseBody
 
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+* This class contains information about the feature entity.*/
 public class FeatureEntityApi {
     private ApiClient apiClient;
 
+    /*  Initialize the construction method  */
     public FeatureEntityApi(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
@@ -22,16 +24,21 @@ public class FeatureEntityApi {
         this.apiClient = apiClient;
     }
 
+    /*
+    * Gets all feature entities for the current project based on the project id
+    * @Param projectId(@code String)
+    * @return ListFeatureEntitiesResponse,The class of ListFeatureEntitiesResponse the response characteristics of the entity.*/
     public ListFeatureEntitiesResponse listFeatureEntities(String projectId) throws Exception {
         ListFeatureEntitiesResponse listFeatureEntitiesResponse = new ListFeatureEntitiesResponse();
-
         ListFeatureEntitiesRequest request = new ListFeatureEntitiesRequest();
         request.setProjectId(projectId);
         request.setPageSize(100);
-        com.aliyun.paifeaturestore20230621.models.ListFeatureEntitiesResponse response = this.apiClient.getClient().listFeatureEntities(this.apiClient.getInstanceId(), request);
+
+        com.aliyun.paifeaturestore20230621.models.ListFeatureEntitiesResponse response = this.apiClient.getClient().listFeatureEntities(
+                this.apiClient.getInstanceId(), request);
 
         List<FeatureEntity> featureEntityList = new ArrayList<>();
-
+        // Traverse all characteristic entities of the response set.
         for (ListFeatureEntitiesResponseBody.ListFeatureEntitiesResponseBodyFeatureEntities entity: response.getBody().getFeatureEntities()) {
             FeatureEntity featureEntity = new FeatureEntity();
             featureEntity.setFeatureEntityId(Integer.valueOf(entity.getFeatureEntityId()));

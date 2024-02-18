@@ -7,8 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+/*  This class contains variables that are required for different data sources.*/
 public class DaoConfig {
+
     public DatasourceType datasourceType;
     public String config;
     public String tableStoreName;
@@ -33,8 +34,22 @@ public class DaoConfig {
     public boolean saveOriginalField = false;
 
     public Map<String, String> fieldMap = new HashMap<>();
+
     // redis, ots
     public Map<String , FSType> fieldTypeMap = new HashMap<>();
 
     public List<String> fields = new ArrayList<>();
+
+    //Off-line sequence feature table
+    //Hologres
+    public String hologresSeqOnlineTableName;//在线表
+    public String hologresSeqOfflineTableName;//离线表
+
+    //ots
+    public String otsSeqOnlineTableName;
+    public String otsSeqOfflineTableName;
+
+    //igraph
+    public String igraphEdgeName;
+
 }

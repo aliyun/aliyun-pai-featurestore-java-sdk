@@ -1,5 +1,5 @@
 package com.aliyun.openservices.paifeaturestore.dao;
-
+/* This class creates specific feature view implementation classes based on the data source types configured with daoconfig.*/
 public class FeatureViewDaoFactory {
 
     public static FeatureViewDao getFeatureViewDao(DaoConfig daoConfig) {

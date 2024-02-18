@@ -1,9 +1,11 @@
 package com.aliyun.openservices.paifeaturestore.api;
 
+
 import com.aliyun.openservices.paifeaturestore.model.FeatureView;
 
 import java.util.List;
-
+/*
+ * This class contains list information composed of FeatureViews.*/
 public class ListFeatureViewsResponse {
     Long totalCount ;
     List<FeatureView> featureViews;

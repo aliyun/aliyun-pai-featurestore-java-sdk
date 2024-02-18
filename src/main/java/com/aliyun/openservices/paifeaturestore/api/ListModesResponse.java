@@ -3,7 +3,8 @@ package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.openservices.paifeaturestore.model.Model;
 
 import java.util.List;
-
+/*
+ * This class contains list information composed of Model.*/
 public class ListModesResponse {
     Long totalCount ;
     List<Model> models;

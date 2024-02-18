@@ -185,6 +185,7 @@ public class Datasource {
     this.publicAddress = publicAddress;
   }
 
+
   public Datasource project(String project) {
     this.project = project;
     return this;
@@ -370,23 +371,32 @@ public class Datasource {
     return o.toString().replace("\n", "\n    ");
   }
 
-  public String  generateDSN(DatasourceType type)  {
-    String dsn = null;
-    switch (type) {
-      case Datasource_Type_Hologres:
-        dsn = String.format("jdbc:postgresql://%s/%s?user=%s&password=%s&ApplicationName=PAI-FeatureStore",
-                this.vpcAddress, this.database, this.ak.getAccessId(), this.ak.getAccessKey());
-        break;
-    }
+  public String  generateDSN(DatasourceType type,boolean usePublicAddress)  {
+      if (usePublicAddress) {
+        this.vpcAddress=this.publicAddress;
+      }
+      String dsn = null;
+      switch (type) {
+        case Datasource_Type_Hologres:
+          dsn = String.format("jdbc:postgresql://%s/%s?user=%s&password=%s&ApplicationName=PAI-FeatureStore",
+                  this.vpcAddress, this.database, this.ak.getAccessId(), this.ak.getAccessKey());
+          break;
+      }
 
-    return dsn;
+     return dsn;
   }
 
-  public SyncClient generateOTSClient() {
+  public SyncClient generateOTSClient(boolean usePublicAddress) {
+      if (usePublicAddress) {
+        this.vpcAddress=this.publicAddress;
+      }
       return new SyncClient(this.vpcAddress, this.ak.getAccessId(), this.ak.getAccessKey(), this.rdsInstanceId );
   }
 
-  public Client generateIgraphClient() {
+  public Client generateIgraphClient(boolean usePublicAddress) {
+    if (usePublicAddress) {
+      this.vpcAddress=this.publicAddress;
+    }
     Cluster.Builder builder = Cluster.build();
     String endpoint = this.vpcAddress;
     builder.addContactPoint(endpoint).userName(this.user).userPasswd(this.pwd)

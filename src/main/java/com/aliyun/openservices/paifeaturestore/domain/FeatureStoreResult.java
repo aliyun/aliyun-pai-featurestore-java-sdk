@@ -15,6 +15,7 @@ public class FeatureStoreResult implements FeatureResult {
 
     private List<Map<String, Object>> featureDataList;
 
+
     public FSType getType(String featureName) {
         return this.featureFieldTypeMap.get(featureName);
     }
@@ -135,6 +136,7 @@ public class FeatureStoreResult implements FeatureResult {
     public List<Map<String, Object>> getFeatureData() {
         return this.featureDataList;
     }
+
 
     public String[] getFeatureFields() {
         return featureFields;

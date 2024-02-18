@@ -16,6 +16,7 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class ModelFeatures {
+
   @SerializedName("feature_view_id")
   private Integer featureViewId = null;
 

@@ -1,7 +1,9 @@
 package com.aliyun.openservices.paifeaturestore.api;
 
 import com.aliyun.paifeaturestore20230621.Client;
-
+/*
+* This class is used to prepare for registering the FeatureStore client,
+*  and contains the instance ID, data source, configuration information, etc. */
 public class ApiClient {
     private String instanceId;
 
@@ -19,6 +21,7 @@ public class ApiClient {
     private  FeatureViewApi featureViewApi;
 
     private  FsModelApi fsModelApi;
+    /*  Initialize the construction method  */
     public ApiClient(Configuration configuration) throws Exception {
         this.configuration = configuration;
         this.client = new Client(configuration.getConfig());

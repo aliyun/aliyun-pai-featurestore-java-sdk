@@ -7,6 +7,7 @@ import com.aliyun.openservices.paifeaturestore.dao.FeatureViewDaoFactory;
 import com.aliyun.openservices.paifeaturestore.model.FeatureViewRequestFields;
 import com.aliyun.tea.utils.StringUtils;
 import com.google.gson.Gson;
+import org.jacoco.agent.rt.internal_035b120.core.internal.flow.IFrame;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FeatureView {
+public class FeatureView implements IFeatureView {
     com.aliyun.openservices.paifeaturestore.model.FeatureView featureView;
 
     private final Project project;
@@ -121,6 +122,7 @@ public class FeatureView {
         this.featureViewDao = FeatureViewDaoFactory.getFeatureViewDao(daoConfig);
     }
 
+
     public com.aliyun.openservices.paifeaturestore.model.FeatureView getFeatureView() {
         return featureView;
     }
@@ -128,6 +130,15 @@ public class FeatureView {
     public Project getProject() {
         return project;
     }
+
+    public void setFeatureView(com.aliyun.openservices.paifeaturestore.model.FeatureView featureView) {
+        this.featureView = featureView;
+    }
+
+    public FeatureEntity getFeatureEntity() {
+        return featureEntity;
+    }
+
 
     public FeatureResult getOnlineFeatures(String[] joinIds) throws Exception {
         return this.getOnlineFeatures(joinIds, new String[]{"*"}, null);
@@ -191,6 +202,22 @@ public class FeatureView {
 
         return featureStoreResult;
     }
+
+    @Override
+    public String getName() {
+        return featureView.getName();
+    }
+
+    @Override
+    public String getFeatureEntityName() {
+        return featureView.getFeatureEntityName();
+    }
+
+    @Override
+    public String getType() {
+        return featureView.getType();
+    }
+
 
     @Override
     public String toString() {

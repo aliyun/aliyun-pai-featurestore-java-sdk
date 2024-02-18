@@ -52,7 +52,7 @@
   <profiles>
     <profile>
       <id>release</id>
-      <build>
+       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -217,6 +217,7 @@
   </build>
 
   <dependencies>
+
     <dependency>
       <groupId>com.aliyun</groupId>
       <artifactId>paifeaturestore20230621</artifactId>
@@ -285,8 +286,18 @@
       <groupId>com.aliyun.igraph</groupId>
       <artifactId>aliyun-sdk-igraph</artifactId>
       <version>1.0.7</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.xerial.snappy</groupId>
+          <artifactId>snappy-java</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>org.xerial.snappy</groupId>
+      <artifactId>snappy-java</artifactId>
+      <version>${snappy-java.version}</version>
+    </dependency>
   </dependencies>
   <properties>
     <java.version>1.8</java.version>
@@ -304,5 +315,6 @@
     <gpg-plugin.version>1.6</gpg-plugin.version>
     <jar-plugin.version>3.0.2</jar-plugin.version>
     <source-plugin.version>3.0.1</source-plugin.version>
+    <snappy-java.version>1.1.10.5</snappy-java.version>
   </properties>
 </project>

@@ -3,7 +3,8 @@ package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.openservices.paifeaturestore.model.Project;
 
 import java.util.List;
-
+/*
+ * This class contains list information composed of project.*/
 public class ListProjectResponse {
     List<Project> projects;
 

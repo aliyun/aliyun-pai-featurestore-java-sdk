@@ -9,8 +9,7 @@ import com.google.gson.annotations.SerializedName;
  * Project
  */
 
-
-public class Project {
+public class  Project {
   @SerializedName("project_id")
   private Long projectId = null;
 
