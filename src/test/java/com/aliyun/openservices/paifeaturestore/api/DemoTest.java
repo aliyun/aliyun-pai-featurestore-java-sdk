@@ -2,8 +2,7 @@ package com.aliyun.openservices.paifeaturestore.api;
 
 import com.aliyun.openservices.paifeaturestore.FeatureStoreClient;
 import com.aliyun.openservices.paifeaturestore.domain.*;
-import jdk.nashorn.internal.ir.annotations.Ignore;
-import org.jooq.meta.derby.sys.Sys;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -14,7 +13,7 @@ import java.util.Map;
 public class DemoTest {
 
     @Ignore
-    @org.junit.Test
+    @Test
     public void hologrestest3(){
         try {
             //创建配置类
@@ -87,7 +86,8 @@ public class DemoTest {
     }
 
     //TableStore
-    @org.junit.Test
+    @Ignore
+    @Test
     public void otsDatasourceTest() throws Exception {
         //注册配置类
         Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,
@@ -139,6 +139,7 @@ public class DemoTest {
     }
 
     @Test
+    @Ignore
     public void igraphDatasourceTest() throws Exception {
         //注册配置类
         Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,
