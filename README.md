@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 ## 使用方式
@@ -143,4 +143,9 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 ```
 
 上面的含义是把 ModelFeature 下的 user(FeatureEntity) 对应的特征全部获取到。
+
+## 版本说明
+### 1.0.3 (2024-02-20)
+* 支持公网访问获取数据
+* 支持序列特征获取
 

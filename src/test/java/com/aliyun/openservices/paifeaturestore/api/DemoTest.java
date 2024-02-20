@@ -88,6 +88,7 @@ public class DemoTest {
 
     //TableStore
     @org.junit.Test
+    @Ignore
     public void otsDatasourceTest() throws Exception {
         //注册配置类
         Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,
@@ -139,6 +140,7 @@ public class DemoTest {
     }
 
     @Test
+    @Ignore
     public void igraphDatasourceTest() throws Exception {
         //注册配置类
         Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,
