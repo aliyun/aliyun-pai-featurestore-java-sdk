@@ -13,7 +13,7 @@ import java.util.Map;
 public class DemoTest {
 
     @Ignore
-    @Test
+    @org.junit.Test
     public void hologrestest3(){
         try {
             //创建配置类
@@ -30,7 +30,7 @@ public class DemoTest {
             }
             System.out.println(project.getProject().getProjectName());
 
-            IFeatureView fv1 = project.getFeatureView("fv1");
+            FeatureView fv1 = project.getFeatureView("fv1");
             if (fv1==null) {
                 throw new RuntimeException("This featureView is not exist");
             }
@@ -44,12 +44,12 @@ public class DemoTest {
                 System.out.println("");
             }
 
-            IFeatureView seqfv1 =  project.getFeatureView("seq_fv3");
-            if (null == seqfv1) {
+            SequenceFeatureView seqfv4 =  project.getSeqFeatureView("seq_fv4");
+            if (null == seqfv4) {
                 throw  new RuntimeException("Sequence feature view not found");
             }
 
-            FeatureResult features2 =  seqfv1.getOnlineFeatures( new String[]{"10000001", "10000002"});
+            FeatureResult features2 =  seqfv4.getOnlineFeatures( new String[]{"100217707", "100138881"});
             System.out.println("[");
             for (Map<String,Object> m:features2.getFeatureData()) {
                 System.out.println("{");
@@ -61,12 +61,14 @@ public class DemoTest {
             System.out.println("]");
 
             HashMap<String, List<String>> fsmap = new HashMap<>();
-            fsmap.put("user_id",Arrays.asList("10000001","10000002"));
+            fsmap.put("user_id",Arrays.asList("100039333","100161956"));
+            fsmap.put("item_id",Arrays.asList(new String[]{"200011231","200156550"}));
+
             Model mdt2 = project.getModelFeature("seq_mdt1");
             if (mdt2==null) {
                 throw new RuntimeException("ModelFeature is not exist!");
             }
-            fsmap.put("item_id",Arrays.asList(new String[]{"20000001","20000002"}));
+
             FeatureResult fr4 = mdt2.getOnlineFeatures(fsmap);
             System.out.println("[");
             for (Map<String, Object> m:fr4.getFeatureData()) {
@@ -76,7 +78,6 @@ public class DemoTest {
                 }
                     System.out.println("}");
             }
-
             System.out.printf("]");
 
 
@@ -86,15 +87,14 @@ public class DemoTest {
     }
 
     //TableStore
-    @Ignore
-    @Test
+    @org.junit.Test
     public void otsDatasourceTest() throws Exception {
         //注册配置类
         Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,
                 Constants.accessKey,"dec8");
         configuration.setDomain(Constants.host);
         ApiClient apiClient = new ApiClient(configuration);
-        FeatureStoreClient fsclient = new FeatureStoreClient(apiClient,true);//true:本地测试
+        FeatureStoreClient fsclient = new FeatureStoreClient(apiClient,Constants.usePublicAddress);//true:本地测试
 
         //获取项目
         Project dec8 = fsclient.getProject("dec8");
@@ -102,12 +102,12 @@ public class DemoTest {
             throw new RuntimeException("This project is not exist");
         }
 
-        IFeatureView otsSeq3 =  dec8.getFeatureView("ots_seq3");
+        SequenceFeatureView otsSeq3 =  dec8.getSeqFeatureView("ots_seq3");
         if (null == otsSeq3) {
             throw  new RuntimeException("sequence feature view not found");
         }
 
-        FeatureResult features2 =  otsSeq3.getOnlineFeatures(new String[]{"100001167", "100003520"});
+        FeatureResult features2 =  otsSeq3.getOnlineFeatures(new String[]{"100000142", "100003474"});
         System.out.println("[");
         for (Map<String,Object> m:features2.getFeatureData()) {
             System.out.println("{");
@@ -123,6 +123,7 @@ public class DemoTest {
         Model mdt1 = dec8.getModelFeature("mdt1");
         HashMap<String, List<String>> mm1 = new HashMap<>();
         mm1.put("user_id", Arrays.asList("100001167", "100003495", "100003520"));
+
         FeatureResult fs = mdt1.getOnlineFeatures(mm1);
         System.out.println("[");
         for (Map<String, Object> m:fs.getFeatureData()) {
@@ -135,11 +136,9 @@ public class DemoTest {
         }
         System.out.printf("]");
 
-
     }
 
     @Test
-    @Ignore
     public void igraphDatasourceTest() throws Exception {
         //注册配置类
         Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,
@@ -153,16 +152,15 @@ public class DemoTest {
         if (dec8==null) {
             throw new RuntimeException("This project is not exist");
         }
-
         //获取特征视图
         //客户侧
-        IFeatureView mo1 = dec8.getFeatureViewMap().get("mg1");
-        if (mo1==null) {
+        FeatureView mg1 = dec8.getFeatureView("mg1");
+        if (mg1==null) {
             throw new RuntimeException("This featureView is not exist");
         }
         //获取部分线上数据
         HashMap<String, String> ss = new HashMap<>();
-        FeatureResult features = mo1.getOnlineFeatures(new String[]{"101598051", "101598471", "101601287"}, new String[]{"*"}, ss);
+        FeatureResult features = mg1.getOnlineFeatures(new String[]{"101598051", "101598471", "101601287"}, new String[]{"*"}, ss);
         //输出
         while (features.next()) {
             System.out.println("-------------------------");
@@ -173,10 +171,11 @@ public class DemoTest {
         }
 
         //服务侧
-        IFeatureView mo2 = dec8.getFeatureViewMap().get("mg2");
+        FeatureView mo2 = dec8.getFeatureView("mg2");
         if (mo2==null) {
             throw new RuntimeException("This featureView is not exist");
         }
+
         //获取线上数据
         FeatureResult features1 = mo2.getOnlineFeatures(new String[]{"200004157", "200006185", "200034730"});
         //输出
@@ -188,8 +187,9 @@ public class DemoTest {
             System.out.println();
         }
         System.out.println("-------------------------");
+
         //实时特征视图
-        IFeatureView fv1 = dec8.getFeatureViewMap().get("fv1");
+        FeatureView fv1 = dec8.getFeatureView("fv1");
         if (fv1==null) {
             throw new RuntimeException("This featureView is not exist");
         }
@@ -256,6 +256,7 @@ public class DemoTest {
         HashMap<String, List<String>> fsmap = new HashMap<>();
         fsmap.put("user_id",Arrays.asList("100001167","100024146"));
         fsmap.put("item_id",Arrays.asList(new String[]{"200138790","200385417"}));
+
         FeatureResult fr3 = mf2.getOnlineFeatures(fsmap);
         System.out.println("[");
         for (Map<String, Object> m:fr3.getFeatureData()) {
@@ -266,7 +267,7 @@ public class DemoTest {
             }
             System.out.println("}");
         }
-
         System.out.printf("]");
+
     }
 }

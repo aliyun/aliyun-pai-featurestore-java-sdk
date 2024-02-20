@@ -168,7 +168,7 @@ public class FeatureStoreClientTest {
             throw new RuntimeException("sequence feature view not found");
         }
 
-        FeatureResult features =  seqFeatureView.getOnlineFeatures( new String[]{"10", "100023406","100027794"});
+        FeatureResult features =  seqFeatureView.getOnlineFeatures( new String[]{"10", "100020289","100027794"});
         while (features.next()) {
             for (String name : features.getFeatureFields()) {
                 System.out.print(String.format("%s=%s,", name, features.getObject(name)));
@@ -184,7 +184,7 @@ public class FeatureStoreClientTest {
 
         Map<String, List<String>> joinids = new HashMap<>();
 
-        joinids.put("user_id", Arrays.asList(new String[]{"100023406", "119387221"}));
+        joinids.put("user_id", Arrays.asList(new String[]{"100023406", "100020289"}));
         features = model.getOnlineFeaturesWithEntity(joinids, "user");
 
         while (features.next()) {

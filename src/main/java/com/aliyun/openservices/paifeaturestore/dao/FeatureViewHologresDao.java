@@ -251,7 +251,7 @@ public class FeatureViewHologresDao implements FeatureViewDao{
                 }
             }
             for (String name : selectFields) {
-                String newname = qz + "_" + name;
+                String newname = qz + "__" + name;
 
                 if (name.equals(config.getItemIdField())) {
                     if (sequenceFeatures.containsKey(newname)) {
@@ -285,7 +285,7 @@ public class FeatureViewHologresDao implements FeatureViewDao{
 
                 }
             }
-            String tsfields = qz + "_ts";//Timestamp from the current time
+            String tsfields = qz + "__ts";//Timestamp from the current time
             long eventTime = 0;
             if (!StringUtils.isEmpty(sequenceInfo.getTimestampField())) {
                 eventTime =Long.valueOf(sequenceInfo.getTimestampField());
@@ -338,7 +338,14 @@ public class FeatureViewHologresDao implements FeatureViewDao{
         try (Connection connection=this.datasource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             int index = 1;
-            preparedStatement.setString(index++, key);
+            if (this.fieldTypeMap.get(this.primaryKeyField) == FSType.FS_STRING) {
+                preparedStatement.setString(index++, key);
+            }else if (this.fieldTypeMap.get(this.primaryKeyField) == FSType.FS_INT32) {
+                preparedStatement.setInt(index++, Integer.parseInt(key));
+            }else if (this.fieldTypeMap.get(this.primaryKeyField) == FSType.FS_INT64){
+                preparedStatement.setLong(index++, Long.parseLong(key));
+            }
+
             preparedStatement.setString(index++, event);
             if (useOnlineTable) {
                 preparedStatement.setLong(index++, nt);

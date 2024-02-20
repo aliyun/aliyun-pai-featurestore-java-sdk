@@ -67,7 +67,6 @@ public class Project {
         if (featureView instanceof FeatureView) {
             return (FeatureView) featureView;
         }
-
         return null;
     }
 

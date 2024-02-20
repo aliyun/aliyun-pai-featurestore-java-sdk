@@ -192,7 +192,6 @@ public class FeatureViewTableStoreDao implements FeatureViewDao {
                 keyEventsDatasOnline.put(this.primaryKeyField, key);
             }
 
-            // TODO:: function params confuse
             if (!keyEventsDatasOnline.isEmpty()) {
                 featureFieldList.addAll(keyEventsDatasOnline.keySet());
 
@@ -250,7 +249,7 @@ public class FeatureViewTableStoreDao implements FeatureViewDao {
                 }
             }
             for (String name : selectFields) {
-                String newname = qz + "_" + name;
+                String newname = qz + "__" + name;
 
                 if (name.equals(config.getItemIdField())) {
                     if (sequenceFeatures.containsKey(newname)) {
@@ -284,7 +283,7 @@ public class FeatureViewTableStoreDao implements FeatureViewDao {
 
                 }
             }
-            String tsfields = qz + "_ts";//Timestamp from the current time
+            String tsfields = qz + "__ts";//Timestamp from the current time
             long eventTime = 0;
             if (!StringUtils.isEmpty(sequenceInfo.getTimestampField())) {
                 eventTime =Long.valueOf(sequenceInfo.getTimestampField());

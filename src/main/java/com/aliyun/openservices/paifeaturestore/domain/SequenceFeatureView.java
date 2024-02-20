@@ -72,6 +72,19 @@ public class SequenceFeatureView implements IFeatureView{
         DaoConfig daoConfig = new DaoConfig();
         daoConfig.datasourceType = project.getProject().getOnlineDatasourceType();
         daoConfig.primaryKeyField=this.userIdField;
+
+        Map<String, FSType> fieldTypeMap2 = new HashMap<>();
+        for (FeatureViewRequestFields field : featureView.getFields()) {
+            if (field.isIsPrimaryKey()) {
+                fieldTypeMap2.put(field.getName(), field.getType());
+            } else if (field.isIsPartition()) {
+                continue;
+            } else {
+                fieldTypeMap2.put(field.getName(), field.getType());
+            }
+        }
+        daoConfig.fieldTypeMap = fieldTypeMap2;
+
         switch (project.getProject().getOnlineDatasourceType()) {
             case Datasource_Type_Hologres:
                 daoConfig.hologresName = project.getOnlineStore().getDatasourceName();
