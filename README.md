@@ -27,8 +27,8 @@ public class Constants {
 }
 
 // 配置regionId、accessId、accessKey以及项目名称
-Configuration cf = new Configuration("cn-hangzhou",Constants.accessId,Constants.accessKey,"dec6");  
-ApiClient apiClient = new ApiClient(cf);  
+Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,Constants.accessKey,"dec6");  
+ApiClient apiClient = new ApiClient(configuration);  
 FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient);  
 ```
 
