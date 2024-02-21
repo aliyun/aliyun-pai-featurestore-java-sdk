@@ -297,7 +297,7 @@
     <maven-plugin-version>1.0.0</maven-plugin-version>
     <junit-version>4.13.1</junit-version>
     <jooq.version>3.13.6</jooq.version>
-    <postgresql-version>42.6.0</postgresql-version>
+    <postgresql-version>42.7.2</postgresql-version>
     <paifeaturestore20230621-version>3.0.0</paifeaturestore20230621-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
