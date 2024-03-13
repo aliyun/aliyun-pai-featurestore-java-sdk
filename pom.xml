@@ -5,7 +5,7 @@
   <artifactId>paifeaturestore-sdk</artifactId>
   <packaging>jar</packaging>
   <name>paifeaturestore-sdk</name>
-  <version>1.0.3</version>
+  <version>1.0.4</version>
   <url>>http://maven.apache.org</url>
   <description>SDK for PAI-FeatureStore service</description>
   <scm>
@@ -274,10 +274,15 @@
       <groupId>com.aliyun.openservices</groupId>
       <artifactId>tablestore</artifactId>
       <version>5.16.0</version>
+      <classifier>jar-with-dependencies</classifier>
       <exclusions>
         <exclusion>
           <groupId>com.google.flatbuffers</groupId>
           <artifactId>flatbuffers-java</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
