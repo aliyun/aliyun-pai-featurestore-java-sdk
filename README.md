@@ -145,6 +145,9 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 上面的含义是把 ModelFeature 下的 user(FeatureEntity) 对应的特征全部获取到。
 
 ## 版本说明
+### 1.0.4 (2024-03-13)
+* 解决 tablestore 依赖 protofbuf 版本问题(参考[这里](https://help.aliyun.com/zh/tablestore/support/what-do-i-do-if-pb-library-conflicts-occur-when-i-use-tablestore-sdk-for-java))
+ 
 ### 1.0.3 (2024-02-20)
 * 支持公网访问获取数据
 * 支持序列特征获取
