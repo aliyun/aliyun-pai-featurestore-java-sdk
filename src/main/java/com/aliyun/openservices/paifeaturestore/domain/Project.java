@@ -1,11 +1,16 @@
 package com.aliyun.openservices.paifeaturestore.domain;
 
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
+import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBClient;
+import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.Hologres;
 import com.aliyun.openservices.paifeaturestore.datasource.HologresFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.IGraphFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.TableStoreFactory;
+import com.aliyun.openservices.paifeaturestore.model.Datasource;
+import com.aliyun.tea.utils.StringUtils;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,8 +27,13 @@ public class Project {
 
     private boolean usePublicAddress = false;
 
+    private String signature = null;
+
+    private Datasource featureDBDatasource = null;
+
     public Project(com.aliyun.openservices.paifeaturestore.model.Project project,boolean usePublicAddress) throws Exception {
         this.project = project;
+        this.signature = project.getSignature();
         switch (project.getOnlineDatasourceType()) {
             case Datasource_Type_Hologres:
                 HologresOnlinestore hologresOnlinestore = new HologresOnlinestore();
@@ -50,6 +60,16 @@ public class Project {
                 if (null == TableStoreFactory.get(this.onlineStore.getDatasourceName())) {
                     TableStoreFactory.register(this.onlineStore.getDatasourceName(),
                             tableStoreOnlinestore.getDatasource().generateOTSClient(usePublicAddress));
+                }
+                break;
+            case Datasource_Type_FeatureDB:
+                FeatureDBOnlinestore featureDBOnlinestore = new FeatureDBOnlinestore();
+                featureDBOnlinestore.setDatasource(project.getOnlineDataSource());
+                this.onlineStore = featureDBOnlinestore;
+                if (null == FeatureDBFactory.get(this.onlineStore.getDatasourceName())) {
+                    FeatureDBClient featureDBClient = featureDBOnlinestore.getDatasource().generateFeatureDBClient(usePublicAddress);
+                    featureDBClient.setSignature(this.signature);
+                    FeatureDBFactory.register(featureDBOnlinestore.getDatasourceName(), featureDBClient);
                 }
                 break;
             default:
@@ -123,5 +143,25 @@ public class Project {
 
     public void addModel(String name, Model domianModel) {
         this.modelMap.put(name, domianModel);
+    }
+
+
+    public void registerFeatrueDB(Datasource featureDBDataSource) {
+        if (null != featureDBDataSource) {
+            this.featureDBDatasource = featureDBDataSource;
+            if (null == FeatureDBFactory.get(featureDBDataSource.getName())) {
+                FeatureDBClient featureDBClient = featureDBDataSource.generateFeatureDBClient(usePublicAddress);
+                featureDBClient.setSignature(this.signature);
+                FeatureDBFactory.register(featureDBDataSource.getName(), featureDBClient);
+            }
+
+        }
+    }
+    public String getFeatureDBName() {
+        if (null != this.featureDBDatasource) {
+            return this.featureDBDatasource.getName();
+        }
+
+        return this.onlineStore.getDatasourceName();
     }
 }

@@ -221,7 +221,7 @@ public class Model {
 
         Map<String, IFeatureView> featureViewMap = this.featureEntityJoinIdMap.get(featureEntity.getFeatureEntity().getFeatureEntityJoinid());
 
-        Stream<CompletableFuture<FeatureResult>> completableFutureStream = featureViewMap.values().stream().map(featureView -> CompletableFuture.supplyAsync(() -> {
+        List<CompletableFuture<FeatureResult>> futures = featureViewMap.values().stream().map(featureView -> CompletableFuture.supplyAsync(() -> {
             try {
                  return featureView.getOnlineFeatures(joinIds.get(featureEntity.getFeatureEntity().getFeatureEntityJoinid()).toArray(new String[0]),
                             this.featureNamesMap.get(featureView.getFeatureView().getName()).toArray(new String[0]), this.aliasNamesMap.get(featureView.getFeatureView().getName()));
@@ -229,9 +229,21 @@ public class Model {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }));
+        })).collect(Collectors.toList());
 
-        List<FeatureResult> featureResults = completableFutureStream.map(CompletableFuture::join).collect(Collectors.toList());
+        CompletableFuture<Void>   allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+
+        CompletableFuture<List<FeatureResult>> allFutureResults = allFutures.thenApply(v ->
+                futures.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList())
+        );
+        List<FeatureResult> featureResults = null;
+        try {
+            featureResults = allFutureResults.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         FeatureStoreResult featureStoreResult = new FeatureStoreResult();
         List<String> featureFields = new ArrayList<>();

@@ -11,6 +11,8 @@ import com.aliyun.openservices.paifeaturestore.domain.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -193,5 +195,113 @@ public class FeatureStoreClientTest {
             }
             System.out.println();
         }
+    }
+    @Ignore
+    @Test
+    public void otsDataTest2() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                Constants.accessId, Constants.accessKey,"fs_test_dj" );
+
+        configuration.setDomain(Constants.host);
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("fs_test_dj");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_fea");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+        int count = 222;
+        String[] joinIds = new String[count];
+        for (int i=0; i < count-1; i++) {
+            joinIds[i] = "100000132";
+        }
+        joinIds[count-1] = "100001167";
+
+        FeatureResult features = featureView.getOnlineFeatures(joinIds, new String[]{"gender", "age", "city"}, null);
+
+        if (features.getFeatureData().size() != count) {
+            throw new Exception("request size not equal");
+        }
+        while (features.next()) {
+            for (String name : features.getFeatureFields()) {
+                System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+            }
+            System.out.println("");
+        }
+
+        for (int i = 0; i < 10; i++) {
+            Instant start = Instant.now();
+            features = featureView.getOnlineFeatures(joinIds, new String[]{"gender", "age", "city"}, null);
+
+            while (features.next()) {
+                for (String name : features.getFeatureFields()) {
+                    //System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+                }
+            }
+            Instant end = Instant.now();
+            Duration timeElapsed = Duration.between(start, end);
+            System.out.println("次数:" + (i+1) + " 执行耗时（毫秒）：" + timeElapsed.toMillis());
+        }
+
+    }
+    @Ignore
+    @Test
+    public void featureDBTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                Constants.accessId, Constants.accessKey,"tablestore_p2" );
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        configuration.setDomain(Constants.host);
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("tablestore_p2");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_fea3");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+        int count = 3;
+        String[] joinIds = new String[count];
+        joinIds[0] = "7718078399602073545";
+        joinIds[1] = "782486411886831247";
+        joinIds[2] = "2855275313274611949";
+
+        for (int i = 0; i < 1000;i++) {
+            long startTime = System.nanoTime();
+            FeatureResult features = featureView.getOnlineFeatures(joinIds );
+
+            if (features.getFeatureData().size() != count) {
+                throw new Exception("request size not equal");
+            }
+            while (features.next()) {
+                for (String name : features.getFeatureFields()) {
+                    System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+                }
+                System.out.println("");
+            }
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            double durationInMilliseconds = duration / 1_000_000.0;
+
+            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+        }
+
+
     }
 }

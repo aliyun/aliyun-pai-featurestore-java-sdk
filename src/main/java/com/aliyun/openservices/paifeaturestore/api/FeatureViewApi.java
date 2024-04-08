@@ -56,6 +56,7 @@ public class FeatureViewApi {
             featureView.setFeatureEntityName(view.getFeatureEntityName());
             featureView.setProjectName(view.getProjectName());
             featureView.setProjectId(Long.valueOf(view.getProjectId()));
+            featureView.setWriteToFeaturedb(view.getWriteToFeatureDB());
             featureViewList.add(featureView);
         }
         listFeatureViewsResponse.setFeatureViews(featureViewList);
@@ -78,6 +79,7 @@ public class FeatureViewApi {
         featureView.setOnline(response.getBody().getSyncOnlineTable());
         featureView.setFeatureEntityId(Integer.valueOf(response.getBody().getFeatureEntityId()));
         featureView.setFeatureEntityName(response.getBody().getFeatureEntityName());
+        featureView.setWriteToFeaturedb(response.getBody().getWriteToFeatureDB());
 
         // Check whether the registry information of the current response class exists.
         if (!StringUtils.isEmpty(response.getBody().getRegisterTable())) {

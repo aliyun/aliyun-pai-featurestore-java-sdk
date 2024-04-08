@@ -8,6 +8,10 @@ public class Configuration {
 
     private Config config;
 
+    private String username = null;
+
+    private String password = null;
+
     /*  Initial configuration information (region ID, AK account, AK password, and project name)    */
     public Configuration(String regionId, String accessKeyId, String accessKeySecret, String projectName) {
         this.config = new Config();
@@ -44,5 +48,21 @@ public class Configuration {
 
     public void setConfig(Config config) {
         this.config = config;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

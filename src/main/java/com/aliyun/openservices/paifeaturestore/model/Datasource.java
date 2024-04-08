@@ -6,6 +6,8 @@ import com.alicloud.openservices.tablestore.SyncClient;
 import com.aliyun.igraph.client.gremlin.driver.Client;
 import com.aliyun.igraph.client.gremlin.driver.Cluster;
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
+import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBClient;
+import com.aliyun.openservices.paifeaturestore.datasource.HttpConfig;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -407,4 +409,16 @@ public class Datasource {
     return client;
   }
 
+  public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress) {
+
+    FeatureDBClient featureDBClient = new FeatureDBClient(new HttpConfig());
+    if (usePublicAddress) {
+      featureDBClient.setAddress(this.publicAddress);
+    } else {
+      featureDBClient.setAddress(this.vpcAddress);
+    }
+    featureDBClient.setToken(this.token);
+
+    return featureDBClient;
+  }
 }

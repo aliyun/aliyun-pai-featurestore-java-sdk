@@ -53,7 +53,15 @@ public class FeatureStoreClient {
             offlineDatasource.setAk(ak);
             project.setOfflineDataSource(offlineDatasource);
 
+            project.createSignature(this.apiClient.getConfiguration().getUsername(), this.apiClient.getConfiguration().getPassword());
             Project domainProject = new Project(project,usePublicAddress);
+
+            domainProject.setUsePublicAddress(usePublicAddress);
+
+            Datasource featureDBDataSource = this.apiClient.getDatasourceApi().getFeatureDBDatasource(offlineDatasource.getWorkspaceId());
+            if (featureDBDataSource != null) {
+                domainProject.registerFeatrueDB(featureDBDataSource);
+            }
 
             projectMap.put(project.getProjectName(), domainProject);
 

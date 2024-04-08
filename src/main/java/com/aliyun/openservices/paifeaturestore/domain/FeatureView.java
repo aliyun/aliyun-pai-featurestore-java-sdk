@@ -1,5 +1,6 @@
 package com.aliyun.openservices.paifeaturestore.domain;
 
+import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
 import com.aliyun.openservices.paifeaturestore.dao.DaoConfig;
 import com.aliyun.openservices.paifeaturestore.dao.FeatureViewDao;
@@ -67,56 +68,65 @@ public class FeatureView implements IFeatureView {
         }
         daoConfig.fieldTypeMap = fieldTypeMap2;
 
-        switch (project.getProject().getOnlineDatasourceType()) {
-            case Datasource_Type_Hologres:
-                daoConfig.hologresName = project.getOnlineStore().getDatasourceName();
-                daoConfig.hologresTableName = project.getOnlineStore().getTableName(this);
-                break;
-            case Datasource_Type_IGraph:
-                if (!StringUtils.isEmpty(featureView.getConfig())) {
-                    Gson gson = new Gson();
-                    Map map = gson.fromJson(featureView.getConfig(), Map.class);
-                    if (map.containsKey("save_original_field")) {
-                        if (map.get("save_original_field") instanceof Boolean) {
-                            daoConfig.saveOriginalField = (Boolean) map.get("save_original_field");
+        if ((null != featureView.getWriteToFeaturedb() && featureView.getWriteToFeaturedb())  || project.getProject().getOnlineDatasourceType().equals(DatasourceType.Datasource_Type_FeatureDB)) {
+            daoConfig.datasourceType = DatasourceType.Datasource_Type_FeatureDB;
+            daoConfig.featureDBName = project.getFeatureDBName();
+            daoConfig.featureDBDatabase = project.getProject().getInstanceId();
+            daoConfig.featureDBSchema = project.getProject().getProjectName();
+            daoConfig.featureDBTable = featureView.getName();
+        } else {
+            switch (project.getProject().getOnlineDatasourceType()) {
+                case Datasource_Type_Hologres:
+                    daoConfig.hologresName = project.getOnlineStore().getDatasourceName();
+                    daoConfig.hologresTableName = project.getOnlineStore().getTableName(this);
+                    break;
+                case Datasource_Type_IGraph:
+                    if (!StringUtils.isEmpty(featureView.getConfig())) {
+                        Gson gson = new Gson();
+                        Map map = gson.fromJson(featureView.getConfig(), Map.class);
+                        if (map.containsKey("save_original_field")) {
+                            if (map.get("save_original_field") instanceof Boolean) {
+                                daoConfig.saveOriginalField = (Boolean) map.get("save_original_field");
+                            }
                         }
                     }
-                }
 
-                daoConfig.iGraphName = project.getOnlineStore().getDatasourceName();
-                daoConfig.groupName = project.getProject().getProjectName();
-                daoConfig.labelName = project.getOnlineStore().getTableName(this);
+                    daoConfig.iGraphName = project.getOnlineStore().getDatasourceName();
+                    daoConfig.groupName = project.getProject().getProjectName();
+                    daoConfig.labelName = project.getOnlineStore().getTableName(this);
 
-                Map<String, String> fieldMap = new HashMap<>();
-                Map<String, FSType> fieldTypeMap = new HashMap<>();
-                for (FeatureViewRequestFields field : featureView.getFields()) {
-                    if (field.isIsPrimaryKey()) {
-                        fieldMap.put(field.getName(), field.getName());
-                        fieldTypeMap.put(field.getName(), field.getType());
-                    } else if (field.isIsPartition()) {
-                        continue;
-                    } else {
-                        String name;
-                        if (daoConfig.saveOriginalField) {
-                            name = field.getName();
+                    Map<String, String> fieldMap = new HashMap<>();
+                    Map<String, FSType> fieldTypeMap = new HashMap<>();
+                    for (FeatureViewRequestFields field : featureView.getFields()) {
+                        if (field.isIsPrimaryKey()) {
+                            fieldMap.put(field.getName(), field.getName());
+                            fieldTypeMap.put(field.getName(), field.getType());
+                        } else if (field.isIsPartition()) {
+                            continue;
                         } else {
-                            name = String.format("f%d", field.getPosition());
+                            String name;
+                            if (daoConfig.saveOriginalField) {
+                                name = field.getName();
+                            } else {
+                                name = String.format("f%d", field.getPosition());
+                            }
+
+                            fieldMap.put(name, field.getName());
+                            fieldTypeMap.put(name, field.getType());
                         }
-
-                        fieldMap.put(name, field.getName());
-                        fieldTypeMap.put(name, field.getType());
                     }
-                }
 
-                daoConfig.fieldMap = fieldMap;
-                daoConfig.fieldTypeMap = fieldTypeMap;
-                break;
-            case Datasource_Type_TableStore:
-                daoConfig.otsTableName = project.getOnlineStore().getTableName(this);
-                daoConfig.otsName = project.getOnlineStore().getDatasourceName();
-                break;
-            default:
-                break;
+                    daoConfig.fieldMap = fieldMap;
+                    daoConfig.fieldTypeMap = fieldTypeMap;
+                    break;
+                case Datasource_Type_TableStore:
+                    daoConfig.otsTableName = project.getOnlineStore().getTableName(this);
+                    daoConfig.otsName = project.getOnlineStore().getDatasourceName();
+                    break;
+                default:
+                    break;
+            }
+
         }
 
         this.featureViewDao = FeatureViewDaoFactory.getFeatureViewDao(daoConfig);
