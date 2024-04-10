@@ -216,4 +216,28 @@ public class FeatureDBClient {
             }
         }
     }
+    public void writeFeatureDB(List<Map<String, Object>> data, String database, String schema, String table) throws Exception {
+        String url = String.format("%s/api/v1/tables/%s/%s/%s/write", address, database, schema, table );
+        Map<String, Object> map = new HashMap<>();
+        map.put("content", data);
+        String requestBody = gson.toJson(map);
+        RequestBody body = RequestBody.create(requestBody, JSON);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .addHeader("Authorization", token)
+                .addHeader("Auth", signature)
+                .build();
+
+        try(Response response = this.httpclient.newCall(request).execute()) {
+           if (!response.isSuccessful() || response.code() != 200) {
+               int errorCode = response.code();
+               try (InputStream errorStream = response.body().byteStream()) {
+                   String errorMessage = IOUtils.readStreamAsString(errorStream, "UTF-8");
+                   throw new HttpException(errorCode, errorMessage);
+               }
+           }
+        }
+
+    }
 }

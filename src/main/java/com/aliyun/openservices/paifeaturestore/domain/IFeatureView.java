@@ -2,6 +2,7 @@ package com.aliyun.openservices.paifeaturestore.domain;
 
 import com.aliyun.openservices.paifeaturestore.model.FeatureView;
 
+import java.util.List;
 import java.util.Map;
 
 public interface IFeatureView {
@@ -19,4 +20,6 @@ public interface IFeatureView {
     FeatureView getFeatureView();
 
     FeatureEntity getFeatureEntity();
+
+    void writeFeatures(List<Map<String, Object>> data);
 }

@@ -19,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class FeatureViewFeatureDBDao implements FeatureViewDao {
@@ -34,6 +38,13 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
     private String primaryKeyField;
 
     public Map<String, FSType> fieldTypeMap;
+
+    private final List<Map<String, Object>> writeData = new ArrayList<>();
+
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
+    private final ExecutorService executor = Executors.newFixedThreadPool(8);
     public FeatureViewFeatureDBDao(DaoConfig daoConfig) {
         this.database = daoConfig.featureDBDatabase;
         this.schema = daoConfig.featureDBSchema;
@@ -47,6 +58,7 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         this.featureDBClient = client;
         this.fieldTypeMap = daoConfig.fieldTypeMap;
         this.primaryKeyField = daoConfig.primaryKeyField;
+        this.startAsyncWrite();
     }
 
     @Override
@@ -175,5 +187,51 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
     @Override
     public FeatureResult getSequenceFeatures(String[] keys, String userIdField, FeatureViewSeqConfig featureViewSeqConfig) {
         return null;
+    }
+
+    @Override
+    public void writeFeatures(List<Map<String, Object>> data) {
+        lock.lock();
+        try {
+            writeData.addAll(data);
+            if (writeData.size() >= 20) {
+                condition.signal();
+            }
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
+    private void startAsyncWrite() {
+        new Thread(() -> {
+            while (true) {
+                lock.lock();
+                try {
+                    condition.await(50, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    if (!writeData.isEmpty()) {
+                        doWriteFeatures();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        }).start();
+    }
+
+    private void doWriteFeatures() {
+        List<Map<String, Object>> tempList = new ArrayList<>(writeData);
+        writeData.clear();
+
+        // 异步处理 tempList
+        this.executor.submit(()->{
+            try {
+                this.featureDBClient.writeFeatureDB(tempList, this.database, this.schema, this.table);
+            } catch (Exception e) {
+                log.error(String.format("request featuredb error:%s", e.getMessage()));
+            }
+        });
     }
 }

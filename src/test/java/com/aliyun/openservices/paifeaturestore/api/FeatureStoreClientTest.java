@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -301,6 +302,70 @@ public class FeatureStoreClientTest {
 
             System.out.println("操作耗时：" + durationInMilliseconds + "ms");
         }
+
+
+    }
+    @Ignore
+    @Test
+    public void writeTofeatureDBTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                Constants.accessId, Constants.accessKey,"tablestore_p2" );
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        configuration.setDomain(Constants.host);
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("tablestore_p2");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_fea3");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+
+        int int_field = 3456;
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> m1 = new HashMap<>();
+        m1.put("user_id", 123);
+        m1.put("string_field", "male");
+        m1.put("int32_field", int_field);
+        m1.put("float_field", 0.25f);
+        m1.put("double_field", 0.75d);
+        m1.put("boolean_field", true);
+        data.add(m1);
+        featureView.writeFeatures(data);
+
+        Thread.sleep(1000);
+        FeatureResult features = featureView.getOnlineFeatures( new String[]{"123"} );
+
+        while (features.next()) {
+            for (String name : features.getFeatureFields()) {
+                if (name.equals("user_id")) {
+                    if (features.getLong(name) != 123) {
+                        throw new Exception("get feature error");
+                    }
+                } else if (name.equals("string_field")) {
+                    if (!features.getString(name).equals("male")) {
+                        throw new Exception("get feature error");
+                    }
+                } else if (name.equals("int32_field")) {
+                    if (features.getInt(name) != int_field) {
+                        throw new Exception("get feature error");
+                    }
+
+                }
+                System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+            }
+            System.out.println("");
+        }
+
 
 
     }

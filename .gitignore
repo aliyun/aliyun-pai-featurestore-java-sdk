@@ -1,3 +1,6 @@
 /target/
 /.idea/
 src/test/resources/
+.DS_Store
+src/test/java/com/aliyun/openservices/paifeaturestore/flink/
+dependency-reduced-pom.xml

@@ -13,8 +13,8 @@ public class HttpConfig {
 
     public HttpConfig() {
         this.ioThreadNum = 10;
-        this.readTimeout = 1000;
-        this.writeTimeout = 1000;
+        this.readTimeout = 3000;
+        this.writeTimeout = 3000;
         this.connectTimeout = 3000;
         this.maxConnectionCount = 1000;
         this.maxConnectionPerRoute = 1000;

@@ -149,6 +149,11 @@ public class FeatureView implements IFeatureView {
         return featureEntity;
     }
 
+    @Override
+    public void writeFeatures(List<Map<String, Object>> data) {
+        this.featureViewDao.writeFeatures(data);
+    }
+
 
     public FeatureResult getOnlineFeatures(String[] joinIds) throws Exception {
         return this.getOnlineFeatures(joinIds, new String[]{"*"}, null);
