@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.5</version>
 </dependency>
 ```
 ## 使用方式
@@ -145,6 +145,10 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 上面的含义是把 ModelFeature 下的 user(FeatureEntity) 对应的特征全部获取到。
 
 ## 版本说明
+### 1.0.5 (2024-04-08)
+* 增加 FeatureDB 的支持
+* 优化了并行处理的性能
+
 ### 1.0.4 (2024-03-13)
 * 解决 tablestore 依赖 protofbuf 版本问题(参考[这里](https://help.aliyun.com/zh/tablestore/support/what-do-i-do-if-pb-library-conflicts-occur-when-i-use-tablestore-sdk-for-java))
  

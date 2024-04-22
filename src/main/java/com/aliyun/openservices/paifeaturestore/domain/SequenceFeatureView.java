@@ -85,6 +85,9 @@ public class SequenceFeatureView implements IFeatureView{
         }
         daoConfig.fieldTypeMap = fieldTypeMap2;
 
+        if (null != featureView.getWriteToFeaturedb() &&  featureView.getWriteToFeaturedb()) {
+            throw  new RuntimeException("sequence feature view not support featuredb yet");
+        }
         switch (project.getProject().getOnlineDatasourceType()) {
             case Datasource_Type_Hologres:
                 daoConfig.hologresName = project.getOnlineStore().getDatasourceName();
@@ -133,6 +136,8 @@ public class SequenceFeatureView implements IFeatureView{
                 daoConfig.otsSeqOnlineTableName=project.getOnlineStore().getSeqOnlineTableName(this);
                 daoConfig.otsSeqOfflineTableName=project.getOnlineStore().getSeqOfflineTableName(this);
                 break;
+            case Datasource_Type_FeatureDB:
+                throw  new RuntimeException("sequence feature view not support featuredb yet");
             default:
                 break;
         }

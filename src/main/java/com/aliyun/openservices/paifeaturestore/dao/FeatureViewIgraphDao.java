@@ -13,14 +13,6 @@ import com.aliyun.tea.utils.StringUtils;
 import org.apache.tinkerpop.gremlin.driver.Result;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
 import org.bouncycastle.util.Strings;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Query;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.*;
 
 import static org.jooq.impl.DSL.field;

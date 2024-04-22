@@ -1,8 +1,10 @@
 package com.aliyun.openservices.paifeaturestore.model;
 
+import java.util.Base64;
 import java.util.Objects;
 
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
+import com.aliyun.tea.utils.StringUtils;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -61,9 +63,13 @@ public class  Project {
   @SerializedName("model_count")
   private Integer modelCount = null;
 
+  @SerializedName("instance_id")
+  private String instanceId = null;
+
   private Datasource offlineDataSource;
 
   private Datasource onlineDataSource;
+  private String signature = null;
 
 
   public Datasource getOfflineDataSource() {
@@ -373,7 +379,7 @@ public class  Project {
 
 
   @Override
-  public boolean equals(java.lang.Object o) {
+  public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
@@ -397,12 +403,15 @@ public class  Project {
         Objects.equals(this.updateTime, project.updateTime) &&
         Objects.equals(this.featureEntityCount, project.featureEntityCount) &&
         Objects.equals(this.featureViewCount, project.featureViewCount) &&
+        Objects.equals(this.instanceId, project.instanceId) &&
+        Objects.equals(this.signature, project.signature) &&
         Objects.equals(this.modelCount, project.modelCount);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(projectId, projectName, workspaceId, description, owner, offlineDatasourceType, offlineDatasourceId, offlineDatasourceName, onlineDatasourceType, onlineDatasourceId, onlineDatasourceName, offlineLifecycle, createTime, updateTime, featureEntityCount, featureViewCount, modelCount);
+    return Objects.hash(projectId, projectName, workspaceId, description, owner, offlineDatasourceType, offlineDatasourceId, offlineDatasourceName, onlineDatasourceType, onlineDatasourceId,
+            onlineDatasourceName, offlineLifecycle, createTime, updateTime, featureEntityCount, featureViewCount, modelCount, instanceId, signature);
   }
 
 
@@ -428,6 +437,8 @@ public class  Project {
     sb.append("    featureEntityCount: ").append(toIndentedString(featureEntityCount)).append("\n");
     sb.append("    featureViewCount: ").append(toIndentedString(featureViewCount)).append("\n");
     sb.append("    modelCount: ").append(toIndentedString(modelCount)).append("\n");
+    sb.append("    instanceId: ").append(toIndentedString(instanceId)).append("\n");
+    sb.append("    signature: ").append(toIndentedString(signature)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -436,11 +447,31 @@ public class  Project {
    * Convert the given object to string with each line indented by 4 spaces
    * (except the first line).
    */
-  private String toIndentedString(java.lang.Object o) {
+  private String toIndentedString(Object o) {
     if (o == null) {
       return "null";
     }
     return o.toString().replace("\n", "\n    ");
   }
 
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+  public String getSignature() {
+    return signature;
+  }
+
+
+  public void createSignature(String username, String password) {
+    if (!StringUtils.isEmpty(username) && !(StringUtils.isEmpty(password))) {
+      String auth = String.format("%s:%s", username, password);
+      this.signature = Base64.getEncoder().encodeToString(auth.getBytes());
+    }
+
+  }
 }

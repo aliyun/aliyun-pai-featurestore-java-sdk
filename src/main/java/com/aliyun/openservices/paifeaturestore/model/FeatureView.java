@@ -77,6 +77,9 @@ public class FeatureView {
   @SerializedName("last_sync_config")
   private String lastSyncConfig = null;
 
+  @SerializedName("write_to_featuredb")
+  private Boolean writeToFeaturedb = null;
+
   @SerializedName("fields")
   private List<FeatureViewRequestFields> fields = new ArrayList<FeatureViewRequestFields>();
 
@@ -469,6 +472,14 @@ public class FeatureView {
     this.lastSyncConfig = lastSyncConfig;
   }
 
+  public Boolean getWriteToFeaturedb() {
+    return writeToFeaturedb;
+  }
+
+  public void setWriteToFeaturedb(Boolean writeToFeaturedb) {
+    this.writeToFeaturedb = writeToFeaturedb;
+  }
+
   public FeatureView fields(List<FeatureViewRequestFields> fields) {
     this.fields = fields;
     return this;
@@ -523,12 +534,14 @@ public class FeatureView {
         Objects.equals(this.offlineTableName, featureView.offlineTableName) &&
         Objects.equals(this.lastSyncTime, featureView.lastSyncTime) &&
         Objects.equals(this.lastSyncConfig, featureView.lastSyncConfig) &&
+        Objects.equals(this.writeToFeaturedb, featureView.writeToFeaturedb) &&
         Objects.equals(this.fields, featureView.fields);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(featureViewId, projectId, projectName, name, featureEntityId, featureEntityName, featureEntityJoinid, owner, type, online, offline, isRegister, registerTable, registerDatasourceId, registerDatasourceName, ttl, tags, config, onlineTableName, offlineTableName, lastSyncTime, lastSyncConfig, fields);
+    return Objects.hash(featureViewId, projectId, projectName, name, featureEntityId, featureEntityName, featureEntityJoinid, owner, type, online, offline, isRegister, registerTable, registerDatasourceId,
+            registerDatasourceName, ttl, tags, config, onlineTableName, offlineTableName, lastSyncTime, lastSyncConfig, fields, writeToFeaturedb);
   }
 
 
@@ -559,6 +572,7 @@ public class FeatureView {
     sb.append("    offlineTableName: ").append(toIndentedString(offlineTableName)).append("\n");
     sb.append("    lastSyncTime: ").append(toIndentedString(lastSyncTime)).append("\n");
     sb.append("    lastSyncConfig: ").append(toIndentedString(lastSyncConfig)).append("\n");
+    sb.append("    writeToFeaturedb: ").append(toIndentedString(writeToFeaturedb)).append("\n");
     sb.append("    fields: ").append(toIndentedString(fields)).append("\n");
     sb.append("}");
     return sb.toString();

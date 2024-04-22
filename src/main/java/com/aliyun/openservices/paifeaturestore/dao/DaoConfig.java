@@ -52,4 +52,13 @@ public class DaoConfig {
     //igraph
     public String igraphEdgeName;
 
+    // FeatureDB
+    public String featureDBName;
+
+    public String featureDBDatabase;
+
+    public String featureDBSchema;
+
+    public String featureDBTable;
+
 }

@@ -38,6 +38,7 @@ public class FsProjectApi {
             Project project = new Project();
             project.setProjectId(Long.valueOf(projectItem.projectId));
             project.setProjectName(projectItem.name);
+            project.setInstanceId(apiClient.getInstanceId());
             project.setOfflineDatasourceId(Integer.valueOf(projectItem.offlineDatasourceId));
             project.setOnlineDatasourceId(Integer.valueOf(projectItem.onlineDatasourceId));
             if ("MaxCompute".equals(projectItem.offlineDatasourceType)) {

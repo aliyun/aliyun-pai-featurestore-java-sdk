@@ -10,6 +10,8 @@ public class FeatureViewDaoFactory {
                 return new FeatureViewHologresDao(daoConfig);
             case Datasource_Type_TableStore:
                 return new FeatureViewTableStoreDao(daoConfig);
+            case Datasource_Type_FeatureDB:
+                return new FeatureViewFeatureDBDao(daoConfig);
         }
 
         throw new RuntimeException("not found FeatureViewDao implement");

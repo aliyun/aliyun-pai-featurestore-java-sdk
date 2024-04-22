@@ -5,7 +5,7 @@
   <artifactId>paifeaturestore-sdk</artifactId>
   <packaging>jar</packaging>
   <name>paifeaturestore-sdk</name>
-  <version>1.0.4</version>
+  <version>1.0.5</version>
   <url>>http://maven.apache.org</url>
   <description>SDK for PAI-FeatureStore service</description>
   <scm>
@@ -227,6 +227,12 @@
       <groupId>com.aliyun</groupId>
       <artifactId>tea-rpc</artifactId>
       <version>0.1.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.aliyun</groupId>
+          <artifactId>credentials-java</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
@@ -237,11 +243,6 @@
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>logging-interceptor</artifactId>
       <version>${okhttp-version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>${gson-version}</version>
     </dependency>
     <!-- test dependencies -->
     <dependency>
@@ -303,6 +304,13 @@
       <artifactId>snappy-java</artifactId>
       <version>${snappy-java.version}</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.flatbuffers/flatbuffers-java -->
+    <dependency>
+      <groupId>com.google.flatbuffers</groupId>
+      <artifactId>flatbuffers-java</artifactId>
+      <version>${flatbuffer-java.version}</version>
+    </dependency>
+
   </dependencies>
   <properties>
     <java.version>1.8</java.version>
@@ -314,12 +322,13 @@
     <junit-version>4.13.1</junit-version>
     <jooq.version>3.13.6</jooq.version>
     <postgresql-version>42.6.0</postgresql-version>
-    <paifeaturestore20230621-version>3.0.0</paifeaturestore20230621-version>
+    <paifeaturestore20230621-version>3.1.3</paifeaturestore20230621-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
     <jar-plugin.version>3.0.2</jar-plugin.version>
     <source-plugin.version>3.0.1</source-plugin.version>
     <snappy-java.version>1.1.10.5</snappy-java.version>
+    <flatbuffer-java.version>23.5.26</flatbuffer-java.version>
   </properties>
 </project>

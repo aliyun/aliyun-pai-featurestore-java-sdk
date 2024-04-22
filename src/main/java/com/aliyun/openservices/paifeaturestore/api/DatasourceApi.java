@@ -3,6 +3,9 @@ package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.model.Datasource;
 import com.aliyun.paifeaturestore20230621.models.GetDatasourceResponse;
+import com.aliyun.paifeaturestore20230621.models.ListDatasourcesRequest;
+import com.aliyun.paifeaturestore20230621.models.ListDatasourcesResponse;
+import com.aliyun.paifeaturestore20230621.models.ListDatasourcesResponseBody;
 import com.google.gson.Gson;
 import org.bouncycastle.util.Strings;
 
@@ -66,7 +69,27 @@ public class DatasourceApi {
         } else if ("MaxCompute".equals(response.getBody().type)) {//MC data source
             datasource.setType(DatasourceType.Datasource_Type_MaxCompute);
             datasource.setProject(response.getBody().uri);
+            datasource.setWorkspaceId(response.getBody().getWorkspaceId());
+        } else if ("FeatureDB".equals(response.getBody().type)) { // featuredb
+            datasource.setType(DatasourceType.Datasource_Type_FeatureDB);
+            Gson gson = new Gson();
+            Map map = gson.fromJson(response.getBody().config, Map.class);
+            datasource.setVpcAddress(String.valueOf(map.get("fdb_vpc_address")));
+            datasource.setPublicAddress(String.valueOf(map.get("fdb_public_address")));
+            datasource.setToken(String.valueOf(map.get("token")));
+
         }
         return datasource;
+    }
+    public Datasource getFeatureDBDatasource(String workspaceId) throws Exception {
+        ListDatasourcesRequest listDatasourcesRequest = new ListDatasourcesRequest();
+        listDatasourcesRequest.setType("FeatureDB");
+        listDatasourcesRequest.setWorkspaceId(workspaceId);
+        ListDatasourcesResponse listDatasourcesResponse =  apiClient.getClient().listDatasources(apiClient.getInstanceId(), listDatasourcesRequest);
+
+        for (ListDatasourcesResponseBody.ListDatasourcesResponseBodyDatasources body : listDatasourcesResponse.getBody().getDatasources()){
+            return this.getDatasourceById(Integer.valueOf(body.getDatasourceId()));
+        }
+        return null;
     }
 }
