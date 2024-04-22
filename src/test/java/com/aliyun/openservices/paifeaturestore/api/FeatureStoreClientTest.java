@@ -277,13 +277,14 @@ public class FeatureStoreClientTest {
         }
         int count = 3;
         String[] joinIds = new String[count];
-        joinIds[0] = "7718078399602073545";
-        joinIds[1] = "782486411886831247";
-        joinIds[2] = "2855275313274611949";
+        joinIds[0] = "2819290457213129004";
+        joinIds[1] = "769798189884836920";
+        joinIds[2] = "3484327982552061277";
 
-        for (int i = 0; i < 1000;i++) {
+        for (int i = 0; i < 100;i++) {
             long startTime = System.nanoTime();
-            FeatureResult features = featureView.getOnlineFeatures(joinIds );
+            //FeatureResult features = featureView.getOnlineFeatures(joinIds, new String[]{"int32_field", "boolean_field", "float_field", "string_field", "double_field"}, null );
+            FeatureResult features = featureView.getOnlineFeatures(joinIds  );
 
             if (features.getFeatureData().size() != count) {
                 throw new Exception("request size not equal");
