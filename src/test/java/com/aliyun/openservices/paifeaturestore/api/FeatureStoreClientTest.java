@@ -309,7 +309,7 @@ public class FeatureStoreClientTest {
     @Test
     public void writeTofeatureDBTest() throws Exception {
         Configuration configuration = new Configuration("cn-beijing",
-                Constants.accessId, Constants.accessKey,"tablestore_p2" );
+                Constants.accessId, Constants.accessKey,"fs_demo_featuredb" );
 
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
@@ -320,12 +320,12 @@ public class FeatureStoreClientTest {
 
         FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
 
-        Project project = featureStoreClient.getProject("tablestore_p2");
+        Project project = featureStoreClient.getProject("fs_demo_featuredb");
         if (null == project) {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_fea3");
+        FeatureView featureView = project.getFeatureView("user_test_1");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }

@@ -51,6 +51,8 @@ public class FsProjectApi {
                 project.setOnlineDatasourceType(DatasourceType.Datasource_Type_IGraph);
             } else if ("Tablestore".equals(projectItem.onlineDatasourceType)) {//Tablestore类型
                 project.setOnlineDatasourceType(DatasourceType.Datasource_Type_TableStore);
+            } else if ("FeatureDB".equals(projectItem.onlineDatasourceType)) {
+                project.setOnlineDatasourceType(DatasourceType.Datasource_Type_FeatureDB);
             }
             projects.add(project);
         }

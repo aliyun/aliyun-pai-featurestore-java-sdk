@@ -156,3 +156,9 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 * 支持公网访问获取数据
 * 支持序列特征获取
 
+## flink connector
+编译运行
+```
+ mvn clean -DskipTests package -P flink-sink
+```
+
