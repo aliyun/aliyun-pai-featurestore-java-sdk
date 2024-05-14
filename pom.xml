@@ -157,20 +157,19 @@
     </profile>
     <profile>
       <id>flink-dev</id>
+      <properties>
+        <flinkVvrVersion>1.15-vvr-6.0.7-1</flinkVvrVersion>
+        <flinkVersion>1.15.3</flinkVersion>
+      </properties>
       <dependencies>
         <dependency>
           <groupId>org.apache.flink</groupId>
-          <artifactId>flink-streaming-java_2.11</artifactId>
+          <artifactId>flink-streaming-java</artifactId>
           <version>${flink.version}</version>
         </dependency>
         <dependency>
           <groupId>org.apache.flink</groupId>
-          <artifactId>flink-table-api-java-bridge_2.11</artifactId>
-          <version>${flink.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-table-planner-blink_2.11</artifactId>
+          <artifactId>flink-table-api-java-bridge</artifactId>
           <version>${flink.version}</version>
         </dependency>
         <dependency>
@@ -180,13 +179,33 @@
         </dependency>
         <dependency>
           <groupId>org.apache.flink</groupId>
-          <artifactId>flink-clients_2.11</artifactId>
+          <artifactId>flink-table-runtime</artifactId>
           <version>${flink.version}</version>
         </dependency>
+        <dependency>
+          <groupId>com.alibaba.ververica</groupId>
+          <artifactId>ververica-connector-common</artifactId>
+          <version>${flink.vvr.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+        <dependency>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>flink-table-planner_2.12</artifactId>
+          <version>${flink.version}</version>
+          <scope>test</scope>
+        </dependency>
+
       </dependencies>
     </profile>
     <profile>
-      <id>flink-sink</id>
+      <id>flink-1.15</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <flinkVvrVersion>1.15-vvr-6.0.7-1</flinkVvrVersion>
+        <flinkVersion>1.15.3</flinkVersion>
+      </properties>
       <build>
         <plugins>
           <!-- 确保使用maven-shade-plugin将依赖打包到一个uber-jar中 -->
@@ -398,13 +417,13 @@
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-streaming-java_2.11</artifactId>
+      <artifactId>flink-streaming-java</artifactId>
       <version>${flink.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-table-api-java-bridge_2.11</artifactId>
+      <artifactId>flink-table-api-java-bridge</artifactId>
       <version>${flink.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -412,7 +431,27 @@
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-table-common</artifactId>
       <version>${flink.version}</version>
+      <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-runtime</artifactId>
+      <version>${flink.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.ververica</groupId>
+      <artifactId>ververica-connector-common</artifactId>
+      <version>${flink.vvr.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients</artifactId>
+      <version>${flink.version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
   <properties>
     <java.version>1.8</java.version>
@@ -432,6 +471,7 @@
     <source-plugin.version>3.0.1</source-plugin.version>
     <snappy-java.version>1.1.10.5</snappy-java.version>
     <flatbuffer-java.version>23.5.26</flatbuffer-java.version>
-    <flink.version>1.13.6</flink.version>
+    <flink.version>${flinkVersion}</flink.version>
+    <flink.vvr.version>${flinkVvrVersion}</flink.vvr.version>
   </properties>
 </project>

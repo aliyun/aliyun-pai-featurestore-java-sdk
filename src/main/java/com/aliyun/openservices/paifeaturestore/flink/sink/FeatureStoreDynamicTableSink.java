@@ -1,5 +1,6 @@
 package com.aliyun.openservices.paifeaturestore.flink.sink;
 
+import com.aliyun.openservices.paifeaturestore.flink.factory.FeatureStoreTableFactory;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
@@ -43,6 +44,7 @@ public class FeatureStoreDynamicTableSink implements DynamicTableSink {
     @Override
     public ChangelogMode getChangelogMode(ChangelogMode changelogMode) {
         return ChangelogMode.newBuilder().addContainedKind(RowKind.INSERT)
+                .addContainedKind(RowKind.UPDATE_AFTER)
                 .build();
     }
 
@@ -63,6 +65,6 @@ public class FeatureStoreDynamicTableSink implements DynamicTableSink {
 
     @Override
     public String asSummaryString() {
-        return FeatureStoreDynamicTableFactory.IDENTIFIER;
+        return FeatureStoreTableFactory.IDENTIFIER;
     }
 }

@@ -17,6 +17,8 @@ import org.apache.flink.table.types.logical.IntType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.table.types.logical.VarCharType;
 import org.apache.flink.types.RowKind;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
+    private static final Logger LOG =
+            LoggerFactory.getLogger(
+                    FeatureStoreSinkFunction.class);
     private String regionId;
 
     private String accessId;
@@ -114,7 +119,9 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
                     data.put(rowField.getName(), value.getRawValue(i).toString());
                 }
             }
+            LOG.debug("write data:{}", data);
             List<Map<String,Object>> content = new ArrayList<>();
+
             content.add(data);
             featureView.writeFeatures(content);
         }

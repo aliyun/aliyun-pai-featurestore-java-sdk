@@ -1,17 +1,23 @@
-package com.aliyun.openservices.paifeaturestore.flink.sink;
+package com.aliyun.openservices.paifeaturestore.flink.factory;
 
+import com.aliyun.openservices.paifeaturestore.flink.sink.FeatureStoreDynamicTableSink;
+import com.aliyun.openservices.paifeaturestore.flink.source.FeatureStoreDynamicTableSource;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.ReadableConfig;
+import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
+import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSinkFactory;
+import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.utils.TableSchemaUtils;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class FeatureStoreDynamicTableFactory implements DynamicTableSinkFactory {
+public class FeatureStoreTableFactory implements DynamicTableSinkFactory, DynamicTableSourceFactory {
     public static final ConfigOption<String> REGIONID = ConfigOptions.key("region_id")
             .stringType()
             .noDefaultValue();
@@ -93,5 +99,32 @@ public class FeatureStoreDynamicTableFactory implements DynamicTableSinkFactory 
         options.add(HOST);
         options.add(USEPUBLICADDRESS);
         return options;
+    }
+
+    @Override
+    public DynamicTableSource createDynamicTableSource(Context context) {
+        final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(this, context);
+        helper.validate();
+
+        final ReadableConfig options = helper.getOptions();
+        final String regionId = options.get(REGIONID);
+        final String accessId = options.get(ACCESSID);
+        final String accessKey = options.get(ACCESSKEY);
+        final String project = options.get(PROJECT);
+        final String featureView = options.get(FEATUREVIEW);
+        final String username = options.get(USERNAME);
+        final String password = options.get(PASSWORD);
+        boolean usePublicAddress = false;
+        if (options.getOptional(USEPUBLICADDRESS).isPresent()) {
+            usePublicAddress = options.get(USEPUBLICADDRESS);
+        }
+        String host = null;
+        if (options.getOptional(HOST).isPresent()) {
+            host = options.get(HOST);
+        }
+
+        TableSchema schema =
+                TableSchemaUtils.getPhysicalSchema(context.getCatalogTable().getSchema());
+        return new FeatureStoreDynamicTableSource(regionId, accessId, accessKey, project, featureView, username, password,  host, usePublicAddress,  schema);
     }
 }

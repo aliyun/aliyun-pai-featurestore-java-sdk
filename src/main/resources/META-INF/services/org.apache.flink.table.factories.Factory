@@ -1,1 +1,1 @@
-com.aliyun.openservices.paifeaturestore.flink.sink.FeatureStoreDynamicTableFactory
+com.aliyun.openservices.paifeaturestore.flink.factory.FeatureStoreTableFactory
