@@ -164,7 +164,7 @@ public class FeatureDBClient {
             } catch(HttpException e) {
                 int statusCode = e.getCode();
                 String errorMessage = String.format("URL: %s, code: %d, error: %s", url, statusCode, e.getMessage());
-                if ( i < retryCount) {
+                if ( i < retryCount -1 ) {
                     log.debug(errorMessage);
                 } else {
                     log.error(errorMessage);
@@ -172,7 +172,7 @@ public class FeatureDBClient {
                 }
             } catch (Exception e) {
                 String errorMessage = String.format("URL: %s, error: %s", url, e.getMessage());
-                if (i < retryCount) {
+                if (i < retryCount -1 ) {
                     log.debug(errorMessage);
                 } else {
                     log.error(errorMessage);
@@ -211,6 +211,9 @@ public class FeatureDBClient {
                 int errorCode = response.code();
                 try (InputStream errorStream = response.body().byteStream()) {
                     String errorMessage = IOUtils.readStreamAsString(errorStream, "UTF-8");
+                    if (errorMessage == null) {
+                        errorMessage = String.format("Error code: %d", errorCode);
+                    }
                     throw new HttpException(errorCode, errorMessage);
                 }
             }

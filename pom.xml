@@ -242,6 +242,12 @@
                       <!-- 在此处添加Flink和其他不需要包含在最终jar中的依赖 -->
                     </excludes>
                   </artifactSet>
+                  <relocations>
+                    <relocation>
+                      <pattern>okhttp3</pattern>
+                      <shadedPattern>featurestore.shade.okhttp3</shadedPattern>
+                    </relocation>
+                  </relocations>
                 </configuration>
               </execution>
             </executions>
@@ -327,6 +333,12 @@
       <groupId>com.aliyun</groupId>
       <artifactId>paifeaturestore20230621</artifactId>
       <version>${paifeaturestore20230621-version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.squareup.okhttp3</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.aliyun</groupId>

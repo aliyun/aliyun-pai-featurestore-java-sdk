@@ -146,7 +146,14 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
             if (joinId != null) {
                 LOG.debug("joinId:{}" , joinId);
 
-                FeatureResult featureResult = featureView.getOnlineFeatures(new String[]{joinId});
+                FeatureResult featureResult = null;
+                try {
+                    featureResult = featureView.getOnlineFeatures(new String[]{joinId});
+                } catch (Exception e) {
+                    LOG.error("getOnlineFeatures error:{}", e);
+                    resultFuture.complete(Collections.emptyList());
+                    return;
+                }
 
                 if (featureResult != null && featureResult.getFeatureData().size() > 0) {
                     featureResult.next();
