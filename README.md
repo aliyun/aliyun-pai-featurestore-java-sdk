@@ -150,7 +150,7 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 ### 4. 写入数据到 FeatureStore
 目前写入接口只支持在线数据源为 FeatureDB, 并且是实时特征。 
 假设有如下的实时 featureview 定义 
-[featureview](./docs/images/20240528104822.jpg)
+![featureview](./docs/images/20240528104822.jpg)
 
 写入示例参考:
 ```java
