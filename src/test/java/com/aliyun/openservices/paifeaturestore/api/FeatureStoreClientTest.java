@@ -7,12 +7,17 @@
 package com.aliyun.openservices.paifeaturestore.api;
 
 import com.aliyun.openservices.paifeaturestore.FeatureStoreClient;
-import com.aliyun.openservices.paifeaturestore.domain.*;
+import com.aliyun.openservices.paifeaturestore.domain.FeatureResult;
+import com.aliyun.openservices.paifeaturestore.domain.FeatureView;
+import com.aliyun.openservices.paifeaturestore.domain.Model;
+import com.aliyun.openservices.paifeaturestore.domain.Project;
+import com.aliyun.openservices.paifeaturestore.domain.SequenceFeatureView;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -303,6 +308,60 @@ public class FeatureStoreClientTest {
             System.out.println("操作耗时：" + durationInMilliseconds + "ms");
         }
 
+
+    }
+    @Ignore
+    @Test
+    public void featureDBWriteTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                Constants.accessId, Constants.accessKey,"fs_demo_featuredb" );
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        configuration.setDomain(Constants.host);
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("fs_demo_featuredb");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_test_2");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+
+        List<Map<String, Object>> writeData = new ArrayList<>();
+        // add more data
+        for (int i = 0; i < 10; i++) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("user_id", i);
+            data.put("string_field", String.format("test_%d", i));
+            data.put("int32_field", i);
+            data.put("int64_field", Long.valueOf(i));
+            data.put("float_field", Float.valueOf(i));
+            data.put("double_field", Double.valueOf(i));
+            data.put("boolean_field", i % 2 == 0);
+            writeData.add(data);
+        }
+
+        for (int i = 0; i < 100;i++) {
+            long startTime = System.nanoTime();
+            featureView.writeFeatures(writeData);
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            double durationInMilliseconds = duration / 1_000_000.0;
+
+            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+        }
+
+
+        featureView.writeFlush();
 
     }
 }

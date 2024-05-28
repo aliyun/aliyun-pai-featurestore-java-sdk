@@ -1,3 +1,5 @@
 /target/
 /.idea/
 src/test/resources/
+.DS_Store
+dependency-reduced-pom.xml
