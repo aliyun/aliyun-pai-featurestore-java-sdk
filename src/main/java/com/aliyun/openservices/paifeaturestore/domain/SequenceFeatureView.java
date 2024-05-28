@@ -166,6 +166,16 @@ public class SequenceFeatureView implements IFeatureView{
     }
 
     @Override
+    public void writeFeatures(List<Map<String, Object>> data) {
+        throw new RuntimeException("sequence feature view not support this function") ;
+    }
+
+    @Override
+    public void writeFlush() {
+        throw new RuntimeException("sequence feature view not support this function") ;
+    }
+
+    @Override
     public FeatureResult getOnlineFeatures(String[] joinIds) throws Exception {
         return this.getOnlineFeatures(joinIds, new String[]{"*"}, null);
     }

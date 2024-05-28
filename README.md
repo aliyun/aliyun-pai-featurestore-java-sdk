@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 ## 使用方式
@@ -28,6 +28,9 @@ public class Constants {
 
 // 配置regionId、accessId、accessKey以及项目名称
 Configuration configuration = new Configuration("cn-hangzhou",Constants.accessId,Constants.accessKey,"dec6");  
+// 如果通过 featuredb 读取或者写入数据源，需要配置 featuredb 用户名、密码
+//configuration.setUsername("featuredb username");
+//configuration.setPassword("featuredb password");
 ApiClient apiClient = new ApiClient(configuration);  
 FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient);  
 ```
@@ -144,7 +147,69 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 上面的含义是把 ModelFeature 下的 user(FeatureEntity) 对应的特征全部获取到。
 
+### 4. 写入数据到 FeatureStore
+目前写入接口只支持在线数据源为 FeatureDB, 并且是实时特征。 
+假设有如下的实时 featureview 定义 
+![featureview](./docs/images/20240528104822.jpg)
+
+写入示例参考:
+```java
+// 配置 regionId, 阿里云账号, FeatureStore project
+       Configuration configuration = new Configuration("cn-beijing",
+                Constants.accessId, Constants.accessKey,"fs_demo_featuredb" );
+
+        // 配置 FeatureDB 用户名，密码
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        // 如果使用公网链接 FeatureStore, 参考上面的域名信息
+        // 如果使用 VPC 环境，不需要设置
+        //configuration.setDomain(Constants.host);
+
+        ApiClient client = new ApiClient(configuration);
+
+        // 如果使用公网链接 设置 usePublicAddress = true, vpc 环境不需要设置
+        // FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client );
+
+        Project project = featureStoreClient.getProject("fs_demo_featuredb");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_test_2");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+
+        List<Map<String, Object>> writeData = new ArrayList<>();
+        // 模拟构造数据写入 
+        for (int i = 0; i < 10; i++) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("user_id", i);
+            data.put("string_field", String.format("test_%d", i));
+            data.put("int32_field", i);
+            data.put("int64_field", Long.valueOf(i));
+            data.put("float_field", Float.valueOf(i));
+            data.put("double_field", Double.valueOf(i));
+            data.put("boolean_field", i % 2 == 0);
+            writeData.add(data);
+        }
+
+        for (int i = 0; i < 100;i++) {
+            featureView.writeFeatures(writeData);
+        }
+
+        // 这里只需要调用一次，如果全部数据写完，确保全部写入完成，调用此接口后，无法再调用 writeFeatures 
+        featureView.writeFlush();
+
+```
+
+
 ## 版本说明
+### 1.0.6 (2024-05-28)
+* 增加写入 FeatureDB 的支持
+ 
 ### 1.0.5 (2024-04-08)
 * 增加 FeatureDB 的支持
 * 优化了并行处理的性能
