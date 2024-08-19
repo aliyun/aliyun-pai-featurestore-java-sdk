@@ -121,6 +121,9 @@ public class FeatureViewTableStoreDao implements FeatureViewDao {
 
         for (BatchGetRowResponse.RowResult rowResult : getRowResponse.getBatchGetRowResult(this.table)) {
             Map<String, Object> featureMap = new HashMap<>();
+            if (!rowResult.isSucceed() || rowResult.getRow() == null ) {
+                continue;
+            }
             switch (this.fieldTypeMap.get(this.primaryKeyField)) {
                 case FS_STRING:
                     featureMap.put(this.primaryKeyField, rowResult.getRow().getPrimaryKey().getPrimaryKeyColumn(this.primaryKeyField).getValue().asString());
