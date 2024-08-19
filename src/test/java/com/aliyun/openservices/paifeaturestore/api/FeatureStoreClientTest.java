@@ -110,7 +110,7 @@ public class FeatureStoreClientTest {
             throw  new RuntimeException("featureview not found");
         }
 
-        FeatureResult features = featureView.getOnlineFeatures(new String[]{"100000132", "100001167"} );
+        FeatureResult features = featureView.getOnlineFeatures(new String[]{"100002419", "100001167", "12"} );
 
         while (features.next()) {
             for (String name : features.getFeatureFields()) {

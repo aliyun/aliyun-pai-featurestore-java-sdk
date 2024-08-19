@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.0.6</version>
+  <version>1.0.8</version>
 </dependency>
 ```
 ## 使用方式
@@ -207,6 +207,9 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.0.8 (2024-08-19)
+* 修复特征不在 TableStore 时，报 NullPointerException 
+ 
 ### 1.0.6 (2024-05-28)
 * 增加写入 FeatureDB 的支持
  
