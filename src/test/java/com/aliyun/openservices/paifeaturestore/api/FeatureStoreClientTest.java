@@ -25,7 +25,26 @@ import java.util.Map;
 
 
 public class FeatureStoreClientTest {
+    @Ignore
+    @Test
+    public void featureDBDataSeqReadTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing", Constants.accessId, Constants.accessKey, "ceci_fsdb_test");
+        configuration.setDomain(Constants.host);
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+        ApiClient apiClient = new ApiClient(configuration);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, true);
+        Project project = featureStoreClient.getProject("ceci_fsdb_test");
+        SequenceFeatureView sequenceFeatureView = project.getSeqFeatureView("sequence");
+        FeatureResult featureResult = sequenceFeatureView.getOnlineFeatures(new String[]{"183248589"}, new String[]{"*"}, null);
+        while (featureResult.next()){
+            for (String m:featureResult.getFeatureFields()){
+                System.out.printf("%s='%s'(%s) ",m,featureResult.getObject(m),featureResult.getType(m));
+            }
+            System.out.println("---------------");
 
+        }
+    }
     @Ignore
     @Test
     public void hologresDataTest() throws Exception {
@@ -33,7 +52,6 @@ public class FeatureStoreClientTest {
                 Constants.accessId, Constants.accessKey,"fs_holo_dj" );
 
         configuration.setDomain(Constants.host);
-
         ApiClient client = new ApiClient(configuration);
 
         FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
