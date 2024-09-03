@@ -19,6 +19,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,7 +184,48 @@ public class FeatureDBClient {
         return content;
 
     }
+    public byte[] kkvRequestFeatureDB(List<String> pks, String database, String schema, String table, int length) throws Exception {
+        String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kkv", address, database, schema, table);
+        Map<String, Object> map = new HashMap<>();
+        map.put("pks", pks);
+        map.put("length", length);
+        String requestBody = gson.toJson(map);
+        RequestBody body = RequestBody.create(requestBody, JSON);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .addHeader("Authorization", token)
+                .addHeader("Auth", signature)
+                .build();
 
+        byte[] content = null;
+
+        for (int i = 0; i < retryCount ; i++) {
+            try {
+                content = this.doRequest(request);
+                break;
+            } catch(HttpException e) {
+                int statusCode = e.getCode();
+                String errorMessage = String.format("URL: %s, code: %d, error: %s", url, statusCode, e.getMessage());
+                if ( i < retryCount) {
+                    log.debug(errorMessage);
+                } else {
+                    log.error(errorMessage);
+                    throw e;
+                }
+            } catch (Exception e) {
+                String errorMessage = String.format("URL: %s, error: %s", url, e.getMessage());
+                if (i < retryCount) {
+                    log.debug(errorMessage);
+                } else {
+                    log.error(errorMessage);
+                    throw e;
+                }
+            }
+        }
+        return content;
+
+    }
     public byte[] doRequest(Request request) throws HttpException, IOException {
         try (Response response  = httpclient.newCall(request).execute()){
             if (response.isSuccessful() && response.body() != null) {
@@ -192,7 +234,6 @@ public class FeatureDBClient {
                      if (inputStream.read(sizeByte) != sizeByte.length) {
                          throw new HttpException(-1, "input stream read error");
                      }
-
                      int size = ByteBuffer.wrap(sizeByte).order(ByteOrder.LITTLE_ENDIAN).getInt();
                      byte[] content = new byte[size];
                      int offset = 0;
@@ -203,7 +244,6 @@ public class FeatureDBClient {
                          }
                          offset += read;
                      }
-
                      return content;
 
                  }
