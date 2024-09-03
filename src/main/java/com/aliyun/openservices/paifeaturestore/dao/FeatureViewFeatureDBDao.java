@@ -83,83 +83,84 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
             List<Map<String, Object>> featuresList = new ArrayList<>(group.size());
             try {
                 byte[] content = this.featureDBClient.requestFeatureDB(group, this.database, this.schema, this.table);
-
-                RecordBlock recordBlock = RecordBlock.getRootAsRecordBlock(ByteBuffer.wrap(content));
-                for(int i= 0; i < recordBlock.valuesLength(); i++) {
-                    UInt8ValueColumn valueColumn = new UInt8ValueColumn();
-                    recordBlock.values(valueColumn, i);
-                    if (valueColumn.valueLength() < 2 ) {
-                        continue;
-                    }
-                    ByteBuffer byteBuffer =  valueColumn.valueAsByteBuffer();
-                    byteBuffer =  byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-                    byte protoFlag =  byteBuffer.get();
-                    byte protoVersion =  byteBuffer.get();
-                    if (protoFlag != 'F' || protoVersion != '1') {
-                        String errorMsg =String.format("invalid proto version, %d, %d", protoFlag, protoVersion);
-                        log.error(errorMsg);
-                        throw  new RuntimeException(errorMsg);
-                    }
-                    Map<String, Object> featureMap = new HashMap<>(selectFields.length);
-
-                    for (String featureName : this.fields) {
-                        if (featureName.equals(this.primaryKeyField)) {
+                if(content!=null) {
+                    RecordBlock recordBlock = RecordBlock.getRootAsRecordBlock(ByteBuffer.wrap(content));
+                    for (int i = 0; i < recordBlock.valuesLength(); i++) {
+                        UInt8ValueColumn valueColumn = new UInt8ValueColumn();
+                        recordBlock.values(valueColumn, i);
+                        if (valueColumn.valueLength() < 2) {
                             continue;
                         }
-                        byte isNull = byteBuffer.get();
-                        if (1 == isNull) {
-                            if (selectFieldSet.contains(featureName)) {
-                                featureMap.put(featureName, null);
+                        ByteBuffer byteBuffer = valueColumn.valueAsByteBuffer();
+                        byteBuffer = byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+                        byte protoFlag = byteBuffer.get();
+                        byte protoVersion = byteBuffer.get();
+                        if (protoFlag != 'F' || protoVersion != '1') {
+                            String errorMsg = String.format("invalid proto version, %d, %d", protoFlag, protoVersion);
+                            log.error(errorMsg);
+                            throw new RuntimeException(errorMsg);
+                        }
+                        Map<String, Object> featureMap = new HashMap<>(selectFields.length);
+
+                        for (String featureName : this.fields) {
+                            if (featureName.equals(this.primaryKeyField)) {
+                                continue;
                             }
-                            continue;
-                        }
-                        switch (this.fieldTypeMap.get(featureName)) {
-                            case FS_INT32:
+                            byte isNull = byteBuffer.get();
+                            if (1 == isNull) {
                                 if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, byteBuffer.getInt());
+                                    featureMap.put(featureName, null);
                                 }
-                                break;
-                            case FS_INT64:
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, byteBuffer.getLong());
-                                }
-                                break;
-                            case FS_DOUBLE:
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, byteBuffer.getDouble());
-                                }
-                                break;
-                            case FS_BOOLEAN:
-                                byte boolValue = byteBuffer.get();
-                                if (boolValue == 0) {
+                                continue;
+                            }
+                            switch (this.fieldTypeMap.get(featureName)) {
+                                case FS_INT32:
                                     if (selectFieldSet.contains(featureName)) {
-                                        featureMap.put(featureName, false);
+                                        featureMap.put(featureName, byteBuffer.getInt());
                                     }
-                                } else {
+                                    break;
+                                case FS_INT64:
                                     if (selectFieldSet.contains(featureName)) {
-                                        featureMap.put(featureName, true);
+                                        featureMap.put(featureName, byteBuffer.getLong());
                                     }
-                                }
-                                break;
-                            case FS_FLOAT:
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, byteBuffer.getFloat());
-                                }
-                                break;
-                            default:
-                                int len = byteBuffer.getInt();
-                                byte[] bytes = new byte[len];
-                                byteBuffer.get(bytes, 0, len);
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, new String(bytes));
-                                }
-                                break;
+                                    break;
+                                case FS_DOUBLE:
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, byteBuffer.getDouble());
+                                    }
+                                    break;
+                                case FS_BOOLEAN:
+                                    byte boolValue = byteBuffer.get();
+                                    if (boolValue == 0) {
+                                        if (selectFieldSet.contains(featureName)) {
+                                            featureMap.put(featureName, false);
+                                        }
+                                    } else {
+                                        if (selectFieldSet.contains(featureName)) {
+                                            featureMap.put(featureName, true);
+                                        }
+                                    }
+                                    break;
+                                case FS_FLOAT:
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, byteBuffer.getFloat());
+                                    }
+                                    break;
+                                default:
+                                    int len = byteBuffer.getInt();
+                                    byte[] bytes = new byte[len];
+                                    byteBuffer.get(bytes, 0, len);
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, new String(bytes));
+                                    }
+                                    break;
+                            }
+
                         }
 
+                        featureMap.put(this.primaryKeyField, group.get(i));
+                        featuresList.add(featureMap);
                     }
-
-                    featureMap.put(this.primaryKeyField, group.get(i));
-                    featuresList.add(featureMap);
                 }
 
                 featureResult.setFeatureDataList(featuresList);
