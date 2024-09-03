@@ -365,44 +365,46 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         // config.getSeqLenOnline() 数字对不上 这里是100 go是50 holo也是这样
         try {
             byte[] content = this.featureDBClient.kkvRequestFeatureDB(pks, this.database, this.schema, this.table, config.getSeqLenOnline());
-            KKVRecordBlock kkvRecordBlock = KKVRecordBlock.getRootAsKKVRecordBlock(ByteBuffer.wrap(content));
-            for (int i = 0; i< kkvRecordBlock.valuesLength(); i++){
-                KKVData kkvData = new KKVData();
-                kkvRecordBlock.values(kkvData, i);
-                String pk = kkvData.pk();
-                String[] userIdEvent = pk.split("\u001D");
-                if (userIdEvent.length != 2) {
-                    continue;
-                }
-                String itemId = "";
-                if (config.getDeduplicationMethodNum() == 1){
-                    itemId = kkvData.sk();
-                } else if (config.getDeduplicationMethodNum() == 2){
-                    String sk = kkvData.sk();
-                    String[] itemIdTimestamp = sk.split("\u001D");
-                    if (itemIdTimestamp.length != 2){
+            if (content!=null){
+                KKVRecordBlock kkvRecordBlock = KKVRecordBlock.getRootAsKKVRecordBlock(ByteBuffer.wrap(content));
+                for (int i = 0; i< kkvRecordBlock.valuesLength(); i++){
+                    KKVData kkvData = new KKVData();
+                    kkvRecordBlock.values(kkvData, i);
+                    String pk = kkvData.pk();
+                    String[] userIdEvent = pk.split("\u001D");
+                    if (userIdEvent.length != 2) {
                         continue;
                     }
-                    itemId = itemIdTimestamp[0];
-                } else {
-                    continue;
-                }
-                SequenceInfo sequenceInfo = new SequenceInfo();
-                sequenceInfo.setEventField(userIdEvent[1]);
-                sequenceInfo.setItemIdField(Long.valueOf(itemId));
-                sequenceInfo.setPlayTimeField(kkvData.playTime());
-                sequenceInfo.setTimestampField(kkvData.eventTimestamp());
-                if (Objects.equals(sequenceInfo.getEventField(), "") || sequenceInfo.getItemIdField() == 0){
-                    continue;
+                    String itemId = "";
+                    if (config.getDeduplicationMethodNum() == 1){
+                        itemId = kkvData.sk();
+                    } else if (config.getDeduplicationMethodNum() == 2){
+                        String sk = kkvData.sk();
+                        String[] itemIdTimestamp = sk.split("\u001D");
+                        if (itemIdTimestamp.length != 2){
+                            continue;
+                        }
+                        itemId = itemIdTimestamp[0];
+                    } else {
+                        continue;
+                    }
+                    SequenceInfo sequenceInfo = new SequenceInfo();
+                    sequenceInfo.setEventField(userIdEvent[1]);
+                    sequenceInfo.setItemIdField(Long.valueOf(itemId));
+                    sequenceInfo.setPlayTimeField(kkvData.playTime());
+                    sequenceInfo.setTimestampField(kkvData.eventTimestamp());
+                    if (Objects.equals(sequenceInfo.getEventField(), "") || sequenceInfo.getItemIdField() == 0){
+                        continue;
 
-                }
-                if(playtimefilter.containsKey(sequenceInfo.getEventField())){
-                    double t = playtimefilter.get(sequenceInfo.getEventField());
-                    if (sequenceInfo.getPlayTimeField() <= t){
-                        continue;
                     }
+                    if(playtimefilter.containsKey(sequenceInfo.getEventField())){
+                        double t = playtimefilter.get(sequenceInfo.getEventField());
+                        if (sequenceInfo.getPlayTimeField() <= t){
+                            continue;
+                        }
+                    }
+                    sequenceInfos.add(sequenceInfo);
                 }
-                sequenceInfos.add(sequenceInfo);
             }
 
 
