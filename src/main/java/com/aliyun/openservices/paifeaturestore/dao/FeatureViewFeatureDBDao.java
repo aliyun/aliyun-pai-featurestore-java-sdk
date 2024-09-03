@@ -362,7 +362,6 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         for (String e: event.split("\\|") ){
             pks.add(String.format("%s\u001D%s", key, e));
         }
-        // config.getSeqLenOnline() 数字对不上 这里是100 go是50 holo也是这样
         try {
             byte[] content = this.featureDBClient.kkvRequestFeatureDB(pks, this.database, this.schema, this.table, config.getSeqLenOnline());
             KKVRecordBlock kkvRecordBlock = KKVRecordBlock.getRootAsKKVRecordBlock(ByteBuffer.wrap(content));
