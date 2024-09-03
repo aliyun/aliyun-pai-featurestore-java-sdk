@@ -140,8 +140,6 @@ public class SequenceFeatureView implements IFeatureView{
                     daoConfig.otsSeqOnlineTableName = project.getOnlineStore().getSeqOnlineTableName(this);
                     daoConfig.otsSeqOfflineTableName = project.getOnlineStore().getSeqOfflineTableName(this);
                     break;
-                case Datasource_Type_FeatureDB:
-                    throw new RuntimeException("sequence feature view not support featuredb yet");
                 default:
                     break;
             }
