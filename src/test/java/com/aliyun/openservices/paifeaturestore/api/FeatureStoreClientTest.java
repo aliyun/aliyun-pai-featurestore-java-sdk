@@ -27,6 +27,34 @@ import java.util.Map;
 public class FeatureStoreClientTest {
     @Ignore
     @Test
+    public void featureDBDataSeqWriteTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing", Constants.accessId, Constants.accessKey, "ceci_fsdb_test");
+        configuration.setDomain(Constants.host);
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+        ApiClient apiClient = new ApiClient(configuration);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, true);
+        Project project = featureStoreClient.getProject("ceci_fsdb_test");
+        SequenceFeatureView sequenceFeatureView = project.getSeqFeatureView("sequence");
+        List<Map<String, Object>> writeData = new ArrayList<>();
+        Map<String, Object> data = new HashMap<>();
+        data.put("request_id", 901850344);
+        data.put("user_id", "172040759");
+        data.put("page", "home");
+        data.put("net_type", "wifi");
+        data.put("day_h", 17);
+        data.put("week_day", 6);
+        data.put("event_unix_time", 1745181407);
+        data.put("item_id", "223466789");
+        data.put("event","click");
+        data.put("playtime", 54.7296554003366);
+        writeData.add(data);
+        sequenceFeatureView.writeFeatures(writeData);
+        sequenceFeatureView.writeFlush();
+
+    }
+    @Ignore
+    @Test
     public void featureDBDataSeqReadTest() throws Exception {
         Configuration configuration = new Configuration("cn-beijing", Constants.accessId, Constants.accessKey, "ceci_fsdb_test");
         configuration.setDomain(Constants.host);
@@ -36,7 +64,7 @@ public class FeatureStoreClientTest {
         FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, true);
         Project project = featureStoreClient.getProject("ceci_fsdb_test");
         SequenceFeatureView sequenceFeatureView = project.getSeqFeatureView("sequence");
-        FeatureResult featureResult = sequenceFeatureView.getOnlineFeatures(new String[]{"183248589"}, new String[]{"*"}, null);
+        FeatureResult featureResult = sequenceFeatureView.getOnlineFeatures(new String[]{"172040759"}, new String[]{"*"}, null);
         while (featureResult.next()){
             for (String m:featureResult.getFeatureFields()){
                 System.out.printf("%s='%s'(%s) ",m,featureResult.getObject(m),featureResult.getType(m));
