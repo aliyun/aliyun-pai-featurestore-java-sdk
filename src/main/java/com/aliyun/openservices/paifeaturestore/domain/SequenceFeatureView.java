@@ -33,7 +33,6 @@ public class SequenceFeatureView implements IFeatureView{
         this.featureEntity = featureEntity;
         Gson gson = new Gson();
         this.config=this.jsonToSeqConfig(featureView.getConfig());
-
         for (FeatureViewRequestFields field : this.featureView.getFields()) {
             if (field.isIsPrimaryKey()) {
                 this.userIdField = field.getName();
@@ -169,12 +168,39 @@ public class SequenceFeatureView implements IFeatureView{
 
     @Override
     public void writeFeatures(List<Map<String, Object>> data) {
-        throw new RuntimeException("sequence feature view not support this function") ;
+        String itemIDField = this.config.getItemIdField();
+        String eventField = this.config.getEventField();
+        String timestampField = this.config.getTimestampField();
+        String playTimeField = this.config.getPlayTimeField();
+        if (data == null || data.isEmpty()){
+            throw new IllegalArgumentException("Data list must not be null or empty");
+        }
+        for (Map<String, Object> record : data){
+            Object itemIdValue = record.get(itemIDField);
+            if (itemIdValue == null || itemIdValue.toString().isEmpty()){
+                throw new IllegalArgumentException("Field '" + itemIDField + "' must not be null or empty for one of the records.");
+            }
+            Object eventValue = record.get(eventField);
+            if (eventValue == null || eventValue.toString().isEmpty()){
+                throw new IllegalArgumentException("Field '" + eventField + "' must not be null or empty for one of the records.");
+            }
+            Object timestampValue = record.get(timestampField);
+            if (timestampValue == null || timestampValue.toString().isEmpty() ||((Number)timestampValue).longValue() == 0){
+                throw new IllegalArgumentException("Field '" + timestampField + "' must not be null or empty for one of the records.");
+            }
+            if (playTimeField != null && !playTimeField.isEmpty()){
+                Object playTimeValue = record.get(playTimeField);
+                if (playTimeValue == null || playTimeValue.toString().isEmpty() ||((Number)playTimeValue).doubleValue() == 0.0){
+                    throw new IllegalArgumentException("Field '" + playTimeField + "' must not be null or empty for one of the records.");
+                }
+            }
+        }
+        this.featureViewDao.writeFeatures(data);
     }
 
     @Override
     public void writeFlush() {
-        throw new RuntimeException("sequence feature view not support this function") ;
+        this.featureViewDao.writeFlush();
     }
 
     @Override
