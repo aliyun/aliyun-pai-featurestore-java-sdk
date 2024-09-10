@@ -44,7 +44,7 @@ public class FeatureStoreClientTest {
         data.put("net_type", "wifi");
         data.put("day_h", 17);
         data.put("week_day", 6);
-        data.put("event_unix_time", 1745181407);
+        data.put("event_unix_time", System.currentTimeMillis()/1000);
         data.put("item_id", "223466789");
         data.put("event","click");
         data.put("playtime", 54.7296554003366);
