@@ -188,7 +188,7 @@ public class SequenceFeatureView implements IFeatureView{
             if (timestampValue == null || timestampValue.toString().isEmpty() ||((Number)timestampValue).longValue() == 0){
                 throw new IllegalArgumentException("Field '" + timestampField + "' must not be null or empty for one of the records.");
             }
-            if (playTimeField != null){
+            if (playTimeField != null && !playTimeField.isEmpty()){
                 Object playTimeValue = record.get(playTimeField);
                 if (playTimeValue == null || playTimeValue.toString().isEmpty() ||((Number)playTimeValue).doubleValue() == 0.0){
                     throw new IllegalArgumentException("Field '" + playTimeField + "' must not be null or empty for one of the records.");
