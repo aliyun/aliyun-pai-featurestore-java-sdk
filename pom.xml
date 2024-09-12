@@ -158,7 +158,7 @@
     <profile>
       <id>flink-dev</id>
       <properties>
-        <flinkVvrVersion>1.15-vvr-6.0.7-1</flinkVvrVersion>
+        <flinkVvrVersion>1.15-vvr-6.0.7</flinkVvrVersion>
         <flinkVersion>1.15.3</flinkVersion>
       </properties>
       <dependencies>
@@ -203,7 +203,7 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <flinkVvrVersion>1.15-vvr-6.0.7-1</flinkVvrVersion>
+        <flinkVvrVersion>1.15-vvr-6.0.7</flinkVvrVersion>
         <flinkVersion>1.15.3</flinkVersion>
       </properties>
       <build>

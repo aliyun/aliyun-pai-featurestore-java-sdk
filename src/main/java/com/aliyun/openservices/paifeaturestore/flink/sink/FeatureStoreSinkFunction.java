@@ -5,6 +5,7 @@ import com.aliyun.openservices.paifeaturestore.api.ApiClient;
 import com.aliyun.openservices.paifeaturestore.api.Configuration;
 import com.aliyun.openservices.paifeaturestore.domain.FeatureView;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
+import com.aliyun.openservices.paifeaturestore.domain.SequenceFeatureView;
 import com.aliyun.tea.utils.StringUtils;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
@@ -49,6 +50,7 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
     private transient FeatureStoreClient featureStoreClient;
 
     private transient FeatureView featureView;
+    private transient SequenceFeatureView sequenceFeatureView;
 
     private List<RowType.RowField> fields = new ArrayList<>();
     public FeatureStoreSinkFunction(String regionId, String accessId, String accessKey, String project, String featureViewName, String username, String password, String host, boolean usePublicAddress, DataType dataType) {
@@ -85,8 +87,11 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
                     throw new RuntimeException(String.format("project:%s, not found", project));
                 }
                 this.featureView = project1.getFeatureView(featureViewName);
-                if (null == featureView) {
+                this.sequenceFeatureView = project1.getSeqFeatureView(featureViewName);
+
+                if (featureView == null && sequenceFeatureView==null){
                     throw new RuntimeException(String.format("featureview:%s, not found", featureViewName));
+
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -123,7 +128,12 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
             List<Map<String,Object>> content = new ArrayList<>();
 
             content.add(data);
-            featureView.writeFeatures(content);
+            if (featureView!=null){
+                featureView.writeFeatures(content);
+            }
+            else {
+                sequenceFeatureView.writeFeatures(content);
+            }
         }
 
     }
