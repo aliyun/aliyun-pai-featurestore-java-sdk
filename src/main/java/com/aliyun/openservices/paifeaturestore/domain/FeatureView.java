@@ -10,11 +10,7 @@ import com.aliyun.tea.utils.StringUtils;
 import com.google.gson.Gson;
 import org.jacoco.agent.rt.internal_035b120.core.internal.flow.IFrame;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FeatureView implements IFeatureView {
     com.aliyun.openservices.paifeaturestore.model.FeatureView featureView;
@@ -153,9 +149,75 @@ public class FeatureView implements IFeatureView {
 
     @Override
     public void writeFeatures(List<Map<String, Object>> data) {
-        this.featureViewDao.writeFeatures(data);
+        List<Map<String, Object>> filteredData = new ArrayList<>();
+        for (Map<String, Object> item : data) {
+            Map<String, Object> filteredItem = filterData(item);
+            if (!filteredItem.isEmpty()) {
+                filteredData.add(filteredItem);
+            }
+        }
+        this.featureViewDao.writeFeatures(filteredData);
     }
 
+    private Map<String, Object> filterData(Map<String, Object> data) {
+        if (data.isEmpty()) return Collections.emptyMap();
+        Map<String, Object> filteredMap = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof List) {
+
+                List<?> filteredList = filterList((List<?>) value);
+                filteredMap.put(key, filteredList);
+            } else if (value instanceof Map) {
+                Map<?, ?> filteredNestedMap = filterMap((Map<?, ?>) value);
+                filteredMap.put(key, filteredNestedMap);
+            } else  {
+                filteredMap.put(key, value);
+            }
+        }
+        return filteredMap;
+    }
+
+    private List<?> filterList(List<?> list) {
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Object> filteredList = new ArrayList<>();
+        for (Object element : list) {
+            if (element instanceof List) {
+
+                List<?> innerList = filterList((List<?>) element);
+                if (!innerList.isEmpty()) {
+                    filteredList.add(innerList);
+                }
+            } else if (element != null) {
+                filteredList.add(element);
+            }
+        }
+
+
+        return filteredList.isEmpty() ? Collections.emptyList() : filteredList;
+    }
+
+
+    private Map<?, ?> filterMap(Map<?, ?> map) {
+        if (map == null || map.isEmpty()) return Collections.emptyMap();
+
+        Map<Object, Object> filteredMap = new HashMap<>();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+            if (key != null && value != null) {
+                filteredMap.put(key, value);
+            }
+        }
+
+
+        return filteredMap.isEmpty() ? Collections.emptyMap() : filteredMap;
+    }
     @Override
     public void writeFlush() {
         this.featureViewDao.writeFlush();

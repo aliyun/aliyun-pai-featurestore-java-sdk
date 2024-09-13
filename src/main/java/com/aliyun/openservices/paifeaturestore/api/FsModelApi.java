@@ -67,6 +67,48 @@ public class FsModelApi {
                 feature.setType(FSType.FS_BOOLEAN);
             } else if (field.getType().equals("TIMESTAMP")) {
                 feature.setType(FSType.FS_TIMESTAMP);
+            } else if (field.getType().equals("ARRAY<INT32>")) {
+                feature.setType(FSType.FS_ARRAY_INT32);
+            } else if (field.getType().equals("ARRAY<INT64>")) {
+                feature.setType(FSType.FS_ARRAY_INT64);
+            } else if (field.getType().equals("ARRAY<FLOAT>")){
+                feature.setType(FSType.FS_ARRAY_FLOAT);
+            } else if (field.getType().equals("ARRAY<STRING>")){
+                feature.setType(FSType.FS_ARRAY_STRING);
+            } else if (field.getType().equals("ARRAY<DOUBLE>")){
+                feature.setType(FSType.FS_ARRAY_DOUBLE);
+            } else if (field.getType().equals("ARRAY<ARRAY<FLOAT>>")){
+                feature.setType(FSType.FS_ARRAY_ARRAY_FLOAT);
+            } else if (field.getType().equals("MAP<INT32,INT32>")){
+                feature.setType(FSType.FS_MAP_INT32_INT32);
+            } else if (field.getType().equals("MAP<INT32,INT64>")){
+                feature.setType(FSType.FS_MAP_INT32_INT64);
+            } else if (field.getType().equals("MAP<INT32,FLOAT>")){
+                feature.setType(FSType.FS_MAP_INT32_FLOAT);
+            } else if (field.getType().equals("MAP<INT32,DOUBLE>")){
+                feature.setType(FSType.FS_MAP_INT32_DOUBLE);
+            } else if (field.getType().equals("MAP<INT32,STRING>")){
+                feature.setType(FSType.FS_MAP_INT32_STRING);
+            } else if (field.getType().equals("MAP<INT64,INT32>")){
+                feature.setType(FSType.FS_MAP_INT64_INT32);
+            } else if (field.getType().equals("MAP<INT64,INT64>")){
+                feature.setType(FSType.FS_MAP_INT64_INT64);
+            } else if (field.getType().equals("MAP<INT64,FLOAT>")){
+                feature.setType(FSType.FS_MAP_INT64_FLOAT);
+            } else if (field.getType().equals("MAP<INT64,DOUBLE>")){
+                feature.setType(FSType.FS_MAP_INT64_DOUBLE);
+            } else if (field.getType().equals("MAP<INT64,STRING>")){
+                feature.setType(FSType.FS_MAP_INT64_STRING);
+            } else if (field.getType().equals("MAP<STRING,INT32>")){
+                feature.setType(FSType.FS_MAP_STRING_INT32);
+            } else if (field.getType().equals("MAP<STRING,INT64>")){
+                feature.setType(FSType.FS_MAP_STRING_INT64);
+            }  else if (field.getType().equals("MAP<STRING,DOUBLE>")){
+                feature.setType(FSType.FS_MAP_STRING_DOUBLE);
+            } else if (field.getType().equals("MAP<STRING,STRING>")){
+                feature.setType(FSType.FS_MAP_STRING_STRING);
+            } else if (field.getType().equals("MAP<STRING,FLOAT>")){
+                feature.setType(FSType.FS_MAP_STRING_FLOAT);
             }
 
             features.add(feature);
