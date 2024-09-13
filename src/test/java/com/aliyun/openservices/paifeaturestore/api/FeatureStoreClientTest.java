@@ -463,4 +463,116 @@ public class FeatureStoreClientTest {
         featureView.writeFlush();
 
     }
+    @Ignore
+    @Test
+    public void featureDBComplexFeatureWriteTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                Constants.accessId, Constants.accessKey,"fs_demo_featuredb" );
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        configuration.setDomain(Constants.host);
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("fs_demo_featuredb");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_fea_complex");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+
+        List<Map<String, Object>> writeData = new ArrayList<>();
+        // add more data
+        for (int i = 0; i < 10; i++) {
+            Map<String, Object> data = new HashMap<>();
+            Map<Integer, Double> mapIntDouble = new HashMap<>();
+            mapIntDouble.put(i, i * 0.1d);
+            mapIntDouble.put(i+1, i * 0.1d);
+            Map<String, String> mapStringString = new HashMap<>();
+            mapStringString.put(String.valueOf(i), String.valueOf(i));
+            mapStringString.put(String.valueOf(i+1), String.valueOf(i+1));
+            data.put("user_id", String.valueOf(i));
+            data.put("array_int", Arrays.asList(i, i+1));
+            data.put("array_float", Arrays.asList(i * 0.1f, i * 0.2f));
+            data.put("map_int_double", mapIntDouble);
+            data.put("map_string_string", mapStringString);
+            writeData.add(data);
+        }
+
+        for (int i = 0; i < 100;i++) {
+            long startTime = System.nanoTime();
+            featureView.writeFeatures(writeData);
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            double durationInMilliseconds = duration / 1_000_000.0;
+
+            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+        }
+
+
+        Thread.sleep(1000);
+        featureView.writeFlush();
+
+    }
+    @Ignore
+    @Test
+    public void featureDBComplexFeatrueReadTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                Constants.accessId, Constants.accessKey,"fs_demo_featuredb" );
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        configuration.setDomain(Constants.host);
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("fs_demo_featuredb");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_fea_complex");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+        int count = 10;
+        String[] joinIds = new String[count];
+        for (int i=0; i < count; i++) {
+            joinIds[i] = String.valueOf(i);
+        }
+
+        for (int i = 0; i < 100;i++) {
+            long startTime = System.nanoTime();
+            FeatureResult features = featureView.getOnlineFeatures(joinIds  );
+
+            if (features.getFeatureData().size() != count) {
+                throw new Exception("request size not equal");
+            }
+            while (features.next()) {
+                for (String name : features.getFeatureFields()) {
+                    System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+                }
+                System.out.println("");
+            }
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            double durationInMilliseconds = duration / 1_000_000.0;
+
+            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+        }
+
+
+    }
 }
