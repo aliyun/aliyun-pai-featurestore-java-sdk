@@ -93,7 +93,7 @@ public class SequenceFeatureView implements IFeatureView {
         }
         daoConfig.fieldTypeMap = fieldTypeMap2;
 
-        if (null != featureView.getWriteToFeaturedb() && featureView.getWriteToFeaturedb() || project.getProject().getOnlineDatasourceType().equals(DatasourceType.Datasource_Type_FeatureDB)) {
+        if ((null != featureView.getWriteToFeaturedb() && featureView.getWriteToFeaturedb()) || project.getProject().getOnlineDatasourceType().equals(DatasourceType.Datasource_Type_FeatureDB)) {
             daoConfig.datasourceType = DatasourceType.Datasource_Type_FeatureDB;
             daoConfig.featureDBName = project.getFeatureDBName();
             daoConfig.featureDBDatabase = project.getProject().getInstanceId();

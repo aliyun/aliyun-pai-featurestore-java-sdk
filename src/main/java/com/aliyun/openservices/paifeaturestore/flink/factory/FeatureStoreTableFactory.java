@@ -47,7 +47,7 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
     public static final ConfigOption<Boolean> USEPUBLICADDRESS = ConfigOptions.key("use_public_address")
             .booleanType()
             .defaultValue(false);
-    public static final String IDENTIFIER = "featurestore-seq";
+    public static final String IDENTIFIER = "featurestore";
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
         final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(this, context);
