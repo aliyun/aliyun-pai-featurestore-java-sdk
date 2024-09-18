@@ -208,7 +208,7 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 ## 版本说明
 ### 1.1.0 (2024-09-13)
-* FeatureDB 增加复杂类型(MAP/ARRAY)特征的读取 
+* FeatureDB 增加复杂类型(MAP/ARRAY)特征的读取及写入
  
 ### 1.0.9 (2024-09-03)
 * 增加通过 FeatureDB 获取序列特征的支持 
