@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.9</version>
 </dependency>
 ```
 ## 使用方式
@@ -145,6 +145,9 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 上面的含义是把 ModelFeature 下的 user(FeatureEntity) 对应的特征全部获取到。
 
 ## 版本说明
+### 1.0.9 (2024-09-18)
+* 增加 FeatureDB 的序列特征写入的支持 
+ 
 ### 1.0.5 (2024-04-08)
 * 增加 FeatureDB 的支持
 * 优化了并行处理的性能
@@ -159,6 +162,6 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 ## flink connector
 编译运行
 ```
- mvn clean -DskipTests package -P flink-sink
+ mvn clean -DskipTests package -P flink-1.15
 ```
 
