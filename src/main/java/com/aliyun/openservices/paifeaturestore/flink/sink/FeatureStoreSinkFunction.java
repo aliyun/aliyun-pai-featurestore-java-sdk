@@ -70,7 +70,7 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
     }
 
     private void initializeFeatureView() {
-        if (this.featureStoreClient == null || this.featureView == null) {
+        if (this.featureStoreClient == null || (this.featureView == null && this.sequenceFeatureView == null)) {
             Configuration configuration = new Configuration(regionId, accessId, accessKey, project);
             if (!StringUtils.isEmpty(host)) {
                 configuration.setDomain(host);
