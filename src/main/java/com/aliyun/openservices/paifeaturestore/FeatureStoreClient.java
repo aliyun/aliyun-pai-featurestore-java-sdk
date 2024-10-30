@@ -65,16 +65,23 @@ public class FeatureStoreClient {
 
             projectMap.put(project.getProjectName(), domainProject);
 
-            ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(project.getProjectId()));
-
-            for(FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
-                if (featureEntity.getProjectId() == project.getProjectId()) {
-                    domainProject.addFeatureEntity( featureEntity.getFeatureEntityName(), new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
-                }
-            }
-
             int pageNumber = 1;
             int pageSize = 100;
+            do {
+                ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(project.getProjectId()), pageNumber, pageSize);
+
+                for (FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
+                    if (featureEntity.getProjectId() == project.getProjectId()) {
+                        domainProject.addFeatureEntity(featureEntity.getFeatureEntityName(), new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
+                    }
+                }
+                if (listFeatureEntitiesResponse.getFeatureEntities().size() == 0 || pageNumber * pageSize > listFeatureEntitiesResponse.getTotalCount()) {
+                    break;
+                }
+                pageNumber++;
+            } while (true);
+
+             pageNumber = 1;
             do {
 
                 ListFeatureViewsResponse listFeatureViewsResponse =  this.apiClient.getFeatureViewApi().listFeatureViews(String.valueOf(project.getProjectId()), pageNumber, pageSize);

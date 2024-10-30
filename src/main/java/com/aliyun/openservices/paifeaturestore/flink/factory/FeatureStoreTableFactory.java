@@ -47,6 +47,9 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
     public static final ConfigOption<Boolean> USEPUBLICADDRESS = ConfigOptions.key("use_public_address")
             .booleanType()
             .defaultValue(false);
+    public static final ConfigOption<String> INSERT_MODE = ConfigOptions.key("insert_mode")
+            .stringType()
+            .defaultValue("full_row_write");
     public static final String IDENTIFIER = "featurestore";
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
@@ -70,9 +73,10 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
             host = options.get(HOST);
         }
 
+        final String insertMode = options.get(INSERT_MODE);
         final DataType producedDataType =
                 context.getCatalogTable().getResolvedSchema().toPhysicalRowDataType();
-        return new FeatureStoreDynamicTableSink(regionId, accessId, accessKey, project, featureView, username, password, producedDataType, host, usePublicAddress);
+        return new FeatureStoreDynamicTableSink(regionId, accessId, accessKey, project, featureView, username, password, producedDataType, host, usePublicAddress, insertMode);
     }
 
     @Override
@@ -98,6 +102,7 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
         final Set<ConfigOption<?>> options = new HashSet<>();
         options.add(HOST);
         options.add(USEPUBLICADDRESS);
+        options.add(INSERT_MODE);
         return options;
     }
 

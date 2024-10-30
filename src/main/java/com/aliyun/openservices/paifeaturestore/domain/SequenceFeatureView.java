@@ -2,10 +2,10 @@ package com.aliyun.openservices.paifeaturestore.domain;
 
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
+import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.aliyun.openservices.paifeaturestore.dao.DaoConfig;
 import com.aliyun.openservices.paifeaturestore.dao.FeatureViewDao;
 import com.aliyun.openservices.paifeaturestore.dao.FeatureViewDaoFactory;
-import com.aliyun.openservices.paifeaturestore.flink.sink.FeatureStoreSinkFunction;
 import com.aliyun.openservices.paifeaturestore.model.FeatureView;
 import com.aliyun.openservices.paifeaturestore.model.FeatureViewRequestFields;
 import com.aliyun.openservices.paifeaturestore.model.FeatureViewSeqConfig;
@@ -15,7 +15,6 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.crypto.Data;
 import java.util.*;
 
 /* This class contains configuration information about the serialized feature view.*/
@@ -206,6 +205,11 @@ public class SequenceFeatureView implements IFeatureView {
             }
         }
         this.featureViewDao.writeFeatures(data);
+    }
+
+    @Override
+    public void writeFeatures(List<Map<String, Object>> data, InsertMode insertMode) {
+        this.writeFeatures(data);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.aliyun.openservices.paifeaturestore.flink.sink;
 import com.aliyun.openservices.paifeaturestore.FeatureStoreClient;
 import com.aliyun.openservices.paifeaturestore.api.ApiClient;
 import com.aliyun.openservices.paifeaturestore.api.Configuration;
+import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.aliyun.openservices.paifeaturestore.domain.FeatureView;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
 import com.aliyun.openservices.paifeaturestore.domain.SequenceFeatureView;
@@ -47,13 +48,15 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
     private String host = null;
 
     private boolean usePublicAddress = false;
+
+    private String insertMode;
     private transient FeatureStoreClient featureStoreClient;
 
     private transient FeatureView featureView;
     private transient SequenceFeatureView sequenceFeatureView;
 
     private List<RowType.RowField> fields = new ArrayList<>();
-    public FeatureStoreSinkFunction(String regionId, String accessId, String accessKey, String project, String featureViewName, String username, String password, String host, boolean usePublicAddress, DataType dataType) {
+    public FeatureStoreSinkFunction(String regionId, String accessId, String accessKey, String project, String featureViewName, String username, String password, String host, boolean usePublicAddress, DataType dataType, String insertMode) {
         this.regionId = regionId;
         this.accessId = accessId;
         this.accessKey = accessKey;
@@ -63,6 +66,7 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
         this.password = password;
         this.host = host;
         this.usePublicAddress = usePublicAddress;
+        this.insertMode = insertMode;
         RowType rowType = (RowType) dataType.getLogicalType();
 
         // 获取字段名称和类型
@@ -129,7 +133,11 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
 
             content.add(data);
             if (featureView!=null){
-                featureView.writeFeatures(content);
+                if (this.insertMode.equals("partial_field_write")) {
+                    featureView.writeFeatures(content, InsertMode.PartialFieldWrite);
+                } else {
+                    featureView.writeFeatures(content, InsertMode.FullRowWrite);
+                }
             }
             else {
                 sequenceFeatureView.writeFeatures(content);

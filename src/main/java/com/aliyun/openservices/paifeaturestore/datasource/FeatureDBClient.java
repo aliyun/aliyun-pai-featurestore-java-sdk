@@ -1,6 +1,7 @@
 package com.aliyun.openservices.paifeaturestore.datasource;
 
 import com.alicloud.openservices.tablestore.core.utils.IOUtils;
+import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.google.gson.Gson;
 import okhttp3.ConnectionPool;
 import okhttp3.MediaType;
@@ -220,9 +221,17 @@ public class FeatureDBClient {
         }
     }
     public void writeFeatureDB(List<Map<String, Object>> data, String database, String schema, String table) throws Exception {
+        InsertMode insertMode = InsertMode.Unknown;
+        for (Map<String, Object> item : data) {
+            if (item.containsKey("__insert_mode__")) {
+                insertMode = (InsertMode) item.get("__insert_mode__");
+                item.remove("__insert_mode__");
+            }
+        }
         String url = String.format("%s/api/v1/tables/%s/%s/%s/write", address, database, schema, table );
         Map<String, Object> map = new HashMap<>();
         map.put("content", data);
+        map.put("write_mode", insertMode);
         String requestBody = gson.toJson(map);
         RequestBody body = RequestBody.create(requestBody, JSON);
         Request request = new Request.Builder()

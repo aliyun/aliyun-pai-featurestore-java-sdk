@@ -7,6 +7,7 @@ import java.util.List;
  * This class contains list information composed of FeatureEntities.*/
 public class ListFeatureEntitiesResponse {
     List<FeatureEntity> featureEntities;
+    private Integer totalCount;
 
     public List<FeatureEntity> getFeatureEntities() {
         return featureEntities;
@@ -14,5 +15,13 @@ public class ListFeatureEntitiesResponse {
 
     public void setFeatureEntities(List<FeatureEntity> featureEntities) {
         this.featureEntities = featureEntities;
+    }
+
+    public void setTotalCount(Integer totalCount) {
+        this.totalCount = totalCount;
+    }
+
+    public Integer getTotalCount() {
+        return totalCount;
     }
 }

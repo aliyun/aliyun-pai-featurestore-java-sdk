@@ -1,5 +1,6 @@
 package com.aliyun.openservices.paifeaturestore.domain;
 
+import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.aliyun.openservices.paifeaturestore.model.FeatureView;
 
 import java.util.List;
@@ -22,4 +23,5 @@ public interface IFeatureView {
     FeatureEntity getFeatureEntity();
 
     void writeFeatures(List<Map<String, Object>> data);
+    void writeFeatures(List<Map<String, Object>> data, InsertMode insertMode);
 }

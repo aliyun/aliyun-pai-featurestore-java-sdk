@@ -28,16 +28,18 @@ public class FeatureEntityApi {
     * Gets all feature entities for the current project based on the project id
     * @Param projectId(@code String)
     * @return ListFeatureEntitiesResponse,The class of ListFeatureEntitiesResponse the response characteristics of the entity.*/
-    public ListFeatureEntitiesResponse listFeatureEntities(String projectId) throws Exception {
+    public ListFeatureEntitiesResponse listFeatureEntities(String projectId, int pageNumber, int pageSize) throws Exception {
         ListFeatureEntitiesResponse listFeatureEntitiesResponse = new ListFeatureEntitiesResponse();
         ListFeatureEntitiesRequest request = new ListFeatureEntitiesRequest();
         request.setProjectId(projectId);
-        request.setPageSize(100);
+        request.setPageNumber(pageNumber);
+        request.setPageSize(pageSize);
 
         com.aliyun.paifeaturestore20230621.models.ListFeatureEntitiesResponse response = this.apiClient.getClient().listFeatureEntities(
                 this.apiClient.getInstanceId(), request);
 
         List<FeatureEntity> featureEntityList = new ArrayList<>();
+        listFeatureEntitiesResponse.setTotalCount(response.getBody().totalCount);
         // Traverse all characteristic entities of the response set.
         for (ListFeatureEntitiesResponseBody.ListFeatureEntitiesResponseBodyFeatureEntities entity: response.getBody().getFeatureEntities()) {
             FeatureEntity featureEntity = new FeatureEntity();

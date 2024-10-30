@@ -2,6 +2,7 @@ package com.aliyun.openservices.paifeaturestore.domain;
 
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
+import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.aliyun.openservices.paifeaturestore.dao.DaoConfig;
 import com.aliyun.openservices.paifeaturestore.dao.FeatureViewDao;
 import com.aliyun.openservices.paifeaturestore.dao.FeatureViewDaoFactory;
@@ -151,6 +152,15 @@ public class FeatureView implements IFeatureView {
 
     @Override
     public void writeFeatures(List<Map<String, Object>> data) {
+        this.writeFeatures(data, InsertMode.FullRowWrite);
+    }
+
+    @Override
+    public void writeFeatures(List<Map<String, Object>> data, InsertMode insertMode) {
+        for (Map<String, Object> record : data) {
+            record.put("__insert_mode__", insertMode);
+        }
+
         this.featureViewDao.writeFeatures(data);
     }
 
