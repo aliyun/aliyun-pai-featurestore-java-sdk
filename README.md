@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 ## 使用方式
@@ -207,6 +207,10 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.1.1 (2024-10-31)
+* 修复FeatureEntity数量过多，读取特征报空指针错误
+* 增加部分字段写入FeatureDB 的支持
+ 
 ### 1.1.0 (2024-09-13)
 * FeatureDB 增加复杂类型(MAP/ARRAY)特征的读取及写入
  
