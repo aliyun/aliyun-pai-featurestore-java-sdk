@@ -47,12 +47,13 @@ FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, true);
 configuration.setDomain("FeatureStore Server 的公网地址");
 ```
 
-| 地域              | vpc 地址                                     | 公网地址                                 |
-| ----------------- | -------------------------------------------- | ---------------------------------------- |
-| 北京(cn-beijing)  | paifeaturestore-vpc.cn-beijing.aliyuncs.com  | paifeaturestore.cn-beijing.aliyuncs.com  |
-| 杭州(cn-hangzhou) | paifeaturestore-vpc.cn-hangzhou.aliyuncs.com | paifeaturestore.cn-hangzhou.aliyuncs.com |
-| 上海(cn-shanghai) | paifeaturestore-vpc.cn-shanghai.aliyuncs.com | paifeaturestore.cn-shanghai.aliyuncs.com |
-| 深圳(cn-shenzhen) | paifeaturestore-vpc.cn-shenzhen.aliyuncs.com | paifeaturestore.cn-shenzhen.aliyuncs.com |
+| 地域                  | vpc 地址                                       | 公网地址                                     |
+|---------------------|----------------------------------------------|------------------------------------------|
+| 北京(cn-beijing)      | paifeaturestore-vpc.cn-beijing.aliyuncs.com  | paifeaturestore.cn-beijing.aliyuncs.com  |
+| 杭州(cn-hangzhou)     | paifeaturestore-vpc.cn-hangzhou.aliyuncs.com | paifeaturestore.cn-hangzhou.aliyuncs.com |
+| 上海(cn-shanghai)     | paifeaturestore-vpc.cn-shanghai.aliyuncs.com | paifeaturestore.cn-shanghai.aliyuncs.com |
+| 深圳(cn-shenzhen)     | paifeaturestore-vpc.cn-shenzhen.aliyuncs.com | paifeaturestore.cn-shenzhen.aliyuncs.com |
+| 新加坡(ap-southeast-1) | paifeaturestore-vpc.ap-southeast-1.aliyuncs.com    | paifeaturestore.ap-southeast-1.aliyuncs.com      |
 
 
 
