@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 ## 使用方式
@@ -47,12 +47,13 @@ FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, true);
 configuration.setDomain("FeatureStore Server 的公网地址");
 ```
 
-| 地域              | vpc 地址                                     | 公网地址                                 |
-| ----------------- | -------------------------------------------- | ---------------------------------------- |
-| 北京(cn-beijing)  | paifeaturestore-vpc.cn-beijing.aliyuncs.com  | paifeaturestore.cn-beijing.aliyuncs.com  |
-| 杭州(cn-hangzhou) | paifeaturestore-vpc.cn-hangzhou.aliyuncs.com | paifeaturestore.cn-hangzhou.aliyuncs.com |
-| 上海(cn-shanghai) | paifeaturestore-vpc.cn-shanghai.aliyuncs.com | paifeaturestore.cn-shanghai.aliyuncs.com |
-| 深圳(cn-shenzhen) | paifeaturestore-vpc.cn-shenzhen.aliyuncs.com | paifeaturestore.cn-shenzhen.aliyuncs.com |
+| 地域                  | vpc 地址                                       | 公网地址                                     |
+|---------------------|----------------------------------------------|------------------------------------------|
+| 北京(cn-beijing)      | paifeaturestore-vpc.cn-beijing.aliyuncs.com  | paifeaturestore.cn-beijing.aliyuncs.com  |
+| 杭州(cn-hangzhou)     | paifeaturestore-vpc.cn-hangzhou.aliyuncs.com | paifeaturestore.cn-hangzhou.aliyuncs.com |
+| 上海(cn-shanghai)     | paifeaturestore-vpc.cn-shanghai.aliyuncs.com | paifeaturestore.cn-shanghai.aliyuncs.com |
+| 深圳(cn-shenzhen)     | paifeaturestore-vpc.cn-shenzhen.aliyuncs.com | paifeaturestore.cn-shenzhen.aliyuncs.com |
+| 新加坡(ap-southeast-1) | paifeaturestore-vpc.ap-southeast-1.aliyuncs.com    | paifeaturestore.ap-southeast-1.aliyuncs.com      |
 
 
 
@@ -204,9 +205,20 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
         featureView.writeFlush();
 
 ```
+目前 SDK 也支持部分字段的写入。 上面的例子中，调用 writeFeatures 方法，默认是整行替换的，哪怕 writeData 中只包含部分字段。如果只想部分字段
+的更新，可以调用指定 InsertMode 写入模式, 参数 InsertMode.PartialFieldWrite。
+````java
+        for (int i = 0; i < 100;i++) {
+            featureView.writeFeatures(writeData, InsertMode.PartialFieldWrite);
+        }
+````
 
 
 ## 版本说明
+### 1.1.1 (2024-10-31)
+* 修复FeatureEntity数量过多，读取特征报空指针错误
+* 增加部分字段写入FeatureDB 的支持
+ 
 ### 1.1.0 (2024-09-13)
 * FeatureDB 增加复杂类型(MAP/ARRAY)特征的读取及写入
  
