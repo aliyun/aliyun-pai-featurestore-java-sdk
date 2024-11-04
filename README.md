@@ -204,6 +204,13 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
         featureView.writeFlush();
 
 ```
+目前 SDK 也支持部分字段的写入。 上面的例子中，调用 writeFeatures 方法，默认是整行替换的，哪怕 writeData 中只包含部分字段。如果只想部分字段
+的更新，可以调用指定 InsertMode 写入模式, 参数 InsertMode.PartialFieldWrite。
+````java
+        for (int i = 0; i < 100;i++) {
+            featureView.writeFeatures(writeData, InsertMode.PartialFieldWrite);
+        }
+````
 
 
 ## 版本说明
