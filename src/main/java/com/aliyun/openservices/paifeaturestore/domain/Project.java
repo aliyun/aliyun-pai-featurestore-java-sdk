@@ -1,5 +1,9 @@
 package com.aliyun.openservices.paifeaturestore.domain;
 
+import com.aliyun.openservices.paifeaturestore.api.ApiClient;
+import com.aliyun.openservices.paifeaturestore.api.ListFeatureEntitiesResponse;
+import com.aliyun.openservices.paifeaturestore.api.ListFeatureViewsResponse;
+import com.aliyun.openservices.paifeaturestore.api.ListModesResponse;
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBClient;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBFactory;
@@ -8,13 +12,14 @@ import com.aliyun.openservices.paifeaturestore.datasource.HologresFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.IGraphFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.TableStoreFactory;
 import com.aliyun.openservices.paifeaturestore.model.Datasource;
-import com.aliyun.tea.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Project {
+    public static Logger logger = LoggerFactory.getLogger(Project.class);
     com.aliyun.openservices.paifeaturestore.model.Project project;
 
     private final OnlineStore onlineStore;
@@ -30,6 +35,7 @@ public class Project {
     private String signature = null;
 
     private Datasource featureDBDatasource = null;
+    private ApiClient apiClient;
 
     public Project(com.aliyun.openservices.paifeaturestore.model.Project project,boolean usePublicAddress) throws Exception {
         this.project = project;
@@ -83,6 +89,13 @@ public class Project {
     }
 
     public FeatureView getFeatureView(String name) {
+        if (!this.featureViewMap.containsKey(name)) {
+            try {
+                this.loadFeatureView(name);
+            } catch (Exception e) {
+                logger.error("load feature view error", e);
+            }
+        }
         IFeatureView featureView =  this.featureViewMap.get(name);
         if (featureView instanceof FeatureView) {
             return (FeatureView) featureView;
@@ -90,7 +103,42 @@ public class Project {
         return null;
     }
 
+    private void loadFeatureView(String name) throws Exception {
+        int pageNumber = 1;
+        int pageSize = 100;
+        do {
+
+            ListFeatureViewsResponse listFeatureViewsResponse =  this.apiClient.getFeatureViewApi().listFeatureViewsByName(name, String.valueOf(project.getProjectId()), pageNumber, pageSize);
+            for (com.aliyun.openservices.paifeaturestore.model.FeatureView view: listFeatureViewsResponse.getFeatureViews()) {
+
+                com.aliyun.openservices.paifeaturestore.model.FeatureView featureView = this.apiClient.getFeatureViewApi().getFeatureViewById(String.valueOf(view.getFeatureViewId()));
+                if (featureView.getRegisterDatasourceId() > 0) {
+                    Datasource registerDatasource = this.apiClient.getDatasourceApi().getDatasourceById(featureView.getRegisterDatasourceId());
+                    featureView.setRegisterDatasource(registerDatasource);
+                }
+
+                IFeatureView domainFeatureView = FeatureViewFactory.getFeatureView(featureView, this, this.getFeatureEntity(featureView.getFeatureEntityName()) );
+
+                this.addFeatureView(featureView.getName(), domainFeatureView);
+            }
+
+
+            if (listFeatureViewsResponse.getFeatureViews().size() == 0 || pageNumber * pageSize > listFeatureViewsResponse.getTotalCount()) {
+                break;
+            }
+
+            pageNumber++;
+        } while (true);
+    }
+
     public SequenceFeatureView getSeqFeatureView(String name) {
+        if (!this.featureViewMap.containsKey(name)) {
+            try {
+                this.loadFeatureView(name);
+            } catch (Exception e) {
+                logger.error("load feature view error", e);
+            }
+        }
         IFeatureView featureView = this.featureViewMap.get(name);
         if (featureView instanceof SequenceFeatureView) {
             return (SequenceFeatureView) featureView;
@@ -99,15 +147,67 @@ public class Project {
     }
 
     public FeatureEntity getFeatureEntity(String name) {
+
+        if (!this.featureEntityMap.containsKey(name)) {
+            try {
+                this.loadFeatureEntities();
+            } catch (Exception e) {
+                logger.error("load feature entity error", e);
+            }
+        }
         return this.featureEntityMap.get(name);
     }
 
+    private void loadFeatureEntities() throws Exception {
+        int pageNumber = 1;
+        int pageSize = 100;
+        do {
+            ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(this.project.getProjectId()), pageNumber, pageSize);
+
+            for (com.aliyun.openservices.paifeaturestore.model.FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
+                if (featureEntity.getProjectId() == project.getProjectId()) {
+                    if (!this.featureEntityMap.containsKey(featureEntity.getFeatureEntityName()))  {
+                        this.featureEntityMap.put(featureEntity.getFeatureEntityName(), new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
+                    }
+                }
+            }
+            if (listFeatureEntitiesResponse.getFeatureEntities().size() == 0 || pageNumber * pageSize > listFeatureEntitiesResponse.getTotalCount()) {
+                break;
+            }
+            pageNumber++;
+        } while (true);
+    }
+
     public Model getModel(String name) {
+        if (!this.modelMap.containsKey(name)) {
+            try {
+                this.loadModelFeature(name);
+            } catch (Exception e) {
+                logger.error("load modelFeature error", e);
+            }
+        }
         return this.modelMap.get(name);
     }
 
+    private void loadModelFeature(String name) throws Exception {
+        int pageNumber = 1;
+        int pageSize = 100;
+        do {
+            ListModesResponse listModesResponse = this.apiClient.getFsModelApi().listModelsByName(name, String.valueOf(project.getProjectId()), pageNumber, pageSize);
+            for (com.aliyun.openservices.paifeaturestore.model.Model m : listModesResponse.getModels()) {
+                com.aliyun.openservices.paifeaturestore.model.Model model = this.apiClient.getFsModelApi().getModelById(String.valueOf(m.getModelId()));
+                com.aliyun.openservices.paifeaturestore.domain.Model domianModel = new com.aliyun.openservices.paifeaturestore.domain.Model(model, this);
+                this.addModel(model.getName(), domianModel);
+            }
+            if (listModesResponse.getModels().size() == 0 || pageNumber * pageSize > listModesResponse.getTotalCount()) {
+                break;
+            }
+            pageNumber++;
+        } while (true);
+    }
+
     public Model getModelFeature(String name) {
-        return this.modelMap.get(name);
+        return this.getModel(name);
     }
 
     public com.aliyun.openservices.paifeaturestore.model.Project getProject() {
@@ -163,5 +263,13 @@ public class Project {
         }
 
         return this.onlineStore.getDatasourceName();
+    }
+
+    public void setApiClient(ApiClient apiClient) {
+        this.apiClient = apiClient;
+    }
+
+    public ApiClient getApiClient() {
+        return apiClient;
     }
 }

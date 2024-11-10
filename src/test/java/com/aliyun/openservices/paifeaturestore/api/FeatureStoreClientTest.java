@@ -306,82 +306,28 @@ public class FeatureStoreClientTest {
     @Ignore
     @Test
     public void featureDBTest() throws Exception {
-        Configuration configuration = new Configuration("cn-beijing",
-                Constants.accessId, Constants.accessKey,"tablestore_p2" );
+        Configuration configuration = new Configuration("cn-shenzhen",
+                Constants.accessId, Constants.accessKey,"fdb_test" );
 
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
 
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
 
         ApiClient client = new ApiClient(configuration);
 
         FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
 
-        Project project = featureStoreClient.getProject("tablestore_p2");
+        Project project = featureStoreClient.getProject("fdb_test");
         if (null == project) {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_fea3");
+        FeatureView featureView = project.getFeatureView("user_test_1");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }
-        int count = 3;
-        String[] joinIds = new String[count];
-        joinIds[0] = "2819290457213129004";
-        joinIds[1] = "769798189884836920";
-        joinIds[2] = "3484327982552061277";
-
-        for (int i = 0; i < 100;i++) {
-            long startTime = System.nanoTime();
-            //FeatureResult features = featureView.getOnlineFeatures(joinIds, new String[]{"int32_field", "boolean_field", "float_field", "string_field", "double_field"}, null );
-            FeatureResult features = featureView.getOnlineFeatures(joinIds  );
-
-            if (features.getFeatureData().size() != count) {
-                throw new Exception("request size not equal");
-            }
-            while (features.next()) {
-                for (String name : features.getFeatureFields()) {
-                    System.out.print(String.format("%s=%s,", name, features.getObject(name)));
-                }
-                System.out.println("");
-            }
-
-            long endTime = System.nanoTime();
-            long duration = endTime - startTime;
-            double durationInMilliseconds = duration / 1_000_000.0;
-
-            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
-        }
-
-
-    }
-    @Ignore
-    @Test
-    public void featureDBTest2() throws Exception {
-        Configuration configuration = new Configuration("cn-beijing",
-                Constants.accessId, Constants.accessKey,"featuredb_p2" );
-
-        configuration.setUsername(Constants.username);
-        configuration.setPassword(Constants.password);
-
-        configuration.setDomain(Constants.host);
-
-        ApiClient client = new ApiClient(configuration);
-
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
-
-        Project project = featureStoreClient.getProject("featuredb_p2");
-        if (null == project) {
-            throw  new RuntimeException("project not found");
-        }
-
-        FeatureView featureView = project.getFeatureView("debug_test1");
-        if (null == featureView) {
-            throw  new RuntimeException("featureview not found");
-        }
-        int count = 3;
+        int count = 10;
         String[] joinIds = new String[count];
         for (int i=0; i < count; i++) {
             joinIds[i] = String.valueOf(i);
@@ -419,7 +365,7 @@ public class FeatureStoreClientTest {
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
 
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
 
         ApiClient client = new ApiClient(configuration);
 
@@ -430,7 +376,7 @@ public class FeatureStoreClientTest {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_test_1");
+        FeatureView featureView = project.getFeatureView("user_test_2");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }
@@ -458,33 +404,33 @@ public class FeatureStoreClientTest {
             double durationInMilliseconds = duration / 1_000_000.0;
 
             System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+            Thread.sleep(1000);
         }
 
 
         featureView.writeFlush();
-
     }
     @Ignore
     @Test
     public void featureDBComplexFeatureWriteTest() throws Exception {
-        Configuration configuration = new Configuration("cn-beijing",
-                Constants.accessId, Constants.accessKey,"fs_demo_featuredb" );
+        Configuration configuration = new Configuration("cn-shenzhen",
+                Constants.accessId, Constants.accessKey,"fdb_test" );
 
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
 
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
 
         ApiClient client = new ApiClient(configuration);
 
         FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
 
-        Project project = featureStoreClient.getProject("fs_demo_featuredb");
+        Project project = featureStoreClient.getProject("fdb_test");
         if (null == project) {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_fea_complex");
+        FeatureView featureView = project.getFeatureView("user_fea_complex2");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }
@@ -526,24 +472,24 @@ public class FeatureStoreClientTest {
     @Ignore
     @Test
     public void featureDBComplexFeatrueReadTest() throws Exception {
-        Configuration configuration = new Configuration("cn-beijing",
-                Constants.accessId, Constants.accessKey,"fs_demo_featuredb" );
+        Configuration configuration = new Configuration("cn-shenzhen",
+                Constants.accessId, Constants.accessKey,"fdb_test" );
 
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
 
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
 
         ApiClient client = new ApiClient(configuration);
 
         FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
 
-        Project project = featureStoreClient.getProject("fs_demo_featuredb");
+        Project project = featureStoreClient.getProject("fdb_test");
         if (null == project) {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_fea_complex");
+        FeatureView featureView = project.getFeatureView("user_fea_complex2");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }
@@ -585,7 +531,7 @@ public class FeatureStoreClientTest {
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
 
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
 
         ApiClient client = new ApiClient(configuration);
 
@@ -596,7 +542,7 @@ public class FeatureStoreClientTest {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_test_1");
+        FeatureView featureView = project.getFeatureView("user_test_2");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }
@@ -606,16 +552,16 @@ public class FeatureStoreClientTest {
         for (int i = 0; i < 10; i++) {
             Map<String, Object> data = new HashMap<>();
             data.put("user_id", i);
-            data.put("string_field", String.format("test_%d", i));
-            data.put("int32_field", i);
-            data.put("int64_field", Long.valueOf(i));
-            data.put("float_field", Float.valueOf(i));
-            data.put("double_field", Double.valueOf(i));
-            data.put("boolean_field", i % 2 == 0);
+            //data.put("string_field", "");
+            data.put("int32_field", i + 100);
+            //data.put("int64_field", Long.valueOf(i));
+            //data.put("float_field", Float.valueOf(i));
+            data.put("double_field", Double.valueOf(i) * 100);
+            //data.put("boolean_field", i % 2 == 0);
             writeData.add(data);
         }
 
-        for (int i = 0; i < 100;i++) {
+        for (int i = 0; i < 80;i++) {
             long startTime = System.nanoTime();
             featureView.writeFeatures(writeData, InsertMode.PartialFieldWrite);
 
@@ -624,10 +570,73 @@ public class FeatureStoreClientTest {
             double durationInMilliseconds = duration / 1_000_000.0;
 
             System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+            Thread.sleep(1000);
         }
 
+        FeatureView featureView4 = project.getFeatureView("user_test_4");
+        if (null == featureView4) {
+            throw  new RuntimeException("featureview4 not found");
+        }
+
+        for (int i = 0; i < 10;i++) {
+            long startTime = System.nanoTime();
+            featureView4.writeFeatures(writeData, InsertMode.PartialFieldWrite);
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            double durationInMilliseconds = duration / 1_000_000.0;
+
+            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+            Thread.sleep(1000);
+        }
 
         featureView.writeFlush();
 
+    }
+    @Ignore
+    @Test
+    public void modelFeatureTest() throws Exception {
+        Configuration configuration = new Configuration("cn-shenzhen",
+                Constants.accessId, Constants.accessKey,"fdb_test" );
+
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("fdb_test");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+
+        System.out.println("get features from model");
+        Model model = project.getModelFeature("fs_test");
+        if (null == model) {
+            throw  new RuntimeException("model not found");
+        }
+
+        List<String> joinIds = new ArrayList<>();
+        for (int i = 1; i < 101; i++) {
+            joinIds.add(String.valueOf(i));
+        }
+        Map<String, List<String>> joinids = new HashMap<>();
+        joinids.put("user_id", joinIds);
+        long startTime = System.nanoTime();
+        FeatureResult features = model.getOnlineFeaturesWithEntity(joinids, "user");
+
+        while (features.next()) {
+            for (String name : features.getFeatureFields()) {
+                System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+            }
+            System.out.println();
+        }
+
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        double durationInMilliseconds = duration / 1_000_000.0;
+        System.out.println("操作耗时：" + durationInMilliseconds + "ms");
     }
 }
