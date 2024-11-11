@@ -595,7 +595,7 @@ public class FeatureStoreClientTest {
     }
     @Ignore
     @Test
-    public void modelFeatureTest() throws Exception {
+    public void modelGetFeaturesWithEntityTest() throws Exception {
         Configuration configuration = new Configuration("cn-shenzhen",
                 Constants.accessId, Constants.accessKey,"fdb_test" );
 
@@ -619,13 +619,60 @@ public class FeatureStoreClientTest {
         }
 
         List<String> joinIds = new ArrayList<>();
-        for (int i = 1; i < 101; i++) {
+        for (int i = 0; i < 100; i++) {
             joinIds.add(String.valueOf(i));
         }
         Map<String, List<String>> joinids = new HashMap<>();
         joinids.put("user_id", joinIds);
         long startTime = System.nanoTime();
         FeatureResult features = model.getOnlineFeaturesWithEntity(joinids, "user");
+
+        while (features.next()) {
+            for (String name : features.getFeatureFields()) {
+                System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+            }
+            System.out.println();
+        }
+
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        double durationInMilliseconds = duration / 1_000_000.0;
+        System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+    }
+    @Ignore
+    @Test
+    public void modelGetFeaturesTest() throws Exception {
+        Configuration configuration = new Configuration("cn-shenzhen",
+                Constants.accessId, Constants.accessKey,"fdb_test" );
+
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("fdb_test");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+
+        System.out.println("get features from model");
+        Model model = project.getModelFeature("rank_test");
+        if (null == model) {
+            throw  new RuntimeException("model not found");
+        }
+
+        List<String> joinIds = new ArrayList<>();
+        for (int i = 0; i < 101; i++) {
+            joinIds.add(String.valueOf(i));
+        }
+        Map<String, List<String>> joinids = new HashMap<>();
+        joinids.put("user_id", joinIds);
+        joinids.put("item_id", joinIds);
+        long startTime = System.nanoTime();
+        FeatureResult features = model.getOnlineFeatures(joinids);
 
         while (features.next()) {
             for (String name : features.getFeatureFields()) {

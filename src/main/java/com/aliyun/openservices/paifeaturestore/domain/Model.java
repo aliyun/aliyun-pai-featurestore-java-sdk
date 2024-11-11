@@ -49,6 +49,9 @@ public class Model {
 
     List<String> featureEntityJoinIdList = new ArrayList<>();
 
+    // entity joinid : feature entity
+    private final Map<String, FeatureEntity> entityJoinIdToFeatureEntityMap = new HashMap<>();
+
     static ExecutorService executorService;
 
     static {
@@ -76,6 +79,7 @@ public class Model {
 
             this.featureViewMap.put(feature.getFeatureViewName(), featureView);
             this.featureEntityMap.put(featureView.getFeatureView().getFeatureEntityName(), featureEntity);
+            this.entityJoinIdToFeatureEntityMap.put(featureEntity.getFeatureEntity().getFeatureEntityJoinid(), featureEntity);
 
             if (this.featureNamesMap.containsKey(feature.getFeatureViewName())) {
                 if (featureView instanceof  SequenceFeatureView) {
@@ -148,66 +152,63 @@ public class Model {
 
         }
 
-        CountDownLatch countDownLatch = new CountDownLatch(joinIds.size());
         // thread safe map
-        Map<String, List<FeatureResult>> joinIdFeaturesMap = new ConcurrentHashMap<>();
+        Map<String, FeatureResult> joinIdFeaturesMap = new ConcurrentHashMap<>();
+        List<String> featureFields = new CopyOnWriteArrayList<>();
+        Map<String, FSType> featureFieldTypeMap = new ConcurrentHashMap<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        Map<Integer, Map<String, Object>> indexFeatrueMap = new ConcurrentHashMap<>();
         for (Map.Entry<String, List<String>> entry : joinIds.entrySet()) {
-            executorService.execute(() -> {
+            int finalSize = size;
+            CompletableFuture<Void> future = CompletableFuture.runAsync(()->{
                 try {
-                    Map<String, IFeatureView> featureViewMap = this.featureEntityJoinIdMap.get(entry.getKey());
-                    Stream<CompletableFuture<FeatureResult>> completableFutureStream = featureViewMap.values().stream().map(featureView -> CompletableFuture.supplyAsync(() -> {
-                        try {
-                            return featureView.getOnlineFeatures(entry.getValue().toArray(new String[0]),
-                                        this.featureNamesMap.get(featureView.getFeatureView().getName()).toArray(new String[0]), this.aliasNamesMap.get(featureView.getFeatureView().getName()));
-
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
+                    long startTime = System.nanoTime();
+                    FeatureResult featureResult = new FeatureStoreResult();
+                    try {
+                        featureResult = getOnlineFeaturesWithEntity(joinIds, this.entityJoinIdToFeatureEntityMap.get(entry.getKey()).featureEntity.getFeatureEntityName());
+                    } catch (Exception e) {
+                        logger.error("featureview get online features error", e);
+                    } finally {
+                        long endTime = System.nanoTime();
+                        long duration = endTime - startTime;
+                        double durationInMilliseconds = duration / 1_000_000.0;
+                        System.out.println("featureview操作耗时：" + durationInMilliseconds + "ms");
                     }
-                }));
-
-                    List<FeatureResult> featureResults = completableFutureStream.map(CompletableFuture::join).collect(Collectors.toList());
                     // add to map
-                    joinIdFeaturesMap.put(entry.getKey(), featureResults);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-        }
-
-        // wait all featureview get features
-        countDownLatch.await();
-        FeatureStoreResult featureStoreResult = new FeatureStoreResult();
-        List<String> featureFields = new ArrayList<>();
-        Map<String, FSType> featureFieldTypeMap = new HashMap<>();
-        List<Map<String, Object>> featureDataList = new ArrayList<>();
-        for (String joinId : joinIds.keySet()) {
-            if (!joinIdFeaturesMap.isEmpty()) {
-                for (FeatureResult result : joinIdFeaturesMap.get(joinId)) {
-                    featureFields.addAll(Arrays.asList(result.getFeatureFields()));
-                    if (result.getFeatureFieldTypeMap()==null) {
-                        continue;
+                    joinIdFeaturesMap.put(entry.getKey(), featureResult);
+                    featureFields.addAll(Arrays.asList(featureResult.getFeatureFields()));
+                    if (featureResult.getFeatureFieldTypeMap()!=null) {
+                        featureFieldTypeMap.putAll(featureResult.getFeatureFieldTypeMap());
                     }
-                    featureFieldTypeMap.putAll(result.getFeatureFieldTypeMap());
-                }
-            }
-
-        }
-        for (int i = 0; i < size; i++) {
-            Map<String, Object> featuresMap = new HashMap<>();
-            for (String joinId : this.featureEntityJoinIdList) {
-                String joinIdValue = joinIds.get(joinId).get(i);
-                for (FeatureResult result : joinIdFeaturesMap.get(joinId)) {
-
-                    if (result.getFeatureData()!=null) {
-                        for (Map<String, Object> featureData : result.getFeatureData()) {
-                            if (joinIdValue.equals(String.valueOf(featureData.get(joinId)))) {
-                                featuresMap.putAll(featureData);
+                    for (int i = 0; i < finalSize; i++) {
+                        String joinIdValue = entry.getValue().get(i);
+                        for (Map<String, Object> featureData : featureResult.getFeatureData()) {
+                            if (featureData != null) {
+                                if ( joinIdValue.equals(String.valueOf(featureData.get(entry.getKey())))) {
+                                    indexFeatrueMap.computeIfAbsent(i, k -> new ConcurrentHashMap<>()).putAll(featureData);
+                                    break;
+                                }
                             }
                         }
                     }
+                } catch (Exception e) {
+                    logger.error("featureview get online features error", e);
                 }
+            }, executorService);
+            futures.add(future);
+        }
+
+        FeatureStoreResult featureStoreResult = new FeatureStoreResult();
+        List<Map<String, Object>> featureDataList = new ArrayList<>(size);
+        // wait all featureview get features
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        for (int i = 0; i < size; i++) {
+            if (indexFeatrueMap.get(i)==null) {
+                featureDataList.add(new HashMap<>());
+            } else {
+                featureDataList.add(indexFeatrueMap.get(i));
             }
-            featureDataList.add(featuresMap);
         }
 
 
@@ -234,7 +235,6 @@ public class Model {
         FeatureStoreResult featureStoreResult = new FeatureStoreResult();
         List<String> featureFields = new CopyOnWriteArrayList<>();
         Map<String, FSType> featureFieldTypeMap = new ConcurrentHashMap<>();
-        List<Map<String, Object>> featureDataList = new CopyOnWriteArrayList<>();
         Map<String, Map<String, Object>> joinIdFeaturMap = new ConcurrentHashMap<>();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (IFeatureView featureView : featureViewMap.values()) {
@@ -249,8 +249,10 @@ public class Model {
                             featureFieldTypeMap.putAll(featureResult.getFeatureFieldTypeMap());
                         }
                         for (Map<String, Object> featureData : featureResult.getFeatureData()) {
-                            String joinIdValue = String.valueOf(featureData.get(entityJoinId));
-                            joinIdFeaturMap.computeIfAbsent(joinIdValue, k -> new ConcurrentHashMap<>()).putAll(featureData);
+                            if (featureData != null) {
+                                String joinIdValue = String.valueOf(featureData.get(entityJoinId));
+                                joinIdFeaturMap.computeIfAbsent(joinIdValue, k -> new ConcurrentHashMap<>()).putAll(featureData);
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -260,10 +262,17 @@ public class Model {
             futures.add(future);
         }
 
+        List<Map<String, Object>> featureDataList = new ArrayList<>();
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         for (String joinIdValue : joinIdsArray) {
-            featureDataList.add(joinIdFeaturMap.get(joinIdValue));
+            if (joinIdFeaturMap.containsKey(joinIdValue)) {
+                featureDataList.add(joinIdFeaturMap.get(joinIdValue));
+            } else {
+                Map<String, Object> featureMap = new HashMap<>();
+                featureMap.put(entityJoinId, joinIdValue);
+                featureDataList.add(featureMap);
+            }
         }
 
         featureStoreResult.setFeatureFields(featureFields.toArray(new String[0]));
