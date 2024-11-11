@@ -153,7 +153,6 @@ public class Model {
         }
 
         // thread safe map
-        Map<String, FeatureResult> joinIdFeaturesMap = new ConcurrentHashMap<>();
         List<String> featureFields = new CopyOnWriteArrayList<>();
         Map<String, FSType> featureFieldTypeMap = new ConcurrentHashMap<>();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -162,20 +161,13 @@ public class Model {
             int finalSize = size;
             CompletableFuture<Void> future = CompletableFuture.runAsync(()->{
                 try {
-                    long startTime = System.nanoTime();
                     FeatureResult featureResult = new FeatureStoreResult();
                     try {
                         featureResult = getOnlineFeaturesWithEntity(joinIds, this.entityJoinIdToFeatureEntityMap.get(entry.getKey()).featureEntity.getFeatureEntityName());
                     } catch (Exception e) {
                         logger.error("featureview get online features error", e);
-                    } finally {
-                        long endTime = System.nanoTime();
-                        long duration = endTime - startTime;
-                        double durationInMilliseconds = duration / 1_000_000.0;
-                        System.out.println("featureview操作耗时：" + durationInMilliseconds + "ms");
                     }
-                    // add to map
-                    joinIdFeaturesMap.put(entry.getKey(), featureResult);
+
                     featureFields.addAll(Arrays.asList(featureResult.getFeatureFields()));
                     if (featureResult.getFeatureFieldTypeMap()!=null) {
                         featureFieldTypeMap.putAll(featureResult.getFeatureFieldTypeMap());
