@@ -3,6 +3,8 @@ package com.aliyun.openservices.paifeaturestore.datasource;
 import com.alicloud.openservices.tablestore.core.utils.IOUtils;
 import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.google.gson.Gson;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.ConnectionPool;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -24,6 +26,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class FeatureDBClient {
@@ -162,8 +166,10 @@ public class FeatureDBClient {
         for (int i = 0; i < retryCount ; i++) {
             try {
                 content = this.doRequest(request);
+                //content = this.doRequestAsync(request).get();
                 break;
             } catch(HttpException e) {
+                //HttpException e = (HttpException) e1.getCause();
                 int statusCode = e.getCode();
                 String errorMessage = String.format("URL: %s, code: %d, error: %s", url, statusCode, e.getMessage());
                 if ( i < retryCount) {
@@ -256,6 +262,49 @@ public class FeatureDBClient {
                 }
             }
         }
+    }
+    public CompletableFuture<byte[]> doRequestAsync(Request request) {
+        CompletableFuture<byte[]> future = new CompletableFuture<>();
+        httpclient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // 处理失败
+                future.completeExceptionally(new HttpException(-1, e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                // 处理响应
+                if (response.isSuccessful() && response.body() != null) {
+                    try (InputStream inputStream = response.body().byteStream()) {
+                        byte[] sizeByte = new byte[4];
+                        if (inputStream.read(sizeByte) != sizeByte.length) {
+                            future.completeExceptionally(new HttpException(-1, "input stream read error"));
+                            return;
+                        }
+                        int size = ByteBuffer.wrap(sizeByte).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                        byte[] content = new byte[size];
+                        int offset = 0;
+                        while (offset < size) {
+                            int read = inputStream.read(content, offset, size - offset);
+                            if (read == -1) { // End of the stream
+                                future.completeExceptionally(new HttpException(-1, "Input stream read error: unexpected end of stream"));
+                                return;
+                            }
+                            offset += read;
+                        }
+                        future.complete(content);
+                    }
+                } else {
+                    int errorCode = response.code();
+                    try (InputStream errorStream = response.body().byteStream()) {
+                        String errorMessage = IOUtils.readStreamAsString(errorStream, "UTF-8");
+                        future.completeExceptionally(new HttpException(errorCode, errorMessage));
+                    }
+                }
+            }
+        });
+        return future;
     }
 
     public void writeFeatureDB(List<Map<String, Object>> data, String database, String schema, String table) throws Exception {

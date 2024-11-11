@@ -62,6 +62,34 @@ public class FeatureViewApi {
         listFeatureViewsResponse.setFeatureViews(featureViewList);
         return listFeatureViewsResponse;
     }
+    public ListFeatureViewsResponse listFeatureViewsByName(String featureViewName, String projectId, int pageNumber, int pageSize) throws Exception {
+        ListFeatureViewsResponse listFeatureViewsResponse = new ListFeatureViewsResponse();
+        ListFeatureViewsRequest request = new ListFeatureViewsRequest();
+        request.setProjectId(projectId);
+        request.setName(featureViewName);
+        request.setPageSize(pageSize);
+        request.setPageNumber(pageNumber);
+
+        com.aliyun.paifeaturestore20230621.models.ListFeatureViewsResponse response = this.apiClient.getClient().listFeatureViews(
+                this.apiClient.getInstanceId(), request);
+
+        List<FeatureView> featureViewList = new ArrayList<>();
+
+        listFeatureViewsResponse.setTotalCount(response.getBody().totalCount);
+        //  Traverse all characteristic views of the response set.
+        for (ListFeatureViewsResponseBody.ListFeatureViewsResponseBodyFeatureViews view: response.getBody().getFeatureViews()) {
+            FeatureView featureView = new FeatureView();
+            featureView.setFeatureViewId(Long.valueOf(view.getFeatureViewId()));
+            featureView.setType(view.getType());
+            featureView.setFeatureEntityName(view.getFeatureEntityName());
+            featureView.setProjectName(view.getProjectName());
+            featureView.setProjectId(Long.valueOf(view.getProjectId()));
+            featureView.setWriteToFeaturedb(view.getWriteToFeatureDB());
+            featureViewList.add(featureView);
+        }
+        listFeatureViewsResponse.setFeatureViews(featureViewList);
+        return listFeatureViewsResponse;
+    }
 
     /*  Obtain the feature view information based on the feature view id.
     * @Param featureViewId(@code String)
