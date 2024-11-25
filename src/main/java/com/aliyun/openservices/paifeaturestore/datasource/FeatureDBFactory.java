@@ -1,7 +1,5 @@
 package com.aliyun.openservices.paifeaturestore.datasource;
 
-import com.alicloud.openservices.tablestore.core.utils.IOUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,5 +14,13 @@ public class FeatureDBFactory {
 
     public static FeatureDBClient get(String name) {
         return featureDBClientHashMap.get(name);
+    }
+
+    public static void close() throws Exception{
+        for (FeatureDBClient featureDBClient : featureDBClientHashMap.values()) {
+            featureDBClient.close();
+        }
+
+        featureDBClientHashMap.clear();
     }
 }

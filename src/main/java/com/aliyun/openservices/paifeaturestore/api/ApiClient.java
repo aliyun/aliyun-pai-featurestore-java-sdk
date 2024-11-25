@@ -73,4 +73,7 @@ public class ApiClient {
     public Configuration getConfiguration() {
         return configuration;
     }
+
+    public void close() throws Exception {
+    }
 }

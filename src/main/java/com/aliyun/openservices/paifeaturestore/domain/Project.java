@@ -272,4 +272,17 @@ public class Project {
     public ApiClient getApiClient() {
         return apiClient;
     }
+
+    public void close() throws Exception {
+        for (Model model : this.modelMap.values()) {
+            model.close();
+        }
+        this.modelMap.clear();
+
+        for (IFeatureView featureView : this.featureViewMap.values()) {
+            featureView.close();
+        }
+        this.featureViewMap.clear();
+        this.featureEntityMap.clear();
+    }
 }

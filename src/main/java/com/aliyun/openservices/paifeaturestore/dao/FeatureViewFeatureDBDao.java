@@ -714,7 +714,7 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                     doWriteFeatures();
                     this.executor.shutdown();
                     try {
-                        if (!this.executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                        if (!this.executor.awaitTermination(5, TimeUnit.SECONDS)) {
                             this.executor.shutdownNow(); // 取消正在执行的任务
                         }
                     } catch (InterruptedException e) {
@@ -926,5 +926,13 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
             }
         }
         return arrayStringValue;
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.writeFlush();
+        if (!this.executor.isShutdown()) {
+            this.executor.shutdownNow();
+        }
     }
 }

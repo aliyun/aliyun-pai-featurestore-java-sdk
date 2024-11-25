@@ -316,4 +316,11 @@ public class FeatureView implements IFeatureView {
                 "featureView=" + featureView +
                 '}';
     }
+
+    @Override
+    public void close() throws Exception {
+        if (null != this.featureViewDao) {
+            this.featureViewDao.close();
+        }
+    }
 }

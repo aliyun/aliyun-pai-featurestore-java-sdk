@@ -339,4 +339,9 @@ public class FeatureDBClient {
         }
 
     }
+    public void close() throws Exception {
+        if (null != this.httpclient) {
+            this.httpclient.connectionPool().evictAll();
+        }
+    }
 }

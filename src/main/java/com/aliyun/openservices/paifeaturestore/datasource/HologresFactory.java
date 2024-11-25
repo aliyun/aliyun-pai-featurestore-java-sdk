@@ -15,4 +15,12 @@ public class HologresFactory {
     public static Hologres get(String name) {
         return hologresMap.get(name);
     }
+
+    public static void close() throws Exception {
+        for (Hologres hologres : hologresMap.values()) {
+            hologres.close();
+        }
+
+        hologresMap.clear();
+    }
 }

@@ -22,4 +22,7 @@ public interface FeatureViewDao {
         throw new RuntimeException("FeatureViewDao not support");
     };
 
+   default void close() throws Exception {
+   }
+
 }
