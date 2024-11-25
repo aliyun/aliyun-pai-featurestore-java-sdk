@@ -27,4 +27,8 @@ public interface IFeatureView {
     void writeFeatures(List<Map<String, Object>> data, InsertMode insertMode);
     // flush all data to featurestore, use writeFeatures to write data, when finish only call once
     void writeFlush();
+
+    default void close() throws Exception {
+
+    }
 }

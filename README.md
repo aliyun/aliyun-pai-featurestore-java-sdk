@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.1.3</version>
+  <version>1.1.4</version>
 </dependency>
 ```
 ## 使用方式
@@ -215,6 +215,10 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.1.4 (2024-11-25)
+* client 增加了 close function 
+* 修复了 getOnlineFeaturesWithEntity 中特征字段为 null 抛异常的情况 
+ 
 ### 1.1.3 (2024-11-11)
 * 使用懒加载方式初始化meta信息,只有用到相关的资源才会加载
 * 优化 getOnlineFeatures 和 getOnlineFeaturesWithEntity 接口性能 

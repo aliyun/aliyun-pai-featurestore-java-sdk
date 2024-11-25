@@ -52,9 +52,9 @@ public class Model {
     // entity joinid : feature entity
     private final Map<String, FeatureEntity> entityJoinIdToFeatureEntityMap = new HashMap<>();
 
-    static ExecutorService executorService;
+    private ExecutorService executorService;
 
-    static {
+    public Model(com.aliyun.openservices.paifeaturestore.model.Model model, Project project) {
         int parallelism = Runtime.getRuntime().availableProcessors();
         executorService = new ThreadPoolExecutor( parallelism*2,Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,new SynchronousQueue<>(), r -> {
             Thread thread = new Thread(r);
@@ -63,9 +63,7 @@ public class Model {
             return thread;
 
         });
-    }
 
-    public Model(com.aliyun.openservices.paifeaturestore.model.Model model, Project project) {
         this.model = model;
         this.project = project;
 
@@ -243,7 +241,11 @@ public class Model {
                         for (Map<String, Object> featureData : featureResult.getFeatureData()) {
                             if (featureData != null) {
                                 String joinIdValue = String.valueOf(featureData.get(entityJoinId));
-                                joinIdFeaturMap.computeIfAbsent(joinIdValue, k -> new ConcurrentHashMap<>()).putAll(featureData);
+                                // 过滤掉值为 null 的条目
+                                Map<String, Object> filteredData = featureData.entrySet().stream()
+                                        .filter(entry -> entry.getValue() != null)
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                                joinIdFeaturMap.computeIfAbsent(joinIdValue, k -> new ConcurrentHashMap<>()).putAll(filteredData);
                             }
                         }
                     }
@@ -274,5 +276,19 @@ public class Model {
         return featureStoreResult;
     }
 
+    public void close() throws Exception {
+        if (!executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+
+        try {
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+        }
+    }
 
 }

@@ -1,5 +1,6 @@
 package com.aliyun.openservices.paifeaturestore.datasource;
 
+import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 
 import javax.sql.DataSource;
@@ -43,5 +44,11 @@ public class Hologres {
 
     public DataSource getDataSource() {
         return dataSource;
+    }
+
+    public void close() throws Exception {
+        if (null != this.dataSource && this.dataSource instanceof DruidDataSource) {
+            ((DruidDataSource) this.dataSource).close();
+        }
     }
 }

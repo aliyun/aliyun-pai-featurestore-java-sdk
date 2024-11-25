@@ -2,6 +2,8 @@ package com.aliyun.openservices.paifeaturestore;
 
 import com.aliyun.openservices.paifeaturestore.api.ApiClient;
 import com.aliyun.openservices.paifeaturestore.api.ListProjectResponse;
+import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBFactory;
+import com.aliyun.openservices.paifeaturestore.datasource.HologresFactory;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
 import com.aliyun.openservices.paifeaturestore.model.*;
 import org.slf4j.Logger;
@@ -105,5 +107,16 @@ public class FeatureStoreClient {
 
     public Project getProject(String name) {
         return this.projects.get(name);
+    }
+
+    public void close() throws Exception {
+        this.scheduledThreadPool.shutdownNow();
+
+        for (Project project : this.projects.values()) {
+            project.close();
+        }
+        this.projects.clear();
+        FeatureDBFactory.close();
+        HologresFactory.close();
     }
 }
