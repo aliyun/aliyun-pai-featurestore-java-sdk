@@ -115,7 +115,9 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
                 if (rowField.getType() instanceof IntType) {
                     data.put(rowField.getName(), value.getInt(i));
                 } else if (rowField.getType() instanceof VarCharType) {
-                    data.put(rowField.getName(), value.getString(i).toString());
+                    if (value.getString(i) != null ) {
+                        data.put(rowField.getName(), value.getString(i).toString());
+                    }
                 } else if (rowField.getType() instanceof DoubleType) {
                     data.put(rowField.getName(), value.getDouble(i));
                 } else if (rowField.getType() instanceof FloatType) {

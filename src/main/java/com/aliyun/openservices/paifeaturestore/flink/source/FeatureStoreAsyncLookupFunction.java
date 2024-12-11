@@ -167,13 +167,13 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
                                     resultRow.setField(i, featureResult.getLong(entityJoinId));
                                     break;
                                 case FS_STRING:
-                                    resultRow.setField(i, featureResult.getString(entityJoinId));
+                                    resultRow.setField(i, StringData.fromString(featureResult.getString(entityJoinId)));
                                     break;
                                 case FS_INT32:
                                     resultRow.setField(i, featureResult.getInt(entityJoinId));
                                     break;
                                 default:
-                                    LOG.error("primary key type not support: {}", featureResult.getType(entityJoinId));
+                                    LOG.error("joinId:{},primary key type not support: {}", joinId, featureResult.getType(entityJoinId));
                                     break;
                             }
                         } else {
@@ -193,6 +193,7 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
                                 } else if (this.fieldTypes.get(i) instanceof BooleanType) {
                                     resultRow.setField(i, featureResult.getBoolean(fieldName));
                                 } else {
+                                    LOG.debug("joinId:{},field: {}, type:{}, " , joinId, fieldName, this.fieldTypes.get(i));
                                     resultRow.setField(i, featureResult.getObject(fieldName));
                                 }
                             }
