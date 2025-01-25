@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.0.9</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 ## 使用方式

@@ -41,6 +41,8 @@ public class FeatureViewApi {
         request.setProjectId(projectId);
         request.setPageSize(pageSize);
         request.setPageNumber(pageNumber);
+        request.setSortBy("GmtCreateTime");
+        request.setOrder("ASC");
 
         com.aliyun.paifeaturestore20230621.models.ListFeatureViewsResponse response = this.apiClient.getClient().listFeatureViews(
                 this.apiClient.getInstanceId(), request);
