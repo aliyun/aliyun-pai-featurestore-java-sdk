@@ -56,6 +56,16 @@ public class FeatureViewSeqConfig {
     @SerializedName("seq_config")
     private SeqConfig[] seqConfigs;
 
+    @SerializedName("registration_mode")
+    private  String registrationMode;
+
+
+    @SerializedName("referenced_feature_view_id")
+    private  int referencedFeatureViewId;
+
+    @SerializedName("referenced_feature_view_name")
+    private  String referencedFeatureViewName;
+
     public String getItemIdField() {
         return ItemIdField;
     }
@@ -158,5 +168,28 @@ public class FeatureViewSeqConfig {
 
     public void setSeqConfigs(SeqConfig[] seqConfigs) {
         this.seqConfigs = seqConfigs;
+    }
+    public String getRegistrationMode() {
+        return registrationMode;
+    }
+
+    public void setRegistrationMode(String registrationMode) {
+        this.registrationMode = registrationMode;
+    }
+
+    public int getReferencedFeatureViewId() {
+        return referencedFeatureViewId;
+    }
+
+    public void setReferencedFeatureViewId(int referencedFeatureViewId) {
+        this.referencedFeatureViewId = referencedFeatureViewId;
+    }
+
+    public String getReferencedFeatureViewName() {
+        return referencedFeatureViewName;
+    }
+
+    public void setReferencedFeatureViewName(String referencedFeatureViewName) {
+        this.referencedFeatureViewName = referencedFeatureViewName;
     }
 }
