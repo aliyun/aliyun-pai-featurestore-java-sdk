@@ -1,5 +1,6 @@
 package com.aliyun.openservices.paifeaturestore.domain;
 
+import com.aliyun.openservices.paifeaturestore.constants.ConstantValue;
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
 import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
@@ -28,6 +29,8 @@ public class SequenceFeatureView implements IFeatureView{
 
     private final Map<String,String> offOnlineSeqMap = new HashMap<>();
 
+    private final List<String> behaviorFields = new ArrayList<>();
+
     public SequenceFeatureView(com.aliyun.openservices.paifeaturestore.model.FeatureView featureView, Project project, FeatureEntity featureEntity) {
         this.featureView = featureView;
         this.project = project;
@@ -41,8 +44,30 @@ public class SequenceFeatureView implements IFeatureView{
             }
         }
 
-        for (SeqConfig seqConfig: this.config.getSeqConfigs()) {
-            offOnlineSeqMap.put(seqConfig.getOfflineSeqName(),seqConfig.getOnlineSeqName());
+        if (StringUtils.isEmpty(this.config.getRegistrationMode())) {
+            this.config.setRegistrationMode(ConstantValue.Seq_Registration_Mode_Full_Sequence);
+        }
+        for (FeatureViewRequestFields field : this.featureView.getFields()) {
+            if (field.isIsPartition()) {
+                continue;
+            } else {
+                this.behaviorFields.add(field.getName());
+            }
+        }
+
+        if (this.config.getRegistrationMode().equals(ConstantValue.Seq_Registration_Mode_Full_Sequence)) {
+            for (SeqConfig seqConfig : this.config.getSeqConfigs()) {
+                offOnlineSeqMap.put(seqConfig.getOfflineSeqName(), seqConfig.getOnlineSeqName());
+            }
+            List<SeqConfig> uniqueSeqConfigs = new ArrayList<>();
+            Set<String> seenConfig = new HashSet<>();
+            for (SeqConfig seqConfig : this.config.getSeqConfigs()) {
+                if (!seenConfig.contains(seqConfig.getOnlineSeqName())) {
+                    uniqueSeqConfigs.add(seqConfig);
+                    seenConfig.add(seqConfig.getOnlineSeqName());
+                }
+            }
+            this.config.setSeqConfigs(uniqueSeqConfigs.toArray(new SeqConfig[0]));
         }
 
         String[] s1={"user_id","item_id","event"};
@@ -90,58 +115,122 @@ public class SequenceFeatureView implements IFeatureView{
             daoConfig.featureDBName = project.getFeatureDBName();
             daoConfig.featureDBDatabase = project.getProject().getInstanceId();
             daoConfig.featureDBSchema = project.getProject().getProjectName();
-            daoConfig.featureDBTable = featureView.getName();
+            if (this.config.getReferencedFeatureViewId() == 0) {
+                daoConfig.featureDBTable = featureView.getName();
+            } else {
+                daoConfig.featureDBTable = this.config.getReferencedFeatureViewName();
+            }
+            daoConfig.fields = this.behaviorFields;
         }else {
-            switch (project.getProject().getOnlineDatasourceType()) {
-                case Datasource_Type_Hologres:
-                    daoConfig.hologresName = project.getOnlineStore().getDatasourceName();
-                    daoConfig.hologresSeqOfflineTableName = project.getOnlineStore().getSeqOfflineTableName(this);
-                    daoConfig.hologresSeqOnlineTableName = project.getOnlineStore().getSeqOnlineTableName(this);
-                    break;
-                case Datasource_Type_IGraph:
-                    if (!StringUtils.isEmpty(featureView.getConfig())) {
-                        Map map = gson.fromJson(featureView.getConfig(), Map.class);
-                        if (map.containsKey("save_original_field")) {
-                            if (map.get("save_original_field") instanceof Boolean) {
-                                daoConfig.saveOriginalField = (Boolean) map.get("save_original_field");
+            if (this.config.getReferencedFeatureViewId() == 0) {
+                switch (project.getProject().getOnlineDatasourceType()) {
+                    case Datasource_Type_Hologres:
+                        daoConfig.hologresName = project.getOnlineStore().getDatasourceName();
+                        daoConfig.hologresSeqOfflineTableName = project.getOnlineStore().getSeqOfflineTableName(this);
+                        daoConfig.hologresSeqOnlineTableName = project.getOnlineStore().getSeqOnlineTableName(this);
+                        break;
+                    case Datasource_Type_IGraph:
+                        if (!StringUtils.isEmpty(featureView.getConfig())) {
+                            Map map = gson.fromJson(featureView.getConfig(), Map.class);
+                            if (map.containsKey("save_original_field")) {
+                                if (map.get("save_original_field") instanceof Boolean) {
+                                    daoConfig.saveOriginalField = (Boolean) map.get("save_original_field");
+                                }
                             }
                         }
-                    }
 
-                    daoConfig.iGraphName = project.getOnlineStore().getDatasourceName();
-                    daoConfig.groupName = project.getProject().getProjectName();
-                    daoConfig.igraphEdgeName = project.getOnlineStore().getSeqOnlineTableName(this);
-                    Map<String, String> fieldMap = new HashMap<>();
-                    Map<String, FSType> fieldTypeMap = new HashMap<>();
-                    for (FeatureViewRequestFields field : featureView.getFields()) {
-                        if (field.isIsPrimaryKey()) {
-                            fieldMap.put(field.getName(), field.getName());
-                            fieldTypeMap.put(field.getName(), field.getType());
-                        } else if (field.isIsPartition()) {
-                            continue;
-                        } else {
-                            String name;
-                            if (daoConfig.saveOriginalField) {
-                                name = field.getName();
+                        daoConfig.iGraphName = project.getOnlineStore().getDatasourceName();
+                        daoConfig.groupName = project.getProject().getProjectName();
+                        daoConfig.igraphEdgeName = project.getOnlineStore().getSeqOnlineTableName(this);
+                        Map<String, String> fieldMap = new HashMap<>();
+                        Map<String, FSType> fieldTypeMap = new HashMap<>();
+                        for (FeatureViewRequestFields field : featureView.getFields()) {
+                            if (field.isIsPrimaryKey()) {
+                                fieldMap.put(field.getName(), field.getName());
+                                fieldTypeMap.put(field.getName(), field.getType());
+                            } else if (field.isIsPartition()) {
+                                continue;
                             } else {
-                                name = String.format("f%d", field.getPosition());
+                                String name;
+                                if (daoConfig.saveOriginalField) {
+                                    name = field.getName();
+                                } else {
+                                    name = String.format("f%d", field.getPosition());
+                                }
+
+                                fieldMap.put(name, field.getName());
+                                fieldTypeMap.put(name, field.getType());
                             }
-
-                            fieldMap.put(name, field.getName());
-                            fieldTypeMap.put(name, field.getType());
                         }
-                    }
 
-                    daoConfig.fieldMap = fieldMap;
-                    daoConfig.fieldTypeMap = fieldTypeMap;
-                    break;
-                case Datasource_Type_TableStore:
-                    daoConfig.otsName = project.getOnlineStore().getDatasourceName();
-                    daoConfig.otsSeqOnlineTableName = project.getOnlineStore().getSeqOnlineTableName(this);
-                    daoConfig.otsSeqOfflineTableName = project.getOnlineStore().getSeqOfflineTableName(this);
-                    break;
-                default:
-                    break;
+                        daoConfig.fieldMap = fieldMap;
+                        daoConfig.fieldTypeMap = fieldTypeMap;
+                        break;
+                    case Datasource_Type_TableStore:
+                        daoConfig.otsName = project.getOnlineStore().getDatasourceName();
+                        daoConfig.otsSeqOnlineTableName = project.getOnlineStore().getSeqOnlineTableName(this);
+                        daoConfig.otsSeqOfflineTableName = project.getOnlineStore().getSeqOfflineTableName(this);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                SequenceFeatureView referencedFeatureView = project.getSeqFeatureView(this.config.getReferencedFeatureViewName());
+                if (referencedFeatureView == null) {
+                    throw  new RuntimeException("referenced feature view not found");
+                }
+                switch (project.getProject().getOnlineDatasourceType()) {
+                    case Datasource_Type_Hologres:
+                        daoConfig.hologresName = project.getOnlineStore().getDatasourceName();
+                        daoConfig.hologresSeqOfflineTableName = project.getOnlineStore().getSeqOfflineTableName(referencedFeatureView);
+                        daoConfig.hologresSeqOnlineTableName = project.getOnlineStore().getSeqOnlineTableName(referencedFeatureView);
+                        break;
+                    case Datasource_Type_IGraph:
+                        if (!StringUtils.isEmpty(referencedFeatureView.getFeatureView().getConfig())) {
+                            Map map = gson.fromJson(referencedFeatureView.getFeatureView().getConfig(), Map.class);
+                            if (map.containsKey("save_original_field")) {
+                                if (map.get("save_original_field") instanceof Boolean) {
+                                    daoConfig.saveOriginalField = (Boolean) map.get("save_original_field");
+                                }
+                            }
+                        }
+
+                        daoConfig.iGraphName = project.getOnlineStore().getDatasourceName();
+                        daoConfig.groupName = project.getProject().getProjectName();
+                        daoConfig.igraphEdgeName = project.getOnlineStore().getSeqOnlineTableName(referencedFeatureView);
+                        Map<String, String> fieldMap = new HashMap<>();
+                        Map<String, FSType> fieldTypeMap = new HashMap<>();
+                        for (FeatureViewRequestFields field : featureView.getFields()) {
+                            if (field.isIsPrimaryKey()) {
+                                fieldMap.put(field.getName(), field.getName());
+                                fieldTypeMap.put(field.getName(), field.getType());
+                            } else if (field.isIsPartition()) {
+                                continue;
+                            } else {
+                                String name;
+                                if (daoConfig.saveOriginalField) {
+                                    name = field.getName();
+                                } else {
+                                    name = String.format("f%d", field.getPosition());
+                                }
+
+                                fieldMap.put(name, field.getName());
+                                fieldTypeMap.put(name, field.getType());
+                            }
+                        }
+
+                        daoConfig.fieldMap = fieldMap;
+                        daoConfig.fieldTypeMap = fieldTypeMap;
+                        break;
+                    case Datasource_Type_TableStore:
+                        daoConfig.otsName = project.getOnlineStore().getDatasourceName();
+                        daoConfig.otsSeqOnlineTableName = project.getOnlineStore().getSeqOnlineTableName(referencedFeatureView);
+                        daoConfig.otsSeqOfflineTableName = project.getOnlineStore().getSeqOfflineTableName(referencedFeatureView);
+                        break;
+                    default:
+                        break;
+                }
+
             }
         }
         featureViewDao = FeatureViewDaoFactory.getFeatureViewDao(daoConfig);

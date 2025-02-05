@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.1.4</version>
+  <version>1.1.5</version>
 </dependency>
 ```
 ## 使用方式
@@ -215,6 +215,10 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.1.5 (2025-02-05)
+* 增加了行为 featureview 可以引用行为表的支持   
+ 
+ 
 ### 1.1.4 (2024-11-25)
 * client 增加了 close function 
 * 修复了 getOnlineFeaturesWithEntity 中特征字段为 null 抛异常的情况 

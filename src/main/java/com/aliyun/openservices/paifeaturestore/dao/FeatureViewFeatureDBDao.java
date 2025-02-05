@@ -16,13 +16,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 public class FeatureViewFeatureDBDao implements FeatureViewDao {
     private static Log log = LogFactory.getLog(FeatureViewFeatureDBDao.class);//日志工厂
@@ -735,7 +733,7 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
             while (true) {
                 lock.lock();
                 try {
-                    condition.await(50, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    condition.await(50, TimeUnit.MILLISECONDS);
                     if (!writeData.isEmpty()) {
                         doWriteFeatures();
                     }
