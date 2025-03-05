@@ -46,6 +46,7 @@ public class FeatureStoreDynamicTableSink implements DynamicTableSink {
     public ChangelogMode getChangelogMode(ChangelogMode changelogMode) {
         return ChangelogMode.newBuilder().addContainedKind(RowKind.INSERT)
                 .addContainedKind(RowKind.UPDATE_AFTER)
+                .addContainedKind(RowKind.DELETE)
                 .build();
     }
 
