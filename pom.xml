@@ -5,7 +5,7 @@
   <artifactId>paifeaturestore-sdk</artifactId>
   <packaging>jar</packaging>
   <name>paifeaturestore-sdk</name>
-  <version>1.1.5</version>
+  <version>1.1.6</version>
   <url>>http://maven.apache.org</url>
   <description>SDK for PAI-FeatureStore service</description>
   <scm>
@@ -274,7 +274,7 @@
     <dependency>
       <groupId>com.aliyun.openservices</groupId>
       <artifactId>tablestore</artifactId>
-      <version>5.16.0</version>
+      <version>5.16.3</version>
       <classifier>jar-with-dependencies</classifier>
       <exclusions>
         <exclusion>
