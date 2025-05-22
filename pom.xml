@@ -167,7 +167,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2</version>
+        <version>2.4</version>
         <executions>
           <execution>
             <id>make-assembly</id>
@@ -274,7 +274,7 @@
     <dependency>
       <groupId>com.aliyun.openservices</groupId>
       <artifactId>tablestore</artifactId>
-      <version>5.16.3</version>
+      <version>5.16.0</version>
       <classifier>jar-with-dependencies</classifier>
       <exclusions>
         <exclusion>
@@ -284,6 +284,15 @@
         <exclusion>
           <groupId>com.google.protobuf</groupId>
           <artifactId>protobuf-java</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpasyncclient</artifactId>
+        </exclusion>
+        <!-- 排除 SLF4J 绑定 -->
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId> <!-- 如果存在 -->
         </exclusion>
       </exclusions>
     </dependency>
