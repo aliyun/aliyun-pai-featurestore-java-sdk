@@ -285,15 +285,16 @@
           <groupId>com.google.protobuf</groupId>
           <artifactId>protobuf-java</artifactId>
         </exclusion>
+        <!--
         <exclusion>
           <groupId>org.apache.httpcomponents</groupId>
           <artifactId>httpasyncclient</artifactId>
         </exclusion>
-        <!-- 排除 SLF4J 绑定 -->
         <exclusion>
           <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId> <!-- 如果存在 -->
+          <artifactId>slf4j-api</artifactId>
         </exclusion>
+        -->
       </exclusions>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.aliyun.igraph/aliyun-sdk-igraph -->
