@@ -2,6 +2,7 @@ package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.teaopenapi.models.Config;
 /*  Configure the information class */
 public class Configuration {
+    private static final String CREDENTIAL_TYPE_ACCESS_KEY = "access_key";
     private String projectName;
 
     private String domain = null;
@@ -14,12 +15,24 @@ public class Configuration {
 
     /*  Initial configuration information (region ID, AK account, AK password, and project name)    */
     public Configuration(String regionId, String accessKeyId, String accessKeySecret, String projectName) {
+        this(regionId, accessKeyId, accessKeySecret, null, projectName);
+    }
+    public Configuration(String regionId, String accessKeyId, String accessKeySecret, String securityToken, String projectName) {
+        initConfig(regionId, accessKeyId, accessKeySecret, securityToken);
+        if (projectName == null) {
+            throw new IllegalArgumentException("projectName must not be null");
+        }
+        this.projectName = projectName;
+    }
+    private void initConfig(String regionId, String accessKeyId, String accessKeySecret, String securityToken) {
         this.config = new Config();
         this.config.setAccessKeyId(accessKeyId);
         this.config.setAccessKeySecret(accessKeySecret);
-        this.config.setType("access_key");
+        this.config.setType(CREDENTIAL_TYPE_ACCESS_KEY);
         this.config.setRegionId(regionId);
-        this.projectName = projectName;
+        if (securityToken != null) {
+            this.config.setSecurityToken(securityToken);
+        }
     }
 
     public String getProjectName() {
