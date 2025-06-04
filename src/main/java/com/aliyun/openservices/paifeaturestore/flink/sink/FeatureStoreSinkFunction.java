@@ -9,13 +9,16 @@ import com.aliyun.openservices.paifeaturestore.domain.Project;
 import com.aliyun.openservices.paifeaturestore.domain.SequenceFeatureView;
 import com.aliyun.tea.utils.StringUtils;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.table.data.ArrayData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.logical.ArrayType;
 import org.apache.flink.table.types.logical.BigIntType;
 import org.apache.flink.table.types.logical.BooleanType;
 import org.apache.flink.table.types.logical.DoubleType;
 import org.apache.flink.table.types.logical.FloatType;
 import org.apache.flink.table.types.logical.IntType;
+import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.table.types.logical.VarCharType;
 import org.apache.flink.types.RowKind;
@@ -126,6 +129,27 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
                     data.put(rowField.getName(), value.getLong(i));
                 } else if (rowField.getType() instanceof BooleanType) {
                     data.put(rowField.getName(), value.getBoolean(i));
+                } else if (rowField.getType() instanceof ArrayType) {
+                    ArrayData arrayData = value.getArray(i);
+                    if (arrayData != null && arrayData.size() > 0) {
+                        ArrayType arrayType = (ArrayType) rowField.getType();
+                        LogicalType elementType =arrayType.getElementType();
+                        if (elementType instanceof IntType) {
+                            data.put(rowField.getName(), arrayData.toIntArray());
+                        } else if (elementType instanceof VarCharType) {
+                            String[] stringArray = new String[arrayData.size()];
+                            for (int j = 0; j < arrayData.size(); j++) {
+                                stringArray[j] = arrayData.getString(j).toString();
+                            }
+                            data.put(rowField.getName(), stringArray);
+                        } else if (elementType instanceof DoubleType) {
+                            data.put(rowField.getName(), arrayData.toDoubleArray());
+                        } else if (elementType instanceof FloatType) {
+                            data.put(rowField.getName(),arrayData.toFloatArray());
+                        } else {
+                            data.put(rowField.getName(), arrayData);
+                        }
+                    }
                 } else {
                     data.put(rowField.getName(), value.getRawValue(i).toString());
                 }
