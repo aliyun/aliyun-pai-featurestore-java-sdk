@@ -46,49 +46,13 @@ public class FeatureViewTableStoreDao implements FeatureViewDao {
 
     @Override
     public FeatureResult getFeatures(String[] keys, String[] selectFields) {
-        List<String> keyList = Arrays.asList(keys);
-        int GROUP_SIZE = 100;
-        List<List<String>> groups = new ArrayList<>();
-        for (int i = 0; i < keyList.size(); i+= GROUP_SIZE) {
-            int end = i + GROUP_SIZE;
-            if (end > keyList.size()) {
-                end = keyList.size();
-            }
+        List<String> group = Arrays.asList(keys);
 
-            groups.add(keyList.subList(i, end));
-        }
 
-        List<CompletableFuture<FeatureResult>> futures =  groups.stream().map(group-> CompletableFuture.supplyAsync(()->{
-            return this.doGetFeatures(group, selectFields);
-        })).collect(Collectors.toList());
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-
-        CompletableFuture<List<FeatureResult>> allFutureResults = allFutures.thenApply(v ->
-                futures.stream()
-                        .map(CompletableFuture::join)
-                        .collect(Collectors.toList())
-        );
-
-        List<FeatureResult> featureResultList = null;
-        try {
-            featureResultList = allFutureResults.get();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        FeatureStoreResult featureResult = new FeatureStoreResult();
+        FeatureStoreResult featureResult = (FeatureStoreResult) this.doGetFeatures(group, selectFields);
         featureResult.setFeatureFields(selectFields);
         featureResult.setFeatureFieldTypeMap(this.fieldTypeMap);
 
-        List<Map<String, Object>> featureDataList = new ArrayList<>();
-        for (FeatureResult result : featureResultList) {
-            if (null != result.getFeatureData()) {
-                featureDataList.addAll(result.getFeatureData());
-            }
-        }
-
-
-        featureResult.setFeatureDataList(featureDataList);
         return featureResult;
     }
     public FeatureResult doGetFeatures(List<String> keys, String[] selectFields) {

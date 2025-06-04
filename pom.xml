@@ -5,7 +5,7 @@
   <artifactId>paifeaturestore-sdk</artifactId>
   <packaging>jar</packaging>
   <name>paifeaturestore-sdk</name>
-  <version>1.1.5</version>
+  <version>1.1.6</version>
   <url>>http://maven.apache.org</url>
   <description>SDK for PAI-FeatureStore service</description>
   <scm>
@@ -167,7 +167,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2</version>
+        <version>2.4</version>
         <executions>
           <execution>
             <id>make-assembly</id>
@@ -285,6 +285,16 @@
           <groupId>com.google.protobuf</groupId>
           <artifactId>protobuf-java</artifactId>
         </exclusion>
+        <!--
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpasyncclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        -->
       </exclusions>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.aliyun.igraph/aliyun-sdk-igraph -->
