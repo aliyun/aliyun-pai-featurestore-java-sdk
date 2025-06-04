@@ -323,7 +323,7 @@ public class FeatureStoreClientTest {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_test_1");
+        FeatureView featureView = project.getFeatureView("user_test_2");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }
@@ -404,7 +404,7 @@ public class FeatureStoreClientTest {
             double durationInMilliseconds = duration / 1_000_000.0;
 
             System.out.println("操作耗时：" + durationInMilliseconds + "ms");
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
         }
 
 
@@ -685,5 +685,61 @@ public class FeatureStoreClientTest {
         long duration = endTime - startTime;
         double durationInMilliseconds = duration / 1_000_000.0;
         System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+    }
+    @Test
+    @Ignore
+    public void featureDBSTSTest() throws Exception {
+
+        String accessId = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID");
+        String accessKey = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
+        String securityToken = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET_TOKEN");
+        Configuration configuration = new Configuration("cn-shenzhen",
+                accessId, accessKey, securityToken,"fdb_test" );
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("fdb_test");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_test_2");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+        int count = 10;
+        String[] joinIds = new String[count];
+        for (int i=0; i < count; i++) {
+            joinIds[i] = String.valueOf(i);
+        }
+
+        for (int i = 0; i < 100;i++) {
+            long startTime = System.nanoTime();
+            FeatureResult features = featureView.getOnlineFeatures(joinIds  );
+
+            if (features.getFeatureData().size() != count) {
+                //throw new Exception("request size not equal");
+            }
+            while (features.next()) {
+                for (String name : features.getFeatureFields()) {
+                    System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+                }
+                System.out.println("");
+            }
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            double durationInMilliseconds = duration / 1_000_000.0;
+
+            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+        }
+
+
     }
 }

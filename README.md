@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.1.5</version>
+  <version>1.1.7</version>
 </dependency>
 ```
 ## 使用方式
@@ -215,6 +215,12 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.1.7 (2025-06-04)
+* 增加了使用 sts 方式调用
+ 
+### 1.1.6 (2025-05-29)
+* 优化了ots的读取逻辑，去掉多线程调用 
+ 
 ### 1.1.5 (2025-02-05)
 * 增加了行为 featureview 可以引用行为表的支持   
  
