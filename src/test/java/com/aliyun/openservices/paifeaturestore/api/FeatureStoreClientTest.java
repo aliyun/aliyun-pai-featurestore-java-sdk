@@ -8,11 +8,7 @@ package com.aliyun.openservices.paifeaturestore.api;
 
 import com.aliyun.openservices.paifeaturestore.FeatureStoreClient;
 import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
-import com.aliyun.openservices.paifeaturestore.domain.FeatureResult;
-import com.aliyun.openservices.paifeaturestore.domain.FeatureView;
-import com.aliyun.openservices.paifeaturestore.domain.Model;
-import com.aliyun.openservices.paifeaturestore.domain.Project;
-import com.aliyun.openservices.paifeaturestore.domain.SequenceFeatureView;
+import com.aliyun.openservices.paifeaturestore.domain.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -248,6 +244,74 @@ public class FeatureStoreClientTest {
             System.out.println();
         }
     }
+
+    @Ignore
+    @org.junit.Test
+    public void featureDBBasicTypeReadOnlineDataTest() throws Exception {
+        Configuration cf = new Configuration("cn-hangzhou", Constants.accessId, Constants.accessKey, "test_fdb0526");
+        cf.setDomain(Constants.host);//默认vpc环境，现在是本机
+        cf.setUsername(Constants.username);
+        cf.setPassword(Constants.password);
+        ApiClient client = new ApiClient(cf);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject("test_fdb0526");
+        if (null == project) {
+            throw new RuntimeException("project not found");
+        }
+        FeatureView featureView = project.getFeatureView("test_demo_0528_table2");
+        if (null == featureView) {
+            throw new RuntimeException("featureview not found");
+        }
+        String[] joinIds = new String[100];
+        for (int i=0;i<100;i++){
+            joinIds[i] = String.valueOf(i+1);
+        }
+//        FeatureResult results = featureView.getOnlineFeatures(joinIds);
+        FeatureResult results = featureView.getOnlineFeatures(joinIds, new String[]{"int2", "float1", "double1", "boolean"}, null);
+        while (results.next()) {
+            for (String field : results.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, results.getObject(field));
+            }
+            System.out.println();
+        }
+    }
+
+    @Ignore
+    @org.junit.Test
+    public void featureDBSeqFeaturesTest() throws Exception {
+        String featureViewName ="fs_test_featuredb_test_label_priority_2_training_set";//unsupported seq feature read data
+        Configuration cf = new Configuration("cn-hangzhou", Constants.accessId, Constants.accessKey, "test_fdb0526");
+        cf.setDomain(Constants.host);//默认vpc环境，现在是本机
+        cf.setUsername(Constants.username);
+        cf.setPassword(Constants.password);
+        ApiClient client = new ApiClient(cf);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
+        if (null == featureStoreClient) {
+            throw new RuntimeException("feature store client not found");
+        }
+
+        Project project = featureStoreClient.getProject("test_fdb0526");
+        if (null == project) {
+            throw new RuntimeException("project not found");
+        }
+        SequenceFeatureView featureView = project.getSeqFeatureView(featureViewName);
+        if (null == featureView) {
+            throw new RuntimeException("featureview not found");
+        }
+
+        FeatureResult results = featureView.getOnlineFeatures(new String[]{"120417711","120391946","182545211","186249620","114357124","186024749"});
+        while (results.next()) {
+            for (String field : results.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, results.getObject(field));
+            }
+            System.out.println();
+        }
+
+    }
+
     @Ignore
     @Test
     public void otsDataTest2() throws Exception {

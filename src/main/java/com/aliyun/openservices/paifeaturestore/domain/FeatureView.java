@@ -268,7 +268,9 @@ public class FeatureView implements IFeatureView {
             for (Map<String, Object> featureMap : featureStoreResult.getFeatureData()) {
                 featureMap.put(this.featureEntity.getFeatureEntity().getFeatureEntityJoinid(), featureMap.get(this.primaryKeyField.getName()));
                 featureMap.remove(this.primaryKeyField.getName());
-                featureFieldList.add(this.featureEntity.getFeatureEntity().getFeatureEntityJoinid());
+                if (!featureFieldList.contains(this.featureEntity.getFeatureEntity().getFeatureEntityJoinid())){
+                    featureFieldList.add(this.featureEntity.getFeatureEntity().getFeatureEntityJoinid());
+                }
                 featureFieldList.remove(this.primaryKeyField.getName());
 
                 fieldTypeMap.put(this.featureEntity.getFeatureEntity().getFeatureEntityJoinid(), fieldTypeMap.get(this.primaryKeyField.getName()));

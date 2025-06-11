@@ -306,22 +306,30 @@ public class SequenceFeatureView implements IFeatureView{
 
     @Override
     public FeatureResult getOnlineFeatures(String[] joinIds, String[] features, Map<String, String> aliasFields) throws Exception {
+
+        FeatureResult sequenceFeatures=new FeatureStoreResult();
         FeatureViewSeqConfig config = this.config;
         List<SeqConfig> onlineseqConfigs =new ArrayList<>();
 
-        for (String f:features) {
-            if (f.equals("*")) {
-                onlineseqConfigs=Arrays.asList(config.getSeqConfigs());
-                break;
-            } else {
-                for (SeqConfig sc:config.getSeqConfigs()) {
-                    if (sc.getOnlineSeqName().equals(f)) {
-                        onlineseqConfigs.add(sc);
-                        break;
+        if (config.getRegistrationMode()==ConstantValue.Seq_Registration_Mode_Only_Behavior) {
+            return sequenceFeatures;
+        }
+
+        if (config.getSeqConfigs()!=null){
+            for (String f:features) {
+                if (f.equals("*")) {
+                    onlineseqConfigs=Arrays.asList(config.getSeqConfigs());
+                    break;
+                } else {
+                    for (SeqConfig sc:config.getSeqConfigs()) {
+                        if (sc.getOnlineSeqName().equals(f)) {
+                            onlineseqConfigs.add(sc);
+                            break;
+                        }
                     }
-                }
-                if (f==null) {
-                    throw new RuntimeException(String.format("sequence feature name :%s not found in feature view config",f));
+                    if (f==null) {
+                        throw new RuntimeException(String.format("sequence feature name :%s not found in feature view config",f));
+                    }
                 }
             }
         }
@@ -331,7 +339,7 @@ public class SequenceFeatureView implements IFeatureView{
         }
         config.setSeqConfigs(seqConfigs);
 
-        FeatureResult sequenceFeatures = this.featureViewDao.getSequenceFeatures(joinIds, this.userIdField, config);
+        sequenceFeatures = this.featureViewDao.getSequenceFeatures(joinIds, this.userIdField, config);
         return sequenceFeatures;
     }
 
