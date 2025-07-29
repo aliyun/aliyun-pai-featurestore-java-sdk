@@ -248,7 +248,9 @@ public class FeatureStoreClientTest {
     @Ignore
     @org.junit.Test
     public void featureDBBasicTypeReadOnlineDataTest() throws Exception {
-        Configuration cf = new Configuration("cn-hangzhou", Constants.accessId, Constants.accessKey, "test_fdb0526");
+        String projectName = "fdb_test_case";
+        String featureViewName = "test_0611_user_table";
+        Configuration cf = new Configuration("cn-beijing", Constants.accessId, Constants.accessKey, projectName);
         cf.setDomain(Constants.host);//默认vpc环境，现在是本机
         cf.setUsername(Constants.username);
         cf.setPassword(Constants.password);
@@ -256,11 +258,11 @@ public class FeatureStoreClientTest {
 
         FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
 
-        Project project = featureStoreClient.getProject("test_fdb0526");
+        Project project = featureStoreClient.getProject(projectName);
         if (null == project) {
             throw new RuntimeException("project not found");
         }
-        FeatureView featureView = project.getFeatureView("test_demo_0528_table2");
+        FeatureView featureView = project.getFeatureView(featureViewName);
         if (null == featureView) {
             throw new RuntimeException("featureview not found");
         }
@@ -269,13 +271,18 @@ public class FeatureStoreClientTest {
             joinIds[i] = String.valueOf(i+1);
         }
 //        FeatureResult results = featureView.getOnlineFeatures(joinIds);
-        FeatureResult results = featureView.getOnlineFeatures(joinIds, new String[]{"int2", "float1", "double1", "boolean"}, null);
-        while (results.next()) {
-            for (String field : results.getFeatureFields()) {
-                System.out.printf("%s = %s\t", field, results.getObject(field));
+        FeatureResult results = featureView.getOnlineFeatures(joinIds, new String[]{"credit","score","amount","name"}, null);
+        if (null == results.getFeatureData()) {
+            System.out.println("not found data");
+        }else {
+            while (results.next()) {
+                for (String field : results.getFeatureFields()) {
+                    System.out.printf("%s = %s\t", field, results.getObject(field));
+                }
+                System.out.println();
             }
-            System.out.println();
         }
+
     }
 
     @Ignore
