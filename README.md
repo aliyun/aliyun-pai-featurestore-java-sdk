@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.1.9</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 ## 使用方式
@@ -215,6 +215,9 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.2.0 (2025-07-02)
+* 修复了读取sequence featureview read nullpointer异常 
+ 
 ### 1.1.7 (2025-06-04)
 * 增加了使用 sts 方式调用
  

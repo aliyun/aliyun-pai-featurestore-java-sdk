@@ -5,7 +5,7 @@
   <artifactId>paifeaturestore-sdk</artifactId>
   <packaging>jar</packaging>
   <name>paifeaturestore-sdk</name>
-  <version>1.1.9</version>
+  <version>1.2.0</version>
   <url>>http://maven.apache.org</url>
   <description>SDK for PAI-FeatureStore service</description>
   <scm>
@@ -108,6 +108,17 @@
           </plugin>
 
           <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.8.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+              <autoPublish>true</autoPublish>
+            </configuration>
+          </plugin>
+          <!--
+          <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
             <version>1.6.13</version>
@@ -119,8 +130,10 @@
               <stagingProfileId>260e4248b30bd2</stagingProfileId>
             </configuration>
           </plugin>
+          -->
         </plugins>
       </build>
+      <!--
       <distributionManagement>
         <repository>
           <id>ossrh</id>
@@ -129,6 +142,7 @@
           </url>
         </repository>
       </distributionManagement>
+      -->
     </profile>
   </profiles>
 
