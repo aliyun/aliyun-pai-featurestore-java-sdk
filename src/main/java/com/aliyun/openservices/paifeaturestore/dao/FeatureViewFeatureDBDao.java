@@ -15,6 +15,8 @@ import org.bouncycastle.util.Strings;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.security.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -67,6 +69,8 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         List<String> keyList = Arrays.asList(keys);
 
         FeatureStoreResult featureResult = new FeatureStoreResult();
+        featureResult.setFeatureFields(selectFields);
+        featureResult.setFeatureFieldTypeMap(this.fieldTypeMap);
         List<Map<String, Object>> featuresList = new ArrayList<>(keyList.size());
         try {
             byte[] content = this.featureDBClient.requestFeatureDB(keyList, this.database, this.schema, this.table);
@@ -149,6 +153,13 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 //                                    if (selectFieldSet.contains(featureName)) {
 //                                        featureMap.put(featureName, byteBuffer.getFloat());
 //                                    }
+                                break;
+                            case FS_TIMESTAMP:
+                                Long timestampValue = byteBuffer.getLong();
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                if (selectFieldSet.contains(featureName)) {
+                                    featureMap.put(featureName, sdf.format(timestampValue));
+                                }
                                 break;
                             case FS_ARRAY_INT32:
 
@@ -540,7 +551,6 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                                 }
                                 break;
                             case FS_MAP_STRING_DOUBLE:
-
                                 int lenMapStringDouble = byteBuffer.getInt();
                                 Map<String, Double> mapStringDoubleValue = new HashMap<>(lenMapStringDouble);
 
@@ -600,9 +610,6 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
             log.error(String.format("request featuredb error:%s", e.getMessage()));
             return featureResult;
         }
-
-        featureResult.setFeatureFields(selectFields);
-        featureResult.setFeatureFieldTypeMap(this.fieldTypeMap);
 
         return featureResult;
     }
