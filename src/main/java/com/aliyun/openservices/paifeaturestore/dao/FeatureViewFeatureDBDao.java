@@ -116,13 +116,18 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 //                                    }
                                 break;
                             case FS_INT64:
-                                Long longValue = byteBuffer.getLong();
+//                                Long longValue = byteBuffer.getLong();
+//                                if (selectFieldSet.contains(featureName)) {
+//                                    featureMap.put(featureName, longValue);
+//                                }
+////                                    if (selectFieldSet.contains(featureName)) {
+////                                        featureMap.put(featureName, byteBuffer.getLong());
+////                                    }
+//                                break;
+                                Integer intValue2 = byteBuffer.getInt();
                                 if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, longValue);
+                                    featureMap.put(featureName, intValue2);
                                 }
-//                                    if (selectFieldSet.contains(featureName)) {
-//                                        featureMap.put(featureName, byteBuffer.getLong());
-//                                    }
                                 break;
                             case FS_DOUBLE:
                                 Double doubleValue = byteBuffer.getDouble();

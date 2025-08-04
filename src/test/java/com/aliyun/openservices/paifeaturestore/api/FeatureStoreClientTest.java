@@ -288,8 +288,9 @@ public class FeatureStoreClientTest {
     @Ignore
     @org.junit.Test
     public void featureDBSeqFeaturesTest() throws Exception {
-        String featureViewName ="fs_test_featuredb_test_label_priority_2_training_set";//unsupported seq feature read data
-        Configuration cf = new Configuration("cn-hangzhou", Constants.accessId, Constants.accessKey, "test_fdb0526");
+        String featureViewName ="seq_fea";//unsupported seq feature read data
+        String projectName = "holo_test_case";
+        Configuration cf = new Configuration("cn-beijing", Constants.accessId, Constants.accessKey, projectName);
         cf.setDomain(Constants.host);//默认vpc环境，现在是本机
         cf.setUsername(Constants.username);
         cf.setPassword(Constants.password);
@@ -300,7 +301,7 @@ public class FeatureStoreClientTest {
             throw new RuntimeException("feature store client not found");
         }
 
-        Project project = featureStoreClient.getProject("test_fdb0526");
+        Project project = featureStoreClient.getProject(projectName);
         if (null == project) {
             throw new RuntimeException("project not found");
         }
@@ -309,7 +310,7 @@ public class FeatureStoreClientTest {
             throw new RuntimeException("featureview not found");
         }
 
-        FeatureResult results = featureView.getOnlineFeatures(new String[]{"120417711","120391946","182545211","186249620","114357124","186024749"});
+        FeatureResult results = featureView.getOnlineFeatures(new String[]{"122283542", "111287215", "118076221", "144744242", "130682535", "102004103"});
         while (results.next()) {
             for (String field : results.getFeatureFields()) {
                 System.out.printf("%s = %s\t", field, results.getObject(field));
