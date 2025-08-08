@@ -77,7 +77,7 @@ public class DatasourceApi {
             datasource.setVpcAddress(String.valueOf(map.get("fdb_vpc_address")));
             datasource.setPublicAddress(String.valueOf(map.get("fdb_public_address")));
             datasource.setToken(String.valueOf(map.get("token")));
-
+            datasource.setFdbVpcAddress(String.valueOf(map.get("fdb_vpc_address")));
         }
         return datasource;
     }

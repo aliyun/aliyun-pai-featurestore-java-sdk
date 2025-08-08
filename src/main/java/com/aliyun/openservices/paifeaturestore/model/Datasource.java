@@ -58,6 +58,17 @@ public class Datasource {
   @SerializedName("endpoint")
   private String endpoint = null;
 
+  @SerializedName("fdb_vpc_address")
+  private String fdbVpcAddress;
+
+  public String getFdbVpcAddress() {
+    return fdbVpcAddress;
+  }
+
+  public void setFdbVpcAddress(String fdbVpcAddress) {
+    this.fdbVpcAddress = fdbVpcAddress;
+  }
+
   private AK ak;
 
   public AK getAk() {
@@ -415,7 +426,14 @@ public class Datasource {
     if (usePublicAddress) {
       featureDBClient.setAddress(this.publicAddress);
     } else {
-      featureDBClient.setAddress(this.vpcAddress);
+
+      if (this.fdbVpcAddress != null) {
+        featureDBClient.setAddress(this.fdbVpcAddress);
+        System.out.println(String.format("use fdb vpc address: %s", this.fdbVpcAddress));
+      }else {
+        featureDBClient.setAddress(this.vpcAddress);
+        System.out.println("not use fdb vpc address");
+      }
     }
     featureDBClient.setToken(this.token);
 
