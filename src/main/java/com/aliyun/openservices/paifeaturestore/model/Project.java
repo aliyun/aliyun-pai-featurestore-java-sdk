@@ -71,7 +71,9 @@ public class  Project {
   private Datasource onlineDataSource;
   private String signature = null;
 
-
+  private String FeatureDBAddress = null;
+  private String FeatureDBToken =null;
+  private String FeatureDBVpcAddress = null;
 
 
   public Datasource getOfflineDataSource() {
@@ -456,11 +458,11 @@ public class  Project {
     return o.toString().replace("\n", "\n    ");
   }
 
-    public void setInstanceId(String instanceId) {
-        this.instanceId = instanceId;
-    }
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
+  }
 
-    public String getInstanceId() {
+  public String getInstanceId() {
         return instanceId;
     }
 
@@ -468,6 +470,29 @@ public class  Project {
     return signature;
   }
 
+  public String getFeatureDBAddress() {
+    return FeatureDBAddress;
+  }
+
+  public void setFeatureDBAddress(String featureDBAddress) {
+    FeatureDBAddress = featureDBAddress;
+  }
+
+  public String getFeatureDBToken() {
+    return FeatureDBToken;
+  }
+
+  public void setFeatureDBToken(String featureDBToken) {
+    FeatureDBToken = featureDBToken;
+  }
+
+  public String getFeatureDBVpcAddress() {
+    return FeatureDBVpcAddress;
+  }
+
+  public void setFeatureDBVpcAddress(String featureDBVpcAddress) {
+    FeatureDBVpcAddress = featureDBVpcAddress;
+  }
 
   public void createSignature(String username, String password) {
     if (!StringUtils.isEmpty(username) && !(StringUtils.isEmpty(password))) {

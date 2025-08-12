@@ -426,7 +426,6 @@ public class Datasource {
     if (usePublicAddress) {
       featureDBClient.setAddress(this.publicAddress);
     } else {
-      System.out.println(String.format("fdb vpc address: %s", this.fdbVpcAddress));
       if (null == this.fdbVpcAddress) {
         System.out.println("not use fdb vpc address, common vpcaddress:" + this.vpcAddress);
         featureDBClient.setAddress(this.vpcAddress);
@@ -434,8 +433,8 @@ public class Datasource {
         System.out.println(String.format("use fdb vpc address: %s", this.fdbVpcAddress));
         featureDBClient.setAddress(this.fdbVpcAddress);
       }
-      featureDBClient.setToken(this.token);
     }
+    featureDBClient.setToken(this.token);
     return featureDBClient;
   }
 }

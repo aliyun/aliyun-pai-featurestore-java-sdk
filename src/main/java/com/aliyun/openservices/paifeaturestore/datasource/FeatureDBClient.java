@@ -33,12 +33,12 @@ import java.util.concurrent.TimeUnit;
 public class FeatureDBClient {
     private static Log log = LogFactory.getLog(FeatureDBClient.class);
     private OkHttpClient httpclient = null;
-    private String address = null;
+    private String address;
+    private String vpcAddress;
     private String token = null;
     private String signature = null;
     private int retryCount = 3;
 
-    private String fdbvpcAddress=null;
 
     // 创建一个全局Gson实例
     private static final Gson gson = new Gson();
@@ -150,10 +150,10 @@ public class FeatureDBClient {
         this.retryCount = retryCount;
     }
 
-
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {
         System.out.println("address:"+address);
         String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=", address, database, schema, table, keys.size());
+        System.out.println("url:"+url);
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
         String requestBody = gson.toJson(map);

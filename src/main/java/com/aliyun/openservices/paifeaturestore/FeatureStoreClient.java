@@ -90,6 +90,9 @@ public class FeatureStoreClient {
             if (featureDBDataSource != null) {
                 domainProject.registerFeatrueDB(featureDBDataSource);
             }
+            project.setFeatureDBAddress(featureDBDataSource.getVpcAddress());
+            project.setFeatureDBToken(featureDBDataSource.getToken());
+            project.setFeatureDBVpcAddress(featureDBDataSource.getFdbVpcAddress());
 
             domainProject.setApiClient(this.apiClient);
             projectMap.put(project.getProjectName(), domainProject);
