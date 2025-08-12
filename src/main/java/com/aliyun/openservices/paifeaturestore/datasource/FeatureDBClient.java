@@ -38,6 +38,8 @@ public class FeatureDBClient {
     private String signature = null;
     private int retryCount = 3;
 
+    private String fdbvpcAddress=null;
+
     // 创建一个全局Gson实例
     private static final Gson gson = new Gson();
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
@@ -148,7 +150,9 @@ public class FeatureDBClient {
         this.retryCount = retryCount;
     }
 
+
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {
+        System.out.println("address:"+address);
         String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=", address, database, schema, table, keys.size());
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
