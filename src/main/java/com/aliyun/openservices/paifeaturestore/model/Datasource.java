@@ -431,7 +431,7 @@ public class Datasource {
         featureDBClient.setAddress(this.vpcAddress);
       } else {
         System.out.println(String.format("use fdb vpc address: %s", this.fdbVpcAddress));
-        featureDBClient.setAddress(this.fdbVpcAddress);
+        featureDBClient.setAddress(String.format("http://%s",this.fdbVpcAddress));
       }
     }
     featureDBClient.setToken(this.token);
