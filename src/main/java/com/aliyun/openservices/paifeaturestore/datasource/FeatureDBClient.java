@@ -152,12 +152,12 @@ public class FeatureDBClient {
 
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {
         System.out.println("address:"+address);
-        String baseUrl = address;
-        if (!address.startsWith("http://") && !address.startsWith("https://")) {
-            baseUrl = "https://" + address;  // 或使用 https://
-        }
+//        String baseUrl = address;
+//        if (!address.startsWith("http://") && !address.startsWith("https://")) {
+//            baseUrl = "https://" + address;  // 或使用 https://
+//        }
         String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=",
-                baseUrl, database, schema, table, keys.size());System.out.println("url:"+url);
+                address, database, schema, table, keys.size());System.out.println("url:"+url);
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
         String requestBody = gson.toJson(map);
