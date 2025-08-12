@@ -12,13 +12,13 @@ public class FeatureDBTest {
         String projectName = "fdb_normal_test";
         String featureViewName = "sdk_performance_test_user_table";
         Configuration cf = new Configuration("cn-shenzhen", Constants.accessId, Constants.accessKey, projectName);
-//        cf.setDomain(Constants.host);//默认vpc环境，现在是本机
+        cf.setDomain(Constants.host);//默认vpc环境，现在是本机
         cf.setUsername(Constants.username);
         cf.setPassword(Constants.password);
         ApiClient client = new ApiClient(cf);
 
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
-//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
+//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
 
         Project project = featureStoreClient.getProject(projectName);
         if (null == project) {
@@ -91,7 +91,7 @@ public class FeatureDBTest {
         String projectName = "fdb_high_speed";
         String featureViewName = "sdk_performance_test_user_table";
         Configuration cf = new Configuration("cn-shenzhen", Constants.accessId, Constants.accessKey, projectName);
-//        cf.setDomain(Constants.host);//默认vpc环境，现在是本机
+        cf.setDomain(Constants.host);//默认vpc环境，现在是本机
         cf.setUsername(Constants.username);
         cf.setPassword(Constants.password);
         ApiClient client = new ApiClient(cf);
