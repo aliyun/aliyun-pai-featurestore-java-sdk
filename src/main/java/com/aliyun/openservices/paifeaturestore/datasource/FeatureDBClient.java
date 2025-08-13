@@ -33,11 +33,10 @@ import java.util.concurrent.TimeUnit;
 public class FeatureDBClient {
     private static Log log = LogFactory.getLog(FeatureDBClient.class);
     private OkHttpClient httpclient = null;
-    private String address;
+    private String address=null;
     private String token = null;
     private String signature = null;
     private int retryCount = 3;
-
 
     // 创建一个全局Gson实例
     private static final Gson gson = new Gson();

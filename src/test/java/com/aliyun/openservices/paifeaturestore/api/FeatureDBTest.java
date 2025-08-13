@@ -66,7 +66,7 @@ public class FeatureDBTest {
 
 //
 //        FeatureResult results = featureView.getOnlineFeatures(joinIds);
-        for(int i=0;i<10;i++){
+        for(int i=0;i<100;i++){
             long start = System.currentTimeMillis();
             FeatureResult results = featureView.getOnlineFeatures(joinId200s, new String[]{"*"}, null);
             long end = System.currentTimeMillis();
@@ -142,7 +142,7 @@ public class FeatureDBTest {
         String[] joinId1s = {"5373471048"};
 
 
-        for(int i=0;i<10;i++){
+        for(int i=0;i<100;i++){
             System.out.println("=== Test run " + (i + 1) + " ===");
             long start = System.currentTimeMillis();
             FeatureResult results = featureView.getOnlineFeatures(joinId200s, new String[]{"*"}, null);
