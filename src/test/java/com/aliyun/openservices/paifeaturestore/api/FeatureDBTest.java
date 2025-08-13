@@ -17,8 +17,8 @@ public class FeatureDBTest {
         cf.setPassword(Constants.password);
         ApiClient client = new ApiClient(cf);
 
-//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
+//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
 
         Project project = featureStoreClient.getProject(projectName);
         if (null == project) {
@@ -96,9 +96,7 @@ public class FeatureDBTest {
         cf.setPassword(Constants.password);
         ApiClient client = new ApiClient(cf);
 
-//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
-
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
         Project project = featureStoreClient.getProject(projectName);
         if (null == project) {
             throw new RuntimeException("project not found");
@@ -143,8 +141,7 @@ public class FeatureDBTest {
 
         String[] joinId1s = {"5373471048"};
 
-//
-//        FeatureResult results = featureView.getOnlineFeatures(joinIds);
+
         for(int i=0;i<10;i++){
             System.out.println("=== Test run " + (i + 1) + " ===");
             long start = System.currentTimeMillis();

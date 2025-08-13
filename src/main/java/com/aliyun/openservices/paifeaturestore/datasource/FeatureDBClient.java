@@ -34,7 +34,6 @@ public class FeatureDBClient {
     private static Log log = LogFactory.getLog(FeatureDBClient.class);
     private OkHttpClient httpclient = null;
     private String address;
-    private String vpcAddress;
     private String token = null;
     private String signature = null;
     private int retryCount = 3;
