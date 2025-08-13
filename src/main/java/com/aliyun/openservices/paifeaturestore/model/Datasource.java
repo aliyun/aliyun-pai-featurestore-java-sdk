@@ -426,6 +426,8 @@ public class Datasource {
     if (usePublicAddress) {
       featureDBClient.setAddress(this.publicAddress);
     } else {
+      System.out.println("fdb vpc address:" + this.fdbVpcAddress);
+      System.out.println("vpc address:" + this.vpcAddress);
       if (null == this.fdbVpcAddress) {
         System.out.println("not use fdb vpc address, common vpcaddress:" + this.vpcAddress);
         featureDBClient.setAddress(this.vpcAddress);

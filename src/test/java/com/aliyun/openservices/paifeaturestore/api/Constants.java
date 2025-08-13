@@ -7,7 +7,7 @@ public class Constants {
     public static String accessId = "";
     public static String accessKey = "";
     public static String host = "paifeaturestore-vpc.cn-shenzhen.aliyuncs.com";
-
+//    public static String host = "paifeaturestore.cn-shenzhen.aliyuncs.com";
     public static Boolean usePublicAddress = true;
 
     public static String username = "";
