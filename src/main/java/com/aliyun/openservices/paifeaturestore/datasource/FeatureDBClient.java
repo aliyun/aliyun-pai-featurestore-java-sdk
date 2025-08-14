@@ -183,7 +183,7 @@ public class FeatureDBClient {
                 }
             });
             System.out.println("current time:" + System.currentTimeMillis());
-            return future.get(300, TimeUnit.MILLISECONDS);
+            return future.get(500, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             System.out.println("VPC address check timeout or failed: " + e.getMessage());
             return false;

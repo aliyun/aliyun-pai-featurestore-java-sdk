@@ -43,10 +43,7 @@ public class HttpConfig {
         this.requestTimeout = requestTimeout;
     }
 
-    public HttpConfig(int connectTimeout) {
-        super();
-        this.connectTimeout = connectTimeout;
-    }
+
 
     public int getIoThreadNum() {
         return ioThreadNum;
