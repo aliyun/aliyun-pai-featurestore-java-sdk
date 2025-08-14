@@ -3,6 +3,7 @@ package com.aliyun.openservices.paifeaturestore.datasource;
 import com.alicloud.openservices.tablestore.core.utils.IOUtils;
 import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.google.gson.Gson;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.ConnectionPool;
@@ -35,6 +36,7 @@ public class FeatureDBClient {
     private OkHttpClient httpclient = null;
     private String address=null;
     private String token = null;
+    private String vpcAddress = null;
     private String signature = null;
     private int retryCount = 3;
 
@@ -132,6 +134,14 @@ public class FeatureDBClient {
         this.token = token;
     }
 
+    public String getVpcAddress() {
+        return vpcAddress;
+    }
+
+    public void setVpcAddress(String vpcAddress) {
+        this.vpcAddress = vpcAddress;
+    }
+
     public String getSignature() {
         return signature;
     }
@@ -146,6 +156,21 @@ public class FeatureDBClient {
 
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
+    }
+
+    public Boolean CheckVpcAddress(){
+        System.out.println("Check if vpc addres is available");
+        String url=String.format("%s/health",this.vpcAddress);
+        System.out.println("url:"+url);
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        try {
+            return httpclient.newCall(request).execute().isSuccessful();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {
@@ -346,4 +371,8 @@ public class FeatureDBClient {
             this.httpclient.connectionPool().evictAll();
         }
     }
+
+
+
+
 }

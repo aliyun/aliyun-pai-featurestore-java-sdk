@@ -423,13 +423,20 @@ public class Datasource {
   public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress) {
 
     FeatureDBClient featureDBClient = new FeatureDBClient(new HttpConfig());
+
     if (usePublicAddress) {
       featureDBClient.setAddress(this.publicAddress);
     } else {
       if (null == this.fdbVpcAddress) {
-        featureDBClient.setAddress(this.vpcAddress);
+          featureDBClient.setAddress(this.vpcAddress);
       } else {
-        featureDBClient.setAddress(String.format("http://%s",this.fdbVpcAddress));
+        // check
+        Boolean isConnected = featureDBClient.CheckVpcAddress();
+        if (isConnected) {
+          featureDBClient.setAddress(String.format("http://%s",this.vpcAddress));
+        }else {
+          featureDBClient.setAddress(this.vpcAddress);
+        }
       }
     }
     featureDBClient.setToken(this.token);
