@@ -5,7 +5,7 @@ import com.aliyun.openservices.paifeaturestore.domain.FeatureResult;
 import com.aliyun.openservices.paifeaturestore.domain.FeatureView;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
 
-public class FeatureDBTest {
+public class FeatureDBTestNew {
     //fdb vpc connect test
 //    @org.junit.Test
     public void featureDBNormalTest() throws Exception {
