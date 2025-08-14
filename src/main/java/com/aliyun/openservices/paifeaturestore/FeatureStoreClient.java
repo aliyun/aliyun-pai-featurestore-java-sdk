@@ -116,7 +116,7 @@ public class FeatureStoreClient {
             project.close();
         }
         this.projects.clear();
-        FeatureDBFactory.close();
+        //FeatureDBFactory.close();
         HologresFactory.close();
     }
 }
