@@ -431,10 +431,9 @@ public class Datasource {
           featureDBClient.setAddress(this.vpcAddress);
       } else {
         // check
+        featureDBClient.setAddress(String.format("http://%s",this.vpcAddress));
         Boolean isConnected = featureDBClient.CheckVpcAddress();
-        if (isConnected) {
-          featureDBClient.setAddress(String.format("http://%s",this.vpcAddress));
-        }else {
+        if (!isConnected) {
           featureDBClient.setAddress(this.vpcAddress);
         }
       }
