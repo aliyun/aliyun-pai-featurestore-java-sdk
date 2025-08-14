@@ -432,8 +432,10 @@ public class Datasource {
       } else {
         // check
         featureDBClient.setVpcAddress(String.format("http://%s",this.fdbVpcAddress));
+        long start = System.currentTimeMillis();
         Boolean isConnected = featureDBClient.CheckVpcAddress();
         if (!isConnected) {
+          System.out.println("check vpcaddress failed cost time:"+(System.currentTimeMillis()-start)+"(ms)");
           featureDBClient.setAddress(this.vpcAddress);
           featureDBClient.setVpcAddress(null);
         }
