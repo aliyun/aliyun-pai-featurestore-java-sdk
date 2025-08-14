@@ -174,8 +174,12 @@ public class FeatureDBClient {
 
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {
         System.out.println("address:"+address);
+        String onlineAddress = address;
+        if (this.getVpcAddress()!= null && !this.getVpcAddress().isEmpty()){
+            onlineAddress = this.getVpcAddress();
+        }
         String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=",
-                address, database, schema, table, keys.size());System.out.println("url:"+url);
+                onlineAddress, database, schema, table, keys.size());System.out.println("url:"+url);
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
         String requestBody = gson.toJson(map);
@@ -218,7 +222,11 @@ public class FeatureDBClient {
 
     }
     public byte[] kkvRequestFeatureDB(List<String> pks, String database, String schema, String table, int length) throws Exception {
-        String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kkv", address, database, schema, table);
+        String onlineAddress = address;
+        if (this.getVpcAddress()!= null && !this.getVpcAddress().isEmpty()){
+            onlineAddress = this.getVpcAddress();
+        }
+        String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kkv", onlineAddress, database, schema, table);
         Map<String, Object> map = new HashMap<>();
         map.put("pks", pks);
         map.put("length", length);

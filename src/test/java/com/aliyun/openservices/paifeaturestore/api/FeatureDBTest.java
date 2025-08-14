@@ -18,8 +18,8 @@ public class FeatureDBTest {
         cf.setPassword(Constants.password);
         ApiClient client = new ApiClient(cf);
 
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
-//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
+//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
 
         Project project = featureStoreClient.getProject(projectName);
         if (null == project) {
@@ -98,7 +98,8 @@ public class FeatureDBTest {
         cf.setPassword(Constants.password);
         ApiClient client = new ApiClient(cf);
 
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
+//        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client,Constants.usePublicAddress);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client);
         Project project = featureStoreClient.getProject(projectName);
         if (null == project) {
             throw new RuntimeException("project not found");
