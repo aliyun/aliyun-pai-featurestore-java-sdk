@@ -82,8 +82,6 @@ public class Project {
                 throw new RuntimeException("not support onlinestore type");
         }
 
-        //
-
     }
 
 

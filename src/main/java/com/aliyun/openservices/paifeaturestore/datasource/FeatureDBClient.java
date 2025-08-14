@@ -46,7 +46,7 @@ public class FeatureDBClient {
     public FeatureDBClient(HttpConfig httpConfig) {
         try {
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.connectTimeout(httpConfig.getConnectTimeout(), TimeUnit.MILLISECONDS);//200ms
+            builder.connectTimeout(httpConfig.getConnectTimeout(), TimeUnit.MILLISECONDS);
             builder.readTimeout(httpConfig.getReadTimeout(), TimeUnit.MILLISECONDS);
             builder.writeTimeout(httpConfig.getWriteTimeout(), TimeUnit.MILLISECONDS);
             builder.socketFactory(new SocketFactory() {
@@ -161,8 +161,6 @@ public class FeatureDBClient {
     public Boolean CheckAddress(String address) {
         System.out.println("checkVpcAddress is available");
         String url = String.format("%s/health", address);
-        System.out.println("url:" + url);
-
         Request request = new Request.Builder()
                 .url(url)
                 .get()
@@ -181,9 +179,10 @@ public class FeatureDBClient {
             });
             return future.get(500, TimeUnit.MILLISECONDS);
         }catch (TimeoutException  te){
+            log.error("VPC address check timeout: " + url);
             return false;
         }catch (Exception e) {
-            System.out.println("VPC address check timeout or failed: " + e.getMessage());
+            log.error("VPC address check timeout or failed: " + url);
             return false;
         }
     }
@@ -196,7 +195,7 @@ public class FeatureDBClient {
         }
         String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=",
                 onlineAddress, database, schema, table, keys.size());
-        System.out.println("url:"+ url);
+
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
         String requestBody = gson.toJson(map);
