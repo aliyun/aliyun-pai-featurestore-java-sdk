@@ -434,6 +434,7 @@ public class Datasource {
         // check
         long start = System.currentTimeMillis();
         String address = String.format("http://%s",this.fdbVpcAddress);
+        System.out.println("address:"+address);
         Boolean isConnected = featureDBClient.CheckAddress(address);
         if (!isConnected) {
           System.out.println("check vpcAddress failed cost time:"+(System.currentTimeMillis()-start)+"(ms)");

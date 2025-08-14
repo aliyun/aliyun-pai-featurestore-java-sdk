@@ -27,8 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class FeatureDBClient {
     private static Log log = LogFactory.getLog(FeatureDBClient.class);
@@ -159,10 +160,6 @@ public class FeatureDBClient {
 
     public Boolean CheckAddress(String address) {
         System.out.println("checkVpcAddress is available");
-        if (this.vpcAddress == null || this.vpcAddress.isEmpty()) {
-            return false;
-        }
-
         String url = String.format("%s/health", address);
         System.out.println("url:" + url);
 
@@ -182,9 +179,10 @@ public class FeatureDBClient {
                     return false;
                 }
             });
-            System.out.println("current time:" + System.currentTimeMillis());
             return future.get(500, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
+        }catch (TimeoutException  te){
+            return false;
+        }catch (Exception e) {
             System.out.println("VPC address check timeout or failed: " + e.getMessage());
             return false;
         }
