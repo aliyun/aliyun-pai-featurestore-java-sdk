@@ -423,7 +423,6 @@ public class Datasource {
   }
 
   public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress) {
-    long startTime=System.currentTimeMillis();
     FeatureDBClient featureDBClient = new FeatureDBClient(new HttpConfig());
 
     if (usePublicAddress) {
@@ -432,19 +431,14 @@ public class Datasource {
       featureDBClient.setAddress(this.vpcAddress);
       if (null != this.fdbVpcAddress) {
         // check
-        long start = System.currentTimeMillis();
         String address = String.format("http://%s",this.fdbVpcAddress);
-        System.out.println("address:"+address);
         Boolean isConnected = featureDBClient.CheckAddress(address);
-        if (!isConnected) {
-          System.out.println("check vpcAddress failed cost time:"+(System.currentTimeMillis()-start)+"(ms)");
-        }else {
+        if (isConnected) {
           featureDBClient.setVpcAddress(String.format("http://%s",this.fdbVpcAddress));
         }
       }
     }
     featureDBClient.setToken(this.token);
-    System.out.println("register fdb client cost time:"+(System.currentTimeMillis()-startTime)+"(ms)");
     return featureDBClient;
   }
 }
