@@ -158,7 +158,9 @@ public class FeatureDBClient {
     }
 
     public Boolean CheckVpcAddress(){
+        System.out.println("checkVpcAddress is availlable");
         String url=String.format("%s/health",this.vpcAddress);
+        System.out.println("url:"+ url);
         Request request = new Request.Builder()
                 .url(url)
                 .get()
@@ -177,6 +179,7 @@ public class FeatureDBClient {
         }
         String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=",
                 onlineAddress, database, schema, table, keys.size());
+        System.out.println("url:"+ url);
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
         String requestBody = gson.toJson(map);

@@ -435,6 +435,7 @@ public class Datasource {
         Boolean isConnected = featureDBClient.CheckVpcAddress();
         if (!isConnected) {
           featureDBClient.setAddress(this.vpcAddress);
+          featureDBClient.setVpcAddress(null);
         }
       }
     }
