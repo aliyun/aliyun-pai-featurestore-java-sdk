@@ -157,20 +157,39 @@ public class FeatureDBClient {
         this.retryCount = retryCount;
     }
 
-    public Boolean CheckVpcAddress(){
-        System.out.println("checkVpcAddress is availlable");
-        String url=String.format("%s/health",this.vpcAddress);
-        System.out.println("url:"+ url);
+    public Boolean CheckVpcAddress() {
+        System.out.println("checkVpcAddress is available");
+        if (this.vpcAddress == null || this.vpcAddress.isEmpty()) {
+            return false;
+        }
+
+        String url = String.format("%s/health", this.vpcAddress);
+        System.out.println("url:" + url);
+
         Request request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
+
         try {
-            return httpclient.newCall(request).execute().isSuccessful();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    Response response = httpclient.newCall(request).execute();
+                    boolean successful = response.isSuccessful();
+                    response.close();
+                    return successful;
+                } catch (IOException e) {
+                    return false;
+                }
+            });
+
+            return future.get(3, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            System.out.println("VPC address check timeout or failed: " + e.getMessage());
+            return false;
         }
     }
+
 
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {
         String onlineAddress = address;
