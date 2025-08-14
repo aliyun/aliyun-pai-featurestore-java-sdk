@@ -1,6 +1,8 @@
 package com.aliyun.openservices.paifeaturestore.model;
 
+import java.sql.Time;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import com.alicloud.openservices.tablestore.SyncClient;
 import com.aliyun.igraph.client.gremlin.driver.Client;
@@ -421,27 +423,26 @@ public class Datasource {
   }
 
   public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress) {
-
-    FeatureDBClient featureDBClient = new FeatureDBClient(new HttpConfig());
+    long startTime=System.currentTimeMillis();
+    FeatureDBClient featureDBClient = new FeatureDBClient(new HttpConfig(200));
 
     if (usePublicAddress) {
       featureDBClient.setAddress(this.publicAddress);
     } else {
-      if (null == this.fdbVpcAddress) {
-          featureDBClient.setAddress(this.vpcAddress);
-      } else {
+      featureDBClient.setAddress(this.vpcAddress);
+      if (null != this.fdbVpcAddress) {
         // check
         featureDBClient.setVpcAddress(String.format("http://%s",this.fdbVpcAddress));
         long start = System.currentTimeMillis();
         Boolean isConnected = featureDBClient.CheckVpcAddress();
         if (!isConnected) {
-          System.out.println("check vpcaddress failed cost time:"+(System.currentTimeMillis()-start)+"(ms)");
-          featureDBClient.setAddress(this.vpcAddress);
+          System.out.println("check vpcAddress failed cost time:"+(System.currentTimeMillis()-start)+"(ms)");
           featureDBClient.setVpcAddress(null);
         }
       }
     }
     featureDBClient.setToken(this.token);
+    System.out.println("register fdb client cost time:"+(System.currentTimeMillis()-startTime)+"(ms)");
     return featureDBClient;
   }
 }

@@ -45,7 +45,7 @@ public class FeatureDBClient {
     public FeatureDBClient(HttpConfig httpConfig) {
         try {
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.connectTimeout(httpConfig.getConnectTimeout(), TimeUnit.MILLISECONDS);
+            builder.connectTimeout(httpConfig.getConnectTimeout(), TimeUnit.MILLISECONDS);//200ms
             builder.readTimeout(httpConfig.getReadTimeout(), TimeUnit.MILLISECONDS);
             builder.writeTimeout(httpConfig.getWriteTimeout(), TimeUnit.MILLISECONDS);
             builder.socketFactory(new SocketFactory() {

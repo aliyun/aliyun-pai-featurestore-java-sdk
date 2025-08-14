@@ -22,12 +22,11 @@ public class HttpConfig {
         this.maxConnectionPerRoute = 1000;
         this.requestTimeout = 0;
         this.keepAlive = true;
-        this.keepAliveTimeout = 30000;
         this.redirectsEnabled = false;
     }
 
     public HttpConfig(int ioThreadNum, int readTimeout, int connectTimeout,
-                      int maxConnectionCount, int maxConnectionPerRoute, int keepAliveTimeout) {
+                      int maxConnectionCount, int maxConnectionPerRoute) {
         super();
         this.ioThreadNum = ioThreadNum;
         this.readTimeout = readTimeout;
@@ -35,14 +34,18 @@ public class HttpConfig {
         this.maxConnectionCount = maxConnectionCount;
         this.maxConnectionPerRoute = maxConnectionPerRoute;
         this.keepAlive = true;
-        this.keepAliveTimeout = keepAliveTimeout;
         this.redirectsEnabled = false;
     }
 
     public HttpConfig(int ioThreadNum, int readTimeout, int connectTimeout,
-                      int maxConnectionCount, int maxConnectionPerRoute, int requestTimeout, int keepAliveTimeout) {
-        this(ioThreadNum, readTimeout, connectTimeout, maxConnectionCount, maxConnectionPerRoute,keepAliveTimeout);
+                      int maxConnectionCount, int maxConnectionPerRoute, int requestTimeout) {
+        this(ioThreadNum, readTimeout, connectTimeout, maxConnectionCount, maxConnectionPerRoute);
         this.requestTimeout = requestTimeout;
+    }
+
+    public HttpConfig(int connectTimeout) {
+        super();
+        this.connectTimeout = connectTimeout;
     }
 
     public int getIoThreadNum() {
