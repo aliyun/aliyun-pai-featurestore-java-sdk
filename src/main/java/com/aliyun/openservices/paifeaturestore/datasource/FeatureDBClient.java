@@ -3,7 +3,6 @@ package com.aliyun.openservices.paifeaturestore.datasource;
 import com.alicloud.openservices.tablestore.core.utils.IOUtils;
 import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.google.gson.Gson;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.ConnectionPool;

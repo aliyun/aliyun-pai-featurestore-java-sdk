@@ -6,8 +6,9 @@ import com.aliyun.openservices.paifeaturestore.domain.FeatureView;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
 
 public class FeatureDBTest {
+
     //fdb vpc connect test
-    @org.junit.Test
+//    @org.junit.Test
     public void featureDBNormalTest() throws Exception {
         String projectName = "fdb_normal_test";
         String featureViewName = "sdk_performance_test_user_table";
@@ -85,6 +86,7 @@ public class FeatureDBTest {
 
 
     }
+
 
     @org.junit.Test
     public void featureDBVPCTest() throws Exception {
