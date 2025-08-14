@@ -433,7 +433,7 @@ public class Datasource {
       if (null != this.fdbVpcAddress) {
         // check
         long start = System.currentTimeMillis();
-        Boolean isConnected = featureDBClient.CheckVpcAddress();
+        Boolean isConnected = featureDBClient.CheckAddress(this.fdbVpcAddress);
         System.out.println("check vpcAddress failed cost time:"+(System.currentTimeMillis()-start)+"(ms)");
         if (isConnected) {
           featureDBClient.setVpcAddress(String.format("http://%s",this.fdbVpcAddress));

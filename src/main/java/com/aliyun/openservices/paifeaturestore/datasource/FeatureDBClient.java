@@ -157,13 +157,13 @@ public class FeatureDBClient {
         this.retryCount = retryCount;
     }
 
-    public Boolean CheckVpcAddress() {
+    public Boolean CheckAddress(String address) {
         System.out.println("checkVpcAddress is available");
         if (this.vpcAddress == null || this.vpcAddress.isEmpty()) {
             return false;
         }
 
-        String url = String.format("%s/health", this.vpcAddress);
+        String url = String.format("%s/health", address);
         System.out.println("url:" + url);
 
         Request request = new Request.Builder()
