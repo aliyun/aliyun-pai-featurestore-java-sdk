@@ -26,7 +26,7 @@ public class FeatureStoreClientTest {
     @Test
     public void featureDBDataSeqWriteTest() throws Exception {
         Configuration configuration = new Configuration("cn-beijing", Constants.accessId, Constants.accessKey, "ceci_fsdb_test");
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-beijing.aliyuncs.com");
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
         ApiClient apiClient = new ApiClient(configuration);
@@ -54,7 +54,7 @@ public class FeatureStoreClientTest {
     @Test
     public void featureDBDataSeqReadTest() throws Exception {
         Configuration configuration = new Configuration("cn-beijing", Constants.accessId, Constants.accessKey, "ceci_fsdb_test");
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-beijing.aliyuncs.com");
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
         ApiClient apiClient = new ApiClient(configuration);

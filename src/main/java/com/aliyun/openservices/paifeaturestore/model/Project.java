@@ -71,7 +71,6 @@ public class  Project {
   private Datasource onlineDataSource;
   private String signature = null;
 
-
   public Datasource getOfflineDataSource() {
     return offlineDataSource;
   }
@@ -454,11 +453,11 @@ public class  Project {
     return o.toString().replace("\n", "\n    ");
   }
 
-    public void setInstanceId(String instanceId) {
-        this.instanceId = instanceId;
-    }
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
+  }
 
-    public String getInstanceId() {
+  public String getInstanceId() {
         return instanceId;
     }
 

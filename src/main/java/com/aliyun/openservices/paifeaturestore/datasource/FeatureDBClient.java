@@ -27,14 +27,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class FeatureDBClient {
     private static Log log = LogFactory.getLog(FeatureDBClient.class);
     private OkHttpClient httpclient = null;
-    private String address = null;
+    private String address=null;
     private String token = null;
+    private String vpcAddress = null;
     private String signature = null;
     private int retryCount = 3;
 
@@ -132,6 +134,14 @@ public class FeatureDBClient {
         this.token = token;
     }
 
+    public String getVpcAddress() {
+        return vpcAddress;
+    }
+
+    public void setVpcAddress(String vpcAddress) {
+        this.vpcAddress = vpcAddress;
+    }
+
     public String getSignature() {
         return signature;
     }
@@ -148,8 +158,44 @@ public class FeatureDBClient {
         this.retryCount = retryCount;
     }
 
+    public Boolean CheckAddress(String address) {
+        System.out.println("checkVpcAddress is available");
+        String url = String.format("%s/health", address);
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        try {
+            CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    Response response = httpclient.newCall(request).execute();
+                    boolean successful = response.isSuccessful();
+                    response.close();
+                    return successful;
+                } catch (IOException e) {
+                    return false;
+                }
+            });
+            return future.get(500, TimeUnit.MILLISECONDS);
+        }catch (TimeoutException  te){
+            log.error("VPC address check timeout: " + url);
+            return false;
+        }catch (Exception e) {
+            log.error("VPC address check timeout or failed: " + url);
+            return false;
+        }
+    }
+
+
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {
-        String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=", address, database, schema, table, keys.size());
+        String onlineAddress = address;
+        if (this.getVpcAddress()!= null && !this.getVpcAddress().isEmpty()){
+            onlineAddress = this.getVpcAddress();
+        }
+        String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kv2?batch_size=%d&encoder=",
+                onlineAddress, database, schema, table, keys.size());
+
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
         String requestBody = gson.toJson(map);
@@ -192,7 +238,11 @@ public class FeatureDBClient {
 
     }
     public byte[] kkvRequestFeatureDB(List<String> pks, String database, String schema, String table, int length) throws Exception {
-        String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kkv", address, database, schema, table);
+        String onlineAddress = address;
+        if (this.getVpcAddress()!= null && !this.getVpcAddress().isEmpty()){
+            onlineAddress = this.getVpcAddress();
+        }
+        String url = String.format("%s/api/v1/tables/%s/%s/%s/batch_get_kkv", onlineAddress, database, schema, table);
         Map<String, Object> map = new HashMap<>();
         map.put("pks", pks);
         map.put("length", length);
@@ -344,4 +394,8 @@ public class FeatureDBClient {
             this.httpclient.connectionPool().evictAll();
         }
     }
+
+
+
+
 }
