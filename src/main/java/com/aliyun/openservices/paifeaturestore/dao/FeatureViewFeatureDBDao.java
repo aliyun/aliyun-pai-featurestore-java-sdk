@@ -159,13 +159,14 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 //                                        featureMap.put(featureName, byteBuffer.getFloat());
 //                                    }
                                 break;
-//                            case FS_TIMESTAMP:
+                            case FS_TIMESTAMP:
 //                                Long timestampValue = byteBuffer.getLong();
 //                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 //                                if (selectFieldSet.contains(featureName)) {
 //                                    featureMap.put(featureName, sdf.format(timestampValue));
 //                                }
 //                                break;
+                                System.out.println("do not handle the timestamp type");
                             case FS_ARRAY_INT32:
 
                                 int lenArrayInt32 = byteBuffer.getInt();
