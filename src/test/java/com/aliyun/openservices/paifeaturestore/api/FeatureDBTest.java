@@ -82,7 +82,7 @@ public class FeatureDBTest {
 
     }
 
-//    @org.junit.Test
+    @org.junit.Test
     public void featureDBVPCTest() throws Exception {
         String projectName = "fdb_high_speed";
         String featureViewName = "sdk_performance_test_user_table";
