@@ -14,8 +14,8 @@ public class Constants {
 
     public static String password = "";
     static {
-        accessId = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID");
-        accessKey = System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
+        accessId = System.getenv("ACCESS_ID");
+        accessKey = System.getenv("ACCESS_KEY");
         username = System.getenv("FEATUREDB_USERNAME");
         password = System.getenv("FEATUREDB_PASSWORD");
     }

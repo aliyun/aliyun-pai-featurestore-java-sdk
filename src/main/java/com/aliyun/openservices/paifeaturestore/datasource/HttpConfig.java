@@ -10,7 +10,6 @@ public class HttpConfig {
     private int maxConnectionPerRoute;
     private boolean keepAlive;
     private boolean redirectsEnabled;
-    private int keepAliveTimeout;
 
 
     public HttpConfig() {
@@ -107,14 +106,6 @@ public class HttpConfig {
 
     public void setKeepAlive(boolean keepAlive) {
         this.keepAlive = keepAlive;
-    }
-
-    public int getKeepAliveTimeout() {
-        return keepAliveTimeout;
-    }
-
-    public void setKeepAliveTimeout(int keepAliveTimeout) {
-        this.keepAliveTimeout = keepAliveTimeout;
     }
 
     public boolean getRedirectsEnabled() {

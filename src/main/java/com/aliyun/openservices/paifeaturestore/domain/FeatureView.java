@@ -257,9 +257,13 @@ public class FeatureView implements IFeatureView {
                 }
             }
         }
-
+        Long getFeaturesStartTime = System.currentTimeMillis();
         FeatureStoreResult featureStoreResult = (FeatureStoreResult) this.featureViewDao.getFeatures(joinIds, selectFields.toArray(new String[0]));
+        Long getFeaturesEndTime = System.currentTimeMillis();
+        System.out.println("getFeatures cost time:" + (getFeaturesEndTime - getFeaturesStartTime));
 
+
+        Long channelFeatureDataStartTime = System.currentTimeMillis();
         String[] featureFields = featureStoreResult.getFeatureFields();
         List<String> featureFieldList = new ArrayList<>(Arrays.asList(featureFields));
         Map<String, FSType> fieldTypeMap = featureStoreResult.getFeatureFieldTypeMap();
@@ -276,6 +280,8 @@ public class FeatureView implements IFeatureView {
                 fieldTypeMap.put(this.featureEntity.getFeatureEntity().getFeatureEntityJoinid(), fieldTypeMap.get(this.primaryKeyField.getName()));
             }
         }
+        Long channelFeatureDataEndTime = System.currentTimeMillis();
+        System.out.println("channelFeatureData cost time:" + (channelFeatureDataEndTime - channelFeatureDataStartTime));
 
         if (null != aliasFields) {
             for (Map.Entry<String, String> entry : aliasFields.entrySet()) {

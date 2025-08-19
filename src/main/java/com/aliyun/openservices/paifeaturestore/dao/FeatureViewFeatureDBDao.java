@@ -85,7 +85,11 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         featureResult.setFeatureFieldTypeMap(this.fieldTypeMap);
         List<Map<String, Object>> featuresList = new ArrayList<>(keyList.size());
         try {
+            Long requestFeatureDBStart = System.currentTimeMillis();
             byte[] content = this.featureDBClient.requestFeatureDB(keyList, this.database, this.schema, this.table);
+            Long requestFeatureDBEnd = System.currentTimeMillis();
+            log.info("requestFeatureDB cost time:" + (requestFeatureDBEnd - requestFeatureDBStart));
+            Long decodeFeatureDBStart = System.currentTimeMillis();
             if (content != null) {
                 RecordBlock recordBlock = RecordBlock.getRootAsRecordBlock(ByteBuffer.wrap(content));
                 for (int i = 0; i < recordBlock.valuesLength(); i++) {
@@ -616,7 +620,8 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                     featuresList.add(featureMap);
                 }
             }
-
+            Long decodeFeatureDBEnd = System.currentTimeMillis();
+            log.info(String.format("decode featureDB time:%d", decodeFeatureDBEnd - decodeFeatureDBStart));
             featureResult.setFeatureDataList(featuresList);
         } catch (Exception e) {
             log.error(String.format("request featuredb error:%s", e.getMessage()));
