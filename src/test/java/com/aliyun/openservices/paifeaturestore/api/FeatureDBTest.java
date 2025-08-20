@@ -70,7 +70,7 @@ public class FeatureDBTest {
             long start = System.nanoTime();
             FeatureResult results = featureView.getOnlineFeatures(joinId200s, new String[]{"*"}, null);
             long end = System.nanoTime();
-            costs[i]= Double.valueOf(String.format("%.2f ms",(end - start) /  1000000.0));
+            costs[i]= Double.valueOf(String.format("%.2f",(end - start) /  1000000.0));
             if (null == results.getFeatureData()) {
                 System.out.println("not found data");
             }else {
@@ -87,15 +87,15 @@ public class FeatureDBTest {
         double tp90 = calculateTP(costs, 90);
         double tp95 = calculateTP(costs, 95);
         double tp99 = calculateTP(costs, 99);
-        System.out.println("Average time: " + avergeTime + " ms");
-        System.out.println("TP90: " + tp90 + " ms");
-        System.out.println("TP95: " + tp95 + " ms");
-        System.out.println("TP99: " + tp99 + " ms");
+        System.out.println("Average time: " + String.format("%.2f ms", avergeTime));
+        System.out.println("TP90: " + String.format("%.2f ms", tp90));
+        System.out.println("TP95: " + String.format("%.2f ms", tp95));
+        System.out.println("TP99: " + String.format("%.2f ms", tp99));
 
 
     }
 
-    @org.junit.Test
+//    @org.junit.Test
     public void featureDBVPCTest() throws Exception {
         String projectName = "fdb_high_speed";
         String featureViewName = "sdk_performance_test_user_table";
@@ -153,7 +153,7 @@ public class FeatureDBTest {
             long start = System.nanoTime();
             FeatureResult results = featureView.getOnlineFeatures(joinId200s, new String[]{"*"}, null);
             long end = System.nanoTime();
-            costs[i]= Double.valueOf(String.format("%.2f ms", (end - start)/1000000.0));
+            costs[i]= Double.valueOf(String.format("%.2f", (end - start)/1000000.0));
             if (null == results.getFeatureData()) {
                 System.out.println("not found data");
             } else {
@@ -171,10 +171,10 @@ public class FeatureDBTest {
         double tp90 = calculateTP(costs, 90);
         double tp95 = calculateTP(costs, 95);
         double tp99 = calculateTP(costs, 99);
-        System.out.println("Average time: " + avergeTime + " ms");
-        System.out.println("TP90: " + tp90 + " ms");
-        System.out.println("TP95: " + tp95 + " ms");
-        System.out.println("TP99: " + tp99 + " ms");
+        System.out.println("Average time: " + String.format("%.2f ms", avergeTime));
+        System.out.println("TP90: " + String.format("%.2f ms", tp90));
+        System.out.println("TP95: " + String.format("%.2f ms", tp95));
+        System.out.println("TP99: " + String.format("%.2f ms", tp99));
 
     }
 
@@ -188,7 +188,8 @@ public class FeatureDBTest {
         }
 
         // 对响应时间进行排序
-        Arrays.sort(responseTimes);
+        double[] sortedTimes = responseTimes.clone();
+        Arrays.sort(sortedTimes);
 
         // 计算指定百分位数的位置
         int index = (int) Math.ceil(percentile / 100.0 * responseTimes.length) - 1;
