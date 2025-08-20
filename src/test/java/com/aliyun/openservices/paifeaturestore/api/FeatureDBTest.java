@@ -192,16 +192,16 @@ public class FeatureDBTest {
         Arrays.sort(sortedTimes);
 
         // 计算指定百分位数的位置
-        int index = (int) Math.ceil(percentile / 100.0 * responseTimes.length) - 1;
+        int index = (int) Math.ceil(percentile / 100.0 * sortedTimes.length) - 1;
 
         // 确保索引不越界
         if (index < 0) {
             index = 0;
-        } else if (index >= responseTimes.length) {
-            index = responseTimes.length - 1;
+        } else if (index >= sortedTimes.length) {
+            index = sortedTimes.length - 1;
         }
 
-        return responseTimes[index];
+        return sortedTimes[index];
     }
 
 }
