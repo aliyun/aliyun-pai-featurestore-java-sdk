@@ -5,6 +5,9 @@ import com.aliyun.openservices.paifeaturestore.domain.FeatureResult;
 import com.aliyun.openservices.paifeaturestore.domain.FeatureView;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 public class FeatureDBTest {
     //fdb vpc connect test
     @org.junit.Test
@@ -62,11 +65,12 @@ public class FeatureDBTest {
         String[] joinId1s = {"5373471048"};
         //
 //        FeatureResult results = featureView.getOnlineFeatures(joinIds);
-        for(int i=0;i<10;i++){
-            long start = System.currentTimeMillis();
+        double[] costs=new double[100000];
+        for(int i=0;i<100000;i++){
+            long start = System.nanoTime();
             FeatureResult results = featureView.getOnlineFeatures(joinId200s, new String[]{"*"}, null);
-            long end = System.currentTimeMillis();
-            System.out.println("cost(ms):" + (end - start));
+            long end = System.nanoTime();
+            costs[i]= Double.valueOf(String.format("%.2f ms",(end - start) /  1000000.0));
             if (null == results.getFeatureData()) {
                 System.out.println("not found data");
             }else {
@@ -78,6 +82,15 @@ public class FeatureDBTest {
 //            }
             }
         }
+
+        double avergeTime = Arrays.stream(costs).average().orElse(0.0);
+        double tp90 = calculateTP(costs, 90);
+        double tp95 = calculateTP(costs, 95);
+        double tp99 = calculateTP(costs, 99);
+        System.out.println("Average time: " + avergeTime + " ms");
+        System.out.println("TP90: " + tp90 + " ms");
+        System.out.println("TP95: " + tp95 + " ms");
+        System.out.println("TP99: " + tp99 + " ms");
 
 
     }
@@ -103,6 +116,7 @@ public class FeatureDBTest {
             throw new RuntimeException("featureview not found");
         }
 
+        double[] costs = new double[100000];
         //200、100、50、10、1
         String[] joinId200s = {"5373471048", "5373473350", "5373486790", "5373496980", "5373504235", "5373507432", "5373512598", "5373530470", "5373538689", "5373538704", "5373554177", "5373554199", "5373559230",
                 "5373559238", "5373561379", "5373564344", "5373584811", "5373589932", "5373589947", "5373594753", "5373596977", "5373609222", "5373615116", "5373617261", "5373620103", "5373625133",
@@ -135,10 +149,11 @@ public class FeatureDBTest {
         String[] joinId10s = {"5373471048", "5373473350", "5373486790", "5373496980", "5373504235", "5373507432", "5373512598", "5373530470", "5373538689", "5373538704"};
 
         String[] joinId1s = {"5373471048"};
-        for (int i = 0; i < 10; i++) {
-            long start = System.currentTimeMillis();
+        for (int i = 0; i < 100000; i++) {
+            long start = System.nanoTime();
             FeatureResult results = featureView.getOnlineFeatures(joinId200s, new String[]{"*"}, null);
-            long end = System.currentTimeMillis();
+            long end = System.nanoTime();
+            costs[i]= Double.valueOf(String.format("%.2f ms", (end - start)/1000000.0));
             if (null == results.getFeatureData()) {
                 System.out.println("not found data");
             } else {
@@ -150,5 +165,42 @@ public class FeatureDBTest {
 //            }
             }
         }
+
+        double avergeTime = Arrays.stream(costs).average().orElse(0.0);
+
+        double tp90 = calculateTP(costs, 90);
+        double tp95 = calculateTP(costs, 95);
+        double tp99 = calculateTP(costs, 99);
+        System.out.println("Average time: " + avergeTime + " ms");
+        System.out.println("TP90: " + tp90 + " ms");
+        System.out.println("TP95: " + tp95 + " ms");
+        System.out.println("TP99: " + tp99 + " ms");
+
     }
+
+    public static double calculateTP(double[] responseTimes, int percentile) {
+        if (responseTimes == null || responseTimes.length == 0) {
+            throw new IllegalArgumentException("响应时间数组不能为空");
+        }
+
+        if (percentile < 0 || percentile > 100) {
+            throw new IllegalArgumentException("百分位数必须在0-100之间");
+        }
+
+        // 对响应时间进行排序
+        Arrays.sort(responseTimes);
+
+        // 计算指定百分位数的位置
+        int index = (int) Math.ceil(percentile / 100.0 * responseTimes.length) - 1;
+
+        // 确保索引不越界
+        if (index < 0) {
+            index = 0;
+        } else if (index >= responseTimes.length) {
+            index = responseTimes.length - 1;
+        }
+
+        return responseTimes[index];
+    }
+
 }
