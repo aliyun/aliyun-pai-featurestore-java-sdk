@@ -128,18 +128,13 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 //                                    }
                                 break;
                             case FS_INT64:
-//                                Long longValue = byteBuffer.getLong();
-//                                if (selectFieldSet.contains(featureName)) {
-//                                    featureMap.put(featureName, longValue);
-//                                }
-////                                    if (selectFieldSet.contains(featureName)) {
-////                                        featureMap.put(featureName, byteBuffer.getLong());
-////                                    }
-//                                break;
-                                Integer intValue2 = byteBuffer.getInt();
+                                Long longValue = byteBuffer.getLong();
                                 if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, intValue2);
+                                    featureMap.put(featureName, longValue);
                                 }
+//                                    if (selectFieldSet.contains(featureName)) {
+//                                        featureMap.put(featureName, byteBuffer.getLong());
+//                                    }
                                 break;
                             case FS_DOUBLE:
                                 Double doubleValue = byteBuffer.getDouble();
@@ -177,8 +172,8 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 //                                if (selectFieldSet.contains(featureName)) {
 //                                    featureMap.put(featureName, sdf.format(timestampValue));
 //                                }
-//                                break;
                                 System.out.println("do not handle the timestamp type");
+                                break;
                             case FS_ARRAY_INT32:
 
                                 int lenArrayInt32 = byteBuffer.getInt();
