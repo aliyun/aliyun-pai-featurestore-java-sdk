@@ -1,7 +1,12 @@
 package com.aliyun.openservices.paifeaturestore.dao;
 
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
-import com.aliyun.openservices.paifeaturestore.datasource.*;
+import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBClient;
+import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBFactory;
+import com.aliyun.openservices.paifeaturestore.datasource.KKVData;
+import com.aliyun.openservices.paifeaturestore.datasource.KKVRecordBlock;
+import com.aliyun.openservices.paifeaturestore.datasource.RecordBlock;
+import com.aliyun.openservices.paifeaturestore.datasource.UInt8ValueColumn;
 import com.aliyun.openservices.paifeaturestore.domain.FeatureResult;
 import com.aliyun.openservices.paifeaturestore.domain.FeatureStoreResult;
 import com.aliyun.openservices.paifeaturestore.model.FeatureViewSeqConfig;
@@ -15,11 +20,18 @@ import org.bouncycastle.util.Strings;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.security.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -721,21 +733,22 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         lock.lock();
         try {
             if (writeData.size() > 0) {
-                try {
-                    doWriteFeatures();
-                    this.executor.shutdown();
-                    try {
-                        if (!this.executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                            this.executor.shutdownNow(); // 取消正在执行的任务
-                        }
-                    } catch (InterruptedException e) {
-                        this.executor.shutdownNow();
-                    }
-
-                } catch (Exception e) {
-                    log.error(String.format("request featuredb error:%s", e.getMessage()));
-                }
+                log.info(String.format("write flush %d", writeData.size()));
+                Future<?> future = doWriteFeatures();
+                future.get();
             }
+
+            this.executor.shutdown();
+            try {
+                if (!this.executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    this.executor.shutdownNow(); // 取消正在执行的任务
+                }
+            } catch (InterruptedException e) {
+                this.executor.shutdownNow();
+            }
+
+        } catch (Exception e) {
+            log.error(String.format("request featuredb error:%s", e.getMessage()));
         } finally {
             lock.unlock();
         }
@@ -759,12 +772,12 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         }).start();
     }
 
-    private void doWriteFeatures() {
+    private Future<?> doWriteFeatures() {
         List<Map<String, Object>> tempList = new ArrayList<>(writeData);
         writeData.clear();
 
         // 异步处理 tempList
-        this.executor.submit(() -> {
+        return this.executor.submit(() -> {
             try {
                 this.featureDBClient.writeFeatureDB(tempList, this.database, this.schema, this.table);
             } catch (Exception e) {

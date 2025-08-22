@@ -1,6 +1,8 @@
 package com.aliyun.openservices.paifeaturestore.model;
 
+import java.sql.Time;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import com.alicloud.openservices.tablestore.SyncClient;
 import com.aliyun.igraph.client.gremlin.driver.Client;
@@ -57,6 +59,17 @@ public class Datasource {
 
   @SerializedName("endpoint")
   private String endpoint = null;
+
+  @SerializedName("fdb_vpc_plk_address")
+  private String fdbVpcAddress;
+
+  public String getFdbVpcAddress() {
+    return fdbVpcAddress;
+  }
+
+  public void setFdbVpcAddress(String fdbVpcAddress) {
+    this.fdbVpcAddress = fdbVpcAddress;
+  }
 
   private AK ak;
 
@@ -410,15 +423,22 @@ public class Datasource {
   }
 
   public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress) {
-
     FeatureDBClient featureDBClient = new FeatureDBClient(new HttpConfig());
+
     if (usePublicAddress) {
       featureDBClient.setAddress(this.publicAddress);
     } else {
       featureDBClient.setAddress(this.vpcAddress);
+      if (null != this.fdbVpcAddress) {
+        // check
+        String address = String.format("http://%s",this.fdbVpcAddress);
+        Boolean isConnected = featureDBClient.CheckAddress(address);
+        if (isConnected) {
+          featureDBClient.setVpcAddress(String.format("http://%s",this.fdbVpcAddress));
+        }
+      }
     }
     featureDBClient.setToken(this.token);
-
     return featureDBClient;
   }
 }
