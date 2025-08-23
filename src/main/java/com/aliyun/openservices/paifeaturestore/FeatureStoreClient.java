@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /* This class is a yes operation. FeatureStore is a FS client to be configured.*/
@@ -21,23 +23,40 @@ public class FeatureStoreClient {
 
     private ApiClient apiClient;
 
-    private Map<String, Project> projects = new HashMap<>();
+    private Map<String, Project> projects = new ConcurrentHashMap<>();
 
-    ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(2);
+    private volatile boolean loopData = true;
+    ScheduledExecutorService scheduledThreadPool = null;
 
-    public FeatureStoreClient(ApiClient apiClient, boolean usePublicAddress ) throws Exception {
+    public FeatureStoreClient(ApiClient apiClient, boolean usePublicAddress, boolean loopData ) throws Exception {
         this.apiClient = apiClient;
         this.apiClient.getInstanceApi().getInstance();
         this.loadProjectData(usePublicAddress);
-        LoadProjectWorker worker = new LoadProjectWorker(this, usePublicAddress);
-        scheduledThreadPool.scheduleWithFixedDelay(worker, 60, 60, TimeUnit.SECONDS);
+        if (loopData) {
+            this.scheduledThreadPool = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+                private final String namePrefix = "FeatureStore-Reloader-";
+                private int threadNum = 1;
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r, namePrefix + threadNum++);
+                    t.setDaemon(true);
+                    return t;
+                }
+            });
+            LoadProjectWorker worker = new LoadProjectWorker(this, usePublicAddress);
+            scheduledThreadPool.scheduleWithFixedDelay(worker, 60, 60, TimeUnit.SECONDS);
+        }
+        this.loopData = loopData;
+    }
+    public FeatureStoreClient(ApiClient apiClient, boolean usePublicAddress ) throws Exception {
+        this(apiClient, usePublicAddress, true);
     }
 
     public FeatureStoreClient(ApiClient apiClient ) throws Exception {
-        this(apiClient, false);
+        this(apiClient, false, true);
     }
 
-    private static class LoadProjectWorker extends Thread {
+    private static class LoadProjectWorker implements Runnable {
 
         FeatureStoreClient featureStoreClient;
         boolean usePublicAddress ;
@@ -45,15 +64,17 @@ public class FeatureStoreClient {
         public LoadProjectWorker(FeatureStoreClient client, boolean usePublicAddress) {
             this.featureStoreClient = client;
             this.usePublicAddress = usePublicAddress;
-            super.setDaemon(true);
         }
 
         @Override
         public void run() {
             try {
                 this.featureStoreClient.loadProjectData(usePublicAddress);
+            } catch (InterruptedException e) {
+                logger.info("LoadProjectWorker was interrupted, shutting down.");
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
-                logger.error("load project error", e);
+                logger.error("load project data failed with an unexpected error", e);
             }
         }
     }
@@ -98,9 +119,7 @@ public class FeatureStoreClient {
 
         if (projectMap.size() > 0) {
             for (Map.Entry<String, Project> entry : projectMap.entrySet()) {
-                if (!this.projects.containsKey(entry.getKey())) {
-                    this.projects.put(entry.getKey(), entry.getValue());
-                }
+                this.projects.putIfAbsent(entry.getKey(), entry.getValue());
             }
         }
     }
@@ -110,7 +129,9 @@ public class FeatureStoreClient {
     }
 
     public void close() throws Exception {
-        this.scheduledThreadPool.shutdownNow();
+        if (this.loopData && null != this.scheduledThreadPool) {
+            this.scheduledThreadPool.shutdownNow();
+        }
 
         for (Project project : this.projects.values()) {
             project.close();
