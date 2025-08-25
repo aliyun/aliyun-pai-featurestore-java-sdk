@@ -57,6 +57,7 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition condition = lock.newCondition();
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private volatile boolean running = true;
 
     public FeatureViewFeatureDBDao(DaoConfig daoConfig) {
         this.database = daoConfig.featureDBDatabase;
@@ -749,8 +750,9 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
     }
 
     private void startAsyncWrite() {
+        String threadName = String.format("FeatureDBWriter-%s", this.table);
         new Thread(() -> {
-            while (true) {
+            while (this.running) {
                 lock.lock();
                 try {
                     condition.await(50, TimeUnit.MILLISECONDS);
@@ -763,7 +765,8 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                     lock.unlock();
                 }
             }
-        }).start();
+            log.info(threadName + " has stopped.");
+        }, threadName).start();
     }
 
     private Future<?> doWriteFeatures() {
@@ -948,6 +951,14 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 
     @Override
     public void close() throws Exception {
+        this.running = false;
+        lock.lock();
+        try {
+            condition.signalAll();
+        } finally {
+            lock.unlock();
+        }
+
         this.writeFlush();
         if (!this.executor.isShutdown()) {
             this.executor.shutdownNow();

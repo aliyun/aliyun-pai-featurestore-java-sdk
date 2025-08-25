@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
 </dependency>
 ```
 ## 使用方式
@@ -215,6 +215,10 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.2.2 (2025-08-25)
+* 增加了loopData的支持，可以控制不轮询数据 
+* 线程的调整优化，写线程close时也能正常结束
+ 
 ### 1.2.1 (2025-08-14)
 * 增加了访问featurestore可以使用vpc高速连接的支持
 * 去除了close时FeatureStoreClient被清理的逻辑 

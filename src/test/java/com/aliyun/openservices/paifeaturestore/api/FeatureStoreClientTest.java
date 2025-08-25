@@ -387,7 +387,7 @@ public class FeatureStoreClientTest {
 
         ApiClient client = new ApiClient(configuration);
 
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress );
 
         Project project = featureStoreClient.getProject("fdb_test");
         if (null == project) {
@@ -440,7 +440,7 @@ public class FeatureStoreClientTest {
 
         ApiClient client = new ApiClient(configuration);
 
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress );
 
         Project project = featureStoreClient.getProject("fdb_test");
         if (null == project) {
