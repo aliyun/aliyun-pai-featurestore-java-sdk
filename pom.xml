@@ -239,14 +239,13 @@
     </dependency>
     <dependency>
       <groupId>com.aliyun</groupId>
+      <artifactId>credentials-java</artifactId>
+      <version>${credentials-java-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.aliyun</groupId>
       <artifactId>tea-rpc</artifactId>
       <version>0.1.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.aliyun</groupId>
-          <artifactId>credentials-java</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
@@ -347,6 +346,7 @@
     <jooq.version>3.13.6</jooq.version>
     <postgresql-version>42.6.0</postgresql-version>
     <paifeaturestore20230621-version>5.0.2</paifeaturestore20230621-version>
+    <credentials-java-version>0.3.12</credentials-java-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
