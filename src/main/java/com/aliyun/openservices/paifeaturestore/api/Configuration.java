@@ -1,5 +1,7 @@
 package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.teaopenapi.models.Config;
+import com.aliyun.credentials.Client;
+
 /*  Configure the information class */
 public class Configuration {
     private static final String CREDENTIAL_TYPE_ACCESS_KEY = "access_key";
@@ -12,6 +14,10 @@ public class Configuration {
     private String username = null;
 
     private String password = null;
+
+    private String hologresUsername = null;
+
+    private String hologresPassword = null;
 
     /*  Initial configuration information (region ID, AK account, AK password, and project name)    */
     public Configuration(String regionId, String accessKeyId, String accessKeySecret, String projectName) {
@@ -26,12 +32,19 @@ public class Configuration {
     }
     private void initConfig(String regionId, String accessKeyId, String accessKeySecret, String securityToken) {
         this.config = new Config();
-        this.config.setAccessKeyId(accessKeyId);
-        this.config.setAccessKeySecret(accessKeySecret);
-        this.config.setType(CREDENTIAL_TYPE_ACCESS_KEY);
         this.config.setRegionId(regionId);
-        if (securityToken != null) {
-            this.config.setSecurityToken(securityToken);
+        
+        if (accessKeyId != null && !accessKeyId.isEmpty() && 
+            accessKeySecret != null && !accessKeySecret.isEmpty()) {
+            this.config.setAccessKeyId(accessKeyId);
+            this.config.setAccessKeySecret(accessKeySecret);
+            this.config.setType(CREDENTIAL_TYPE_ACCESS_KEY);
+            if (securityToken != null) {
+                this.config.setSecurityToken(securityToken);
+            }
+        } else {
+            Client client = new Client();
+            this.config.setCredential(client);
         }
     }
 
@@ -63,10 +76,22 @@ public class Configuration {
         this.config = config;
     }
 
+    /**
+     * 设置FeatureDB用户名
+     * 
+     * @param username FeatureDB用户名
+     * @see #setPassword(String) 设置FeatureDB密码
+     */
     public void setUsername(String username) {
         this.username = username;
     }
 
+    /**
+     * 设置FeatureDB密码
+     * 
+     * @param password FeatureDB密码
+     * @see #setUsername(String) 设置FeatureDB用户名
+     */
     public void setPassword(String password) {
         this.password = password;
     }
@@ -77,5 +102,33 @@ public class Configuration {
 
     public String getPassword() {
         return password;
+    }
+
+    /**
+     * 设置Hologres自定义用户的用户名
+     * 
+     * @param hologresUsername Hologres自定义用户的用户名
+     * @see #setHologresPassword(String) 设置Hologres自定义用户的密码
+     */
+    public void setHologresUsername(String hologresUsername) {
+        this.hologresUsername = hologresUsername;
+    }
+
+    /**
+     * 设置Hologres数据库的密码
+     * 
+     * @param hologresPassword Hologres自定义用户的密码
+     * @see #setHologresUsername(String) 设置Hologres自定义用户的用户名
+     */
+    public void setHologresPassword(String hologresPassword) {
+        this.hologresPassword = hologresPassword;
+    }
+
+    public String getHologresUsername() {
+        return hologresUsername;
+    }
+
+    public String getHologresPassword() {
+        return hologresPassword;
     }
 }
