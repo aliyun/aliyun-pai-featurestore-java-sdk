@@ -137,7 +137,7 @@ public class FeatureStoreClientTest {
         Configuration configuration = new Configuration("cn-beijing",
                 "", "", "holo_p4" );
 
-        configuration.setHologresUsername(Constant.username);
+        configuration.setHologresUsername(Constants.username);
         configuration.setHologresPassword(Constants.password);
 
         configuration.setDomain("paifeaturestore.cn-beijing.aliyuncs.com");
