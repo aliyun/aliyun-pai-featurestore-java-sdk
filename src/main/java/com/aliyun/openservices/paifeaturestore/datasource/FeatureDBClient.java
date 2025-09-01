@@ -199,7 +199,7 @@ public class FeatureDBClient {
         Map<String, Object> map = new HashMap<>();
         map.put("keys", keys);
         String requestBody = gson.toJson(map);
-        RequestBody body = RequestBody.create(JSON, requestBody);
+        RequestBody body = RequestBody.create(requestBody, JSON);
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
@@ -247,7 +247,7 @@ public class FeatureDBClient {
         map.put("pks", pks);
         map.put("length", length);
         String requestBody = gson.toJson(map);
-        RequestBody body = RequestBody.create(JSON, requestBody);
+        RequestBody body = RequestBody.create(requestBody, JSON);
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
@@ -370,7 +370,7 @@ public class FeatureDBClient {
         map.put("content", data);
         map.put("write_mode", insertMode);
         String requestBody = gson.toJson(map);
-        RequestBody body = RequestBody.create(JSON, requestBody);
+        RequestBody body = RequestBody.create(requestBody, JSON);
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
