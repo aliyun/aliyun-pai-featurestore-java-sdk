@@ -250,7 +250,7 @@ public class Project {
     public void registerFeatrueDB(Datasource featureDBDataSource) {
         if (null != featureDBDataSource) {
             this.featureDBDatasource = featureDBDataSource;
-            if (null == FeatureDBFactory.get(featureDBDataSource.getName())) {
+            if (null == FeatureDBFactory.get(featureDBDataSource.getName()) && null != this.signature) {
                 FeatureDBClient featureDBClient = featureDBDataSource.generateFeatureDBClient(usePublicAddress);
                 featureDBClient.setSignature(this.signature);
                 FeatureDBFactory.register(featureDBDataSource.getName(), featureDBClient);
