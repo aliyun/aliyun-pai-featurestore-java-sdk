@@ -1,6 +1,10 @@
 package com.aliyun.openservices.paifeaturestore.model;
 
 import com.google.gson.annotations.SerializedName;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 /*  This class contains information about the configuration of sequence features.*/
 public class SeqConfig {
 
@@ -15,6 +19,9 @@ public class SeqConfig {
 
     @SerializedName("online_seq_name")
     private String OnlineSeqName;
+
+    @SerializedName("online_behavior_table_fields")
+    private ArrayList<String> OnlineBehaviorTableFields;
 
     public String getOfflineSeqName() {
         return OfflineSeqName;
@@ -46,5 +53,13 @@ public class SeqConfig {
 
     public void setOnlineSeqName(String onlineSeqName) {
         OnlineSeqName = onlineSeqName;
+    }
+
+    public ArrayList<String> getOnlineBehaviorTableFields() {
+        return OnlineBehaviorTableFields;
+    }
+
+    public void setOnlineBehaviorTableFields(ArrayList<String> onlineBehaviorTableFields) {
+        OnlineBehaviorTableFields = onlineBehaviorTableFields;
     }
 }
