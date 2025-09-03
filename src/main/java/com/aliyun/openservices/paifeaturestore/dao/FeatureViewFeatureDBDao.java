@@ -1,5 +1,7 @@
 package com.aliyun.openservices.paifeaturestore.dao;
 
+import com.aliyun.igraph.client.gremlin.gremlin_api.P;
+import com.aliyun.openservices.paifeaturestore.constants.ConstantValue;
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBClient;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBFactory;
@@ -13,10 +15,14 @@ import com.aliyun.openservices.paifeaturestore.model.FeatureViewSeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SequenceInfo;
 import com.aliyun.tea.utils.StringUtils;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.util.Strings;
 
+import java.io.InputStream;
+import java.nio.Buffer;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class FeatureViewFeatureDBDao implements FeatureViewDao {
+public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
     private static Log log = LogFactory.getLog(FeatureViewFeatureDBDao.class);//日志工厂
     private FeatureDBClient featureDBClient;
 
@@ -99,7 +105,7 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                     byteBuffer = byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
                     byte protoFlag = byteBuffer.get();
                     byte protoVersion = byteBuffer.get();
-                    if (protoFlag != 'F' || protoVersion != '1') {
+                    if (protoFlag != ConstantValue.FeatureDB_Proto_Flag || protoVersion != ConstantValue.FeatureDB_Proto_Version ) {
                         String errorMsg = String.format("invalid proto version, %d, %d", protoFlag, protoVersion);
                         log.error(errorMsg);
                         //throw new RuntimeException(errorMsg);
@@ -626,15 +632,49 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 
         return featureResult;
     }
+
     @Override
-    public FeatureResult getSequenceFeatures(String[] keys, String userIdField, FeatureViewSeqConfig featureViewSeqConfig) {
+    public FeatureResult getSequenceFeatures(String[] keys, String userIdField, FeatureViewSeqConfig featureViewSeqConfig, SeqConfig[] seqConfigs) {
         FeatureStoreResult featureStoreResult = new FeatureStoreResult();
+
+        HashMap<String, ArrayList<SeqConfig>> seqConfigsMap = new HashMap<>();
+        HashMap<String, ArrayList<HashMap<String, Boolean>>> seqConfigsBehaviorFieldsMap = new HashMap<>();
+
+        Boolean withValue= false;
+        for (SeqConfig seqConfig : seqConfigs) {
+            String key = String.format("%s:%d", seqConfig.getSeqEvent(), seqConfig.getSeqLen());
+            if (seqConfigsMap.containsKey(key)){
+                ArrayList<SeqConfig> seqConfigsList = seqConfigsMap.get(key);
+                seqConfigsList.add(seqConfig);
+            }else {
+                seqConfigsMap.put(key, new ArrayList<>(Arrays.asList(seqConfig)));
+            }
+
+            ArrayList<String> currentOnlineBehaviorTableFields = seqConfig.getOnlineBehaviorTableFields();
+            HashMap<String, Boolean> currentBehaviorFieldsMap = new HashMap<>();
+            for (String field : currentOnlineBehaviorTableFields) {
+                currentBehaviorFieldsMap.put(field, true);
+            }
+            if (currentBehaviorFieldsMap.size() > 0){
+                withValue=true;
+                if (seqConfigsBehaviorFieldsMap.containsKey(key)){
+                    ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFieldsList = seqConfigsBehaviorFieldsMap.get(key);
+                    seqConfigsBehaviorFieldsList.add(currentBehaviorFieldsMap);
+                }else {
+                    seqConfigsBehaviorFieldsMap.put(key, new ArrayList<>(Arrays.asList(currentBehaviorFieldsMap)));
+                }
+
+            }
+
+        }
+
         String[] selectFields = null;
         if (!StringUtils.isEmpty(featureViewSeqConfig.getPlayTimeField())) {
             selectFields = new String[]{featureViewSeqConfig.getItemIdField(), featureViewSeqConfig.getEventField(), featureViewSeqConfig.getPlayTimeField(), featureViewSeqConfig.getTimestampField()};
         } else {
             selectFields = new String[]{featureViewSeqConfig.getItemIdField(), featureViewSeqConfig.getEventField(), featureViewSeqConfig.getTimestampField()};
         }
+
         long currentime = System.currentTimeMillis() / 1000;
         HashMap<String, Double> playtimefilter = new HashMap<>();
         if (!StringUtils.isEmpty(featureViewSeqConfig.getPlayTimeFilter())) {
@@ -645,53 +685,64 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                 }
             }
         }
+
         String[] events = new String[featureViewSeqConfig.getSeqConfigs().length];
         for (int i = 0; i < events.length; i++) {
             events[i] = featureViewSeqConfig.getSeqConfigs()[i].getSeqEvent();
         }
         Set<String> featureFieldList = new HashSet<>();
         List<Map<String, Object>> featureDataList = new ArrayList<>();
+
         for (String key : keys) {
             HashMap<String, String> keyEventsDatasOnline = new HashMap<>();
-            for (String event : events) {
-                List<SequenceInfo> onlineSequence = fetchData(key, playtimefilter, featureViewSeqConfig, event, userIdField, currentime, true);
-                List<SequenceInfo> offlineSequence = new ArrayList<>();
-                onlineSequence = MergeOnOfflineSeq(onlineSequence, offlineSequence, featureViewSeqConfig, event);
-                Map<String, String> resultData = disposeDB(onlineSequence, selectFields, featureViewSeqConfig, event, currentime);
-                if (onlineSequence.size() > 0) {
-                    keyEventsDatasOnline.putAll(resultData);
+            for (String k : seqConfigsMap.keySet()) {
+                if(seqConfigsMap.get(k).size()==0){
+                    continue;
+                }
+                ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFields = new ArrayList<>();
+                if(seqConfigsBehaviorFieldsMap.get(k) != null){
+                    seqConfigsBehaviorFields=seqConfigsBehaviorFieldsMap.get(k);
                 }
 
-            }
+                for (String event : events) {
+                    List<SequenceInfo> onlineSequence = fetchData(key, playtimefilter, featureViewSeqConfig, event, userIdField, currentime, true, seqConfigsBehaviorFields.get(0), withValue);
+                    Map<String, String> resultData = disposeDB(onlineSequence, selectFields, featureViewSeqConfig, event, currentime);
+                    if (onlineSequence.size() > 0) {
+                        keyEventsDatasOnline.putAll(resultData);
+                    }
 
-            if (keyEventsDatasOnline.size() > 0) {
-                keyEventsDatasOnline.put(this.primaryKeyField, key);
-            }
+                }
 
-            if (!keyEventsDatasOnline.isEmpty()) {
-                featureFieldList.addAll(keyEventsDatasOnline.keySet());
+                if (keyEventsDatasOnline.size() > 0) {
+                    keyEventsDatasOnline.put(this.primaryKeyField, key);
+                }
 
-                boolean found = false;
-                for (Map<String, Object> features : featureDataList) {
-                    if (features.containsKey(keyEventsDatasOnline.get(this.primaryKeyField))) {
-                        for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
-                            features.put(entry.getKey(), entry.getKey());
+                if (!keyEventsDatasOnline.isEmpty()) {
+                    featureFieldList.addAll(keyEventsDatasOnline.keySet());
+
+                    boolean found = false;
+                    for (Map<String, Object> features : featureDataList) {
+                        if (features.containsKey(keyEventsDatasOnline.get(this.primaryKeyField))) {
+                            for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
+                                features.put(entry.getKey(), entry.getKey());
+                            }
+                            found = true;
+                            break;
                         }
-                        found = true;
-                        break;
+
                     }
 
-                }
-
-                if (!found) {
-                    Map<String, Object> featureData = new HashMap<>();
-                    for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
-                        featureData.put(entry.getKey(), entry.getValue());
+                    if (!found) {
+                        Map<String, Object> featureData = new HashMap<>();
+                        for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
+                            featureData.put(entry.getKey(), entry.getValue());
+                        }
+                        featureDataList.add(featureData);
                     }
-                    featureDataList.add(featureData);
                 }
             }
         }
+
         String[] fields = new String[featureFieldList.size()];
         int f = 0;
         for (String field : featureFieldList) {
@@ -783,19 +834,49 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         });
     }
 
-    public List<SequenceInfo> fetchData(String key, HashMap<String, Double> playtimefilter,
-                                        FeatureViewSeqConfig config, String event, String userIdFields, Long currentime, boolean useOnlineTable) {
+
+    private int CntSkipBytes(ByteBuffer innerReader, FSType fieldType) {
+        int skipBytes = 0;
+        switch (fieldType){
+            case FS_INT32:
+                skipBytes = 4;
+                break;
+            case FS_INT64:
+                skipBytes = 8;
+                break;
+            case FS_FLOAT:
+                skipBytes = 4;
+                break;
+            case FS_DOUBLE:
+                skipBytes = 8;
+                break;
+            case FS_BOOLEAN:
+                skipBytes = 1;
+                break;
+            default:
+                int length = innerReader.getInt();
+                skipBytes = length;
+                break;
+        }
+        return skipBytes;
+    }
+
+
+    public List<SequenceInfo> fetchData(String key, HashMap<String, Double> playtimefilter, FeatureViewSeqConfig config, String event,
+                                        String userIdFields, Long currentime, boolean useOnlineTable, HashMap<String,Boolean> selectBehaviorFieldsSet, Boolean withValue) {
         List<SequenceInfo> sequenceInfos = new ArrayList<>();
         List<String> pks = new ArrayList<>();
         for (String e : event.split("\\|")) {
             pks.add(String.format("%s\u001D%s", key, e));
         }
+
         try {
-            byte[] content = this.featureDBClient.kkvRequestFeatureDB(pks, this.database, this.schema, this.table, config.getSeqLenOnline());
+            byte[] content = this.featureDBClient.kkvRequestFeatureDB(pks, this.database, this.schema, this.table, config.getSeqLenOnline(), withValue);
             if (content != null) {
                 KKVRecordBlock kkvRecordBlock = KKVRecordBlock.getRootAsKKVRecordBlock(ByteBuffer.wrap(content));
                 for (int i = 0; i < kkvRecordBlock.valuesLength(); i++) {
                     KKVData kkvData = new KKVData();
+
                     kkvRecordBlock.values(kkvData, i);
                     String pk = kkvData.pk();
                     String[] userIdEvent = pk.split("\u001D");
@@ -820,14 +901,83 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                     sequenceInfo.setItemIdField(Long.valueOf(itemId));
                     sequenceInfo.setPlayTimeField(kkvData.playTime());
                     sequenceInfo.setTimestampField(kkvData.eventTimestamp());
+
+
                     if (Objects.equals(sequenceInfo.getEventField(), "") || sequenceInfo.getItemIdField() == 0) {
                         continue;
-
                     }
+
                     if (playtimefilter.containsKey(sequenceInfo.getEventField())) {
                         double t = playtimefilter.get(sequenceInfo.getEventField());
                         if (sequenceInfo.getPlayTimeField() <= t) {
                             continue;
+                        }
+                    }
+
+                    ByteBuffer dataBuffer = kkvData.valueAsByteBuffer();
+                    dataBuffer.order(ByteOrder.LITTLE_ENDIAN);
+
+                    // 读取协议头
+                    if (dataBuffer.remaining() >= 2) {
+                            byte protoFlag = dataBuffer.get();
+                            byte protoVersion = dataBuffer.get();
+
+                            // 验证协议
+                            if (protoFlag != ConstantValue.FeatureDB_Proto_Flag || protoVersion != ConstantValue.FeatureDB_Proto_Version) {
+                                String errMsg = String.format("Invalid proto version, flag: %c, version: %c", protoFlag, protoVersion);
+                                log.warn(errMsg);
+                                continue;
+                            }
+
+                        if (dataBuffer != null && dataBuffer.remaining() > 0) {
+
+                            HashMap<String, String> onlineBehaviorTableFields = new HashMap<>();
+                            for (String featureName : this.fields) {
+                                byte isNull = dataBuffer.get();
+                                if (isNull == 1) {
+                                    continue;
+                                }
+
+                                if (selectBehaviorFieldsSet.get(featureName) != null) {
+                                    switch (this.fieldTypeMap.get(featureName)) {
+                                        case FS_INT32:
+                                            int intValue = dataBuffer.getInt();
+                                            onlineBehaviorTableFields.put(featureName, String.format("%d", intValue));
+                                            break;
+                                        case FS_INT64:
+                                            long longValue = dataBuffer.getLong();
+                                            onlineBehaviorTableFields.put(featureName, String.format("%d", longValue));
+                                            break;
+                                        case FS_FLOAT:
+                                            float floatValue = dataBuffer.getFloat();
+                                            onlineBehaviorTableFields.put(featureName, String.format("%f", floatValue));
+                                            break;
+                                        case FS_DOUBLE:
+                                            double doubleValue = dataBuffer.getDouble();
+                                            onlineBehaviorTableFields.put(featureName, String.format("%f", doubleValue));
+                                            break;
+                                        case FS_BOOLEAN:
+                                            byte boolValue = dataBuffer.get();
+                                            onlineBehaviorTableFields.put(featureName, String.format("%b", boolValue));
+                                            break;
+                                        default:
+                                            int length = dataBuffer.getInt();
+                                            byte[] stringData = new byte[length];
+                                            dataBuffer.get(stringData, 0, length);
+                                            onlineBehaviorTableFields.put(featureName, new String(stringData, StandardCharsets.UTF_8));
+                                            break;
+                                    }
+                                } else {
+                                    int skipBytes = CntSkipBytes(dataBuffer, this.fieldTypeMap.get(featureName));
+                                    if (skipBytes > 0) {
+                                        dataBuffer.position(dataBuffer.position() + skipBytes);
+                                    }
+                                }
+
+                            }
+
+                        sequenceInfo.setOnlineBehaviorTableFields(onlineBehaviorTableFields);
+
                         }
                     }
                     sequenceInfos.add(sequenceInfo);
@@ -842,91 +992,46 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         return sequenceInfos;
     }
 
-    public List<SequenceInfo> MergeOnOfflineSeq(List<SequenceInfo> offlineSequence, List<SequenceInfo> onlineSequence, FeatureViewSeqConfig config, String event) {
-
-        if (offlineSequence.isEmpty()) {
-            return onlineSequence;
-        } else if (onlineSequence.isEmpty()) {
-            return offlineSequence;
-        } else {
-            int index = 0;
-            for (; index < onlineSequence.size(); ) {
-                if (Long.valueOf(onlineSequence.get(index).getTimestampField()) < Long.valueOf(offlineSequence.get(0).getTimestampField())) {
-                    break;
-                }
-                index++;
-            }
-            onlineSequence = onlineSequence.subList(0, index);
-            onlineSequence.addAll(offlineSequence);
-            if (onlineSequence.size() > config.getSeqLenOnline()) {
-                onlineSequence.subList(0, config.getSeqLenOnline());
+    private int readStringSafely(ByteBuffer buffer, String fieldName) {
+        int result = 0;
+        try {
+            if (buffer.remaining() < 4) {
+                log.warn("Not enough bytes to read string length for field: " + fieldName);
+                return result;
             }
 
-        }
-        return onlineSequence;
-    }
+            int length = buffer.getInt();
 
-    public Map<String, String> disposeDB(List<SequenceInfo> sequenceInfos, String[] selectFields, FeatureViewSeqConfig config, String event, Long currentime) {
-        HashMap<String, String> sequenceFeatures = new HashMap<>();
-        for (SequenceInfo sequenceInfo : sequenceInfos) {
-            String qz = "";
-            for (SeqConfig s : config.getSeqConfigs()) {
-                if (s.getSeqEvent().equals(event)) {
-                    qz = s.getOnlineSeqName();
-                    break;
-                }
-            }
-            for (String name : selectFields) {
-                String newname = qz + "__" + name;
 
-                if (name.equals(config.getItemIdField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getItemIdField());
-                    } else {
-                        sequenceFeatures.put(newname, "" + sequenceInfo.getItemIdField());
-                    }
-                    if (sequenceFeatures.containsKey(qz)) {
-                        sequenceFeatures.put(qz, sequenceFeatures.get(qz) + ";" + sequenceInfo.getItemIdField());
-                    } else {
-                        sequenceFeatures.put(qz, "" + sequenceInfo.getItemIdField());
-                    }
-                } else if (name.equals(config.getTimestampField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getTimestampField());
-                    } else {
-                        sequenceFeatures.put(newname, "" + sequenceInfo.getTimestampField());
-                    }
-                } else if (name.equals(config.getEventField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getEventField());
-                    } else {
-                        sequenceFeatures.put(newname, sequenceInfo.getEventField());
-                    }
-                } else if (name.equals(config.getPlayTimeField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getPlayTimeField());
-                    } else {
-                        sequenceFeatures.put(newname, "" + sequenceInfo.getPlayTimeField());
-                    }
+            if (length < 0) {
+                log.warn("Invalid negative string length: " + length + " for field: " + fieldName);
+                return result;
+            }
 
-                }
+            if (length > 10000) { // 根据实际业务调整这个值
+                log.warn("Unreasonably large string length: " + length + " for field: " + fieldName);
+                return result;
             }
-            String tsfields = qz + "__ts";//Timestamp from the current time
-            long eventTime = 0;
-            if (!StringUtils.isEmpty(sequenceInfo.getTimestampField())) {
-                eventTime = Long.valueOf(sequenceInfo.getTimestampField());
+
+            if (buffer.remaining() < length) {
+                log.warn("Not enough bytes to read string data. Required: " + length +
+                        ", Available: " + buffer.remaining() + " for field: " + fieldName);
+                return result;
             }
-            if (sequenceFeatures.containsKey(tsfields)) {
-                sequenceFeatures.put(tsfields, sequenceFeatures.get(tsfields) + ";" + (currentime - eventTime));
+
+            if (length > 0) {
+                result = length;
+                return result;
             } else {
-                sequenceFeatures.put(tsfields, String.valueOf((currentime - eventTime)));
-
-
+                return result;
             }
+        } catch (BufferUnderflowException e) {
+            log.error("Buffer underflow while reading string for field: " + fieldName, e);
+            return result;
         }
-
-        return sequenceFeatures;
     }
+
+
 
     private String[] decodeStringArray(ByteBuffer byteBuffer, int length) {
         String[] arrayStringValue = new String[length];
