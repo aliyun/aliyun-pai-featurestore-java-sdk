@@ -50,6 +50,12 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
     public static final ConfigOption<String> INSERT_MODE = ConfigOptions.key("insert_mode")
             .stringType()
             .defaultValue("full_row_write");
+    public static final ConfigOption<Long> CACHE_SIZE = ConfigOptions.key("cacheSize")
+            .longType()
+            .defaultValue(10000L);
+    public static final ConfigOption<Long> CACHE_TIME_IN_SECOND = ConfigOptions.key("cacheTime") // seconds, default 1800s
+            .longType()
+            .defaultValue(1800L);
     public static final String IDENTIFIER = "featurestore";
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
@@ -103,6 +109,8 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
         options.add(HOST);
         options.add(USEPUBLICADDRESS);
         options.add(INSERT_MODE);
+        options.add(CACHE_SIZE);
+        options.add(CACHE_TIME_IN_SECOND);
         return options;
     }
 
@@ -119,6 +127,8 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
         final String featureView = options.get(FEATUREVIEW);
         final String username = options.get(USERNAME);
         final String password = options.get(PASSWORD);
+        final Long cacheSize = options.get(CACHE_SIZE);
+        final Long cacheTime = options.get(CACHE_TIME_IN_SECOND);
         boolean usePublicAddress = false;
         if (options.getOptional(USEPUBLICADDRESS).isPresent()) {
             usePublicAddress = options.get(USEPUBLICADDRESS);
@@ -130,6 +140,6 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
 
         TableSchema schema =
                 TableSchemaUtils.getPhysicalSchema(context.getCatalogTable().getSchema());
-        return new FeatureStoreDynamicTableSource(regionId, accessId, accessKey, project, featureView, username, password,  host, usePublicAddress,  schema);
+        return new FeatureStoreDynamicTableSource(regionId, accessId, accessKey, project, featureView, username, password,  host, usePublicAddress, cacheSize, cacheTime,  schema);
     }
 }

@@ -28,9 +28,13 @@ public class FeatureStoreDynamicTableSource implements LookupTableSource {
 
     private boolean usePublicAddress = false;
 
+    private Long cacheSize = 100000L;
+
+    private Long cacheTime = 1800L;
+
     private TableSchema tableSchema;
 
-    public FeatureStoreDynamicTableSource(String regionId, String accessId, String accessKey, String project, String featureView, String username, String password, String host, boolean usePublicAddress,  TableSchema schema)  {
+    public FeatureStoreDynamicTableSource(String regionId, String accessId, String accessKey, String project, String featureView, String username, String password, String host, boolean usePublicAddress, Long cacheSize, Long cacheTime, TableSchema schema)  {
         this.regionId = regionId;
         this.accessId = accessId;
         this.accessKey = accessKey;
@@ -40,6 +44,8 @@ public class FeatureStoreDynamicTableSource implements LookupTableSource {
         this.password = password;
         this.host = host;
         this.usePublicAddress = usePublicAddress;
+        this.cacheSize = cacheSize;
+        this.cacheTime = cacheTime;
         this.tableSchema = schema;
 
     }
@@ -48,7 +54,7 @@ public class FeatureStoreDynamicTableSource implements LookupTableSource {
     @Override
     public DynamicTableSource copy() {
         return new FeatureStoreDynamicTableSource(this.regionId, this.accessId, this.accessKey, this.project, this.featureViewName, this.username,
-                this.password, this.host, this.usePublicAddress, tableSchema);
+                this.password, this.host, this.usePublicAddress, this.cacheSize, this.cacheTime, tableSchema);
     }
 
     @Override
@@ -59,7 +65,7 @@ public class FeatureStoreDynamicTableSource implements LookupTableSource {
     @Override
     public LookupRuntimeProvider getLookupRuntimeProvider(LookupContext lookupContext) {
         FeatureStoreAsyncLookupFunction asyncLookupFunction= new FeatureStoreAsyncLookupFunction(this.regionId, this.accessId, this.accessKey, this.project,
-                this.featureViewName, this.username, this.password, this.host, this.usePublicAddress, this.tableSchema);
+                this.featureViewName, this.username, this.password, this.host, this.usePublicAddress, this.cacheSize, this.cacheTime, this.tableSchema);
         AsyncTableFunction<RowData> asyncTableFunction = new  AsyncLookupFunctionWrapper(asyncLookupFunction);
         return AsyncTableFunctionProvider.of(asyncTableFunction);
     }

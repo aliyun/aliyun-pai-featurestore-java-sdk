@@ -40,6 +40,7 @@ public class FeatureView implements IFeatureView {
         for (FeatureViewRequestFields field : this.featureView.getFields()) {
             if (field.isIsEventTime()) {
                 eventTimeField = field;
+                this.featureFields.add(field.getName());
             } else if (field.isIsPrimaryKey()) {
                 primaryKeyField = field;
             } else if (field.isIsPartition()) {
@@ -75,6 +76,7 @@ public class FeatureView implements IFeatureView {
             daoConfig.featureDBDatabase = project.getProject().getInstanceId();
             daoConfig.featureDBSchema = project.getProject().getProjectName();
             daoConfig.featureDBTable = featureView.getName();
+            daoConfig.fields = this.featureFields;
         } else {
             switch (project.getProject().getOnlineDatasourceType()) {
                 case Datasource_Type_Hologres:
