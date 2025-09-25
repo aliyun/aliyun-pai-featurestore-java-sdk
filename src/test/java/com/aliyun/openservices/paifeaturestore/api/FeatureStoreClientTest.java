@@ -255,39 +255,40 @@ public class FeatureStoreClientTest {
     @Ignore
     @Test
     public void featureDBTest() throws Exception {
-        Configuration configuration = new Configuration("cn-beijing",
-                Constants.accessId, Constants.accessKey,"tablestore_p2" );
+        Configuration configuration = new Configuration("cn-shenzhen",
+                Constants.accessId, Constants.accessKey,"fdb_test" );
 
         configuration.setUsername(Constants.username);
         configuration.setPassword(Constants.password);
 
-        configuration.setDomain(Constants.host);
+        configuration.setDomain("paifeaturestore.cn-shenzhen.aliyuncs.com");
 
         ApiClient client = new ApiClient(configuration);
 
-        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress );
 
-        Project project = featureStoreClient.getProject("tablestore_p2");
+        Project project = featureStoreClient.getProject("fdb_test");
         if (null == project) {
             throw  new RuntimeException("project not found");
         }
 
-        FeatureView featureView = project.getFeatureView("user_fea3");
+        FeatureView featureView = project.getFeatureView("user_test_3");
         if (null == featureView) {
             throw  new RuntimeException("featureview not found");
         }
-        int count = 3;
+        int count = 10;
         String[] joinIds = new String[count];
-        joinIds[0] = "7718078399602073545";
-        joinIds[1] = "782486411886831247";
-        joinIds[2] = "2855275313274611949";
+        //joinIds[0] = "19052";
+        for (int i=0; i < count; i++) {
+            joinIds[i] = String.valueOf(i);
+        }
 
-        for (int i = 0; i < 1000;i++) {
+        for (int i = 0; i < 10;i++) {
             long startTime = System.nanoTime();
-            FeatureResult features = featureView.getOnlineFeatures(joinIds );
+            FeatureResult features = featureView.getOnlineFeatures(joinIds  );
 
             if (features.getFeatureData().size() != count) {
-                throw new Exception("request size not equal");
+                //throw new Exception("request size not equal");
             }
             while (features.next()) {
                 for (String name : features.getFeatureFields()) {

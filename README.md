@@ -162,6 +162,6 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 ## flink connector
 编译运行
 ```
- mvn clean -DskipTests package -P flink-1.15
+ mvn clean -DskipTests package -P flink-1.17
 ```
 
