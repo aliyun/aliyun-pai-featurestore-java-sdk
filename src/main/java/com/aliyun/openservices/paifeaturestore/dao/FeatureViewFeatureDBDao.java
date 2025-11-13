@@ -111,7 +111,14 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                         if (featureName.equals(this.primaryKeyField)) {
                             continue;
                         }
-                        byte isNull = byteBuffer.get();
+
+                        byte isNull;
+                        if(byteBuffer.hasRemaining()){
+                            isNull= byteBuffer.get();
+                        }else {
+                            isNull=1;
+                        }
+
                         if (1 == isNull) {
                             if (selectFieldSet.contains(featureName)) {
                                 featureMap.put(featureName, null);
@@ -176,440 +183,440 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                                 break;
                             case FS_ARRAY_INT32:
 
-                                int lenArrayInt32 = byteBuffer.getInt();
-                                List<Integer> integerList = new ArrayList<>(lenArrayInt32);
-                                for (int j = 0; j < lenArrayInt32; j++) {
-                                    integerList.add(byteBuffer.getInt());
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, integerList);
+                                    int lenArrayInt32 = byteBuffer.getInt();
+                                    List<Integer> integerList = new ArrayList<>(lenArrayInt32);
+                                    for (int j = 0; j < lenArrayInt32; j++) {
+                                        integerList.add(byteBuffer.getInt());
+                                    }
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, integerList);
 
-                                }
-                                break;
-                            case FS_ARRAY_INT64:
+                                    }
+                                    break;
+                                case FS_ARRAY_INT64:
 
-                                int lenArrayInt64 = byteBuffer.getInt();
-                                List<Long> longList = new ArrayList<>(lenArrayInt64);
-                                for (int j = 0; j < lenArrayInt64; j++) {
-                                    longList.add(byteBuffer.getLong());
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, longList);
-                                }
-                                break;
-                            case FS_ARRAY_FLOAT:
+                                    int lenArrayInt64 = byteBuffer.getInt();
+                                    List<Long> longList = new ArrayList<>(lenArrayInt64);
+                                    for (int j = 0; j < lenArrayInt64; j++) {
+                                        longList.add(byteBuffer.getLong());
+                                    }
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, longList);
+                                    }
+                                    break;
+                                case FS_ARRAY_FLOAT:
 
-                                int lenArrayFloat = byteBuffer.getInt();
-                                List<Float> floatList = new ArrayList<>(lenArrayFloat);
-                                for (int j = 0; j < lenArrayFloat; j++) {
-                                    floatList.add(byteBuffer.getFloat());
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, floatList);
-                                }
-                                break;
-                            case FS_ARRAY_DOUBLE:
+                                    int lenArrayFloat = byteBuffer.getInt();
+                                    List<Float> floatList = new ArrayList<>(lenArrayFloat);
+                                    for (int j = 0; j < lenArrayFloat; j++) {
+                                        floatList.add(byteBuffer.getFloat());
+                                    }
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, floatList);
+                                    }
+                                    break;
+                                case FS_ARRAY_DOUBLE:
 
-                                int lenArrayDouble = byteBuffer.getInt();
-                                List<Double> doubleList = new ArrayList<>(lenArrayDouble);
-                                for (int j = 0; j < lenArrayDouble; j++) {
-                                    doubleList.add(byteBuffer.getDouble());
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, doubleList);
-                                }
-                                break;
-                            case FS_ARRAY_STRING:
+                                    int lenArrayDouble = byteBuffer.getInt();
+                                    List<Double> doubleList = new ArrayList<>(lenArrayDouble);
+                                    for (int j = 0; j < lenArrayDouble; j++) {
+                                        doubleList.add(byteBuffer.getDouble());
+                                    }
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, doubleList);
+                                    }
+                                    break;
+                                case FS_ARRAY_STRING:
 
-                                int lenArrayString = byteBuffer.getInt();
-                                String[] arrayStringValue = decodeStringArray(byteBuffer, lenArrayString);
-                                List<String> stringList = Arrays.asList(arrayStringValue);
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, stringList);
-                                }
-                                break;
-                            case FS_ARRAY_ARRAY_FLOAT:
+                                    int lenArrayString = byteBuffer.getInt();
+                                    String[] arrayStringValue = decodeStringArray(byteBuffer, lenArrayString);
+                                    List<String> stringList = Arrays.asList(arrayStringValue);
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, stringList);
+                                    }
+                                    break;
+                                case FS_ARRAY_ARRAY_FLOAT:
 
-                                int outerLength = byteBuffer.getInt();
-                                List<List<Float>> arrayOfArrayFloatValue = new ArrayList<>(outerLength);
+                                    int outerLength = byteBuffer.getInt();
+                                    List<List<Float>> arrayOfArrayFloatValue = new ArrayList<>(outerLength);
 
-                                if (outerLength > 0) {
-                                    int totalElements = byteBuffer.getInt();
+                                    if (outerLength > 0) {
+                                        int totalElements = byteBuffer.getInt();
 
-                                    if (totalElements == 0) {
-                                        for (int outerIdx = 0; outerIdx < outerLength; outerIdx++) {
-                                            arrayOfArrayFloatValue.add(new ArrayList<>());
-                                        }
-                                    } else {
-                                        int[] innerArrayLens = new int[outerLength];
-                                        for (int j = 0; j < outerLength; j++) {
-                                            innerArrayLens[j] = byteBuffer.getInt();
-                                        }
-
-                                        List<Float> innerValidElements = new ArrayList<>(totalElements);
-                                        for (int j = 0; j < totalElements; j++) {
-                                            innerValidElements.add(byteBuffer.getFloat());
-                                        }
-
-                                        int innerIndex = 0;
-                                        for (int outerIdx = 0; outerIdx < outerLength; outerIdx++) {
-                                            int innerLength = innerArrayLens[outerIdx];
-                                            List<Float> innerArray = new ArrayList<>();
-                                            for (int j = 0; j < innerLength; j++) {
-                                                innerArray.add(innerValidElements.get(innerIndex++));
+                                        if (totalElements == 0) {
+                                            for (int outerIdx = 0; outerIdx < outerLength; outerIdx++) {
+                                                arrayOfArrayFloatValue.add(new ArrayList<>());
                                             }
-                                            arrayOfArrayFloatValue.add(innerArray);
+                                        } else {
+                                            int[] innerArrayLens = new int[outerLength];
+                                            for (int j = 0; j < outerLength; j++) {
+                                                innerArrayLens[j] = byteBuffer.getInt();
+                                            }
+
+                                            List<Float> innerValidElements = new ArrayList<>(totalElements);
+                                            for (int j = 0; j < totalElements; j++) {
+                                                innerValidElements.add(byteBuffer.getFloat());
+                                            }
+
+                                            int innerIndex = 0;
+                                            for (int outerIdx = 0; outerIdx < outerLength; outerIdx++) {
+                                                int innerLength = innerArrayLens[outerIdx];
+                                                List<Float> innerArray = new ArrayList<>();
+                                                for (int j = 0; j < innerLength; j++) {
+                                                    innerArray.add(innerValidElements.get(innerIndex++));
+                                                }
+                                                arrayOfArrayFloatValue.add(innerArray);
+                                            }
                                         }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, arrayOfArrayFloatValue);
-                                }
-                                break;
-                            case FS_MAP_INT32_INT32:
-
-                                int lenMapInt32Int32 = byteBuffer.getInt();
-                                Map<Integer, Integer> mapInt32Int32Value = new HashMap<>(lenMapInt32Int32);
-
-                                if (lenMapInt32Int32 > 0) {
-                                    int[] keyArray = new int[lenMapInt32Int32];
-
-                                    for (int j = 0; j < lenMapInt32Int32; j++) {
-                                        keyArray[j] = byteBuffer.getInt();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, arrayOfArrayFloatValue);
                                     }
+                                    break;
+                                case FS_MAP_INT32_INT32:
 
-                                    int[] values = new int[lenMapInt32Int32];
-                                    for (int j = 0; j < lenMapInt32Int32; j++) {
-                                        values[j] = byteBuffer.getInt();
+                                    int lenMapInt32Int32 = byteBuffer.getInt();
+                                    Map<Integer, Integer> mapInt32Int32Value = new HashMap<>(lenMapInt32Int32);
+
+                                    if (lenMapInt32Int32 > 0) {
+                                        int[] keyArray = new int[lenMapInt32Int32];
+
+                                        for (int j = 0; j < lenMapInt32Int32; j++) {
+                                            keyArray[j] = byteBuffer.getInt();
+                                        }
+
+                                        int[] values = new int[lenMapInt32Int32];
+                                        for (int j = 0; j < lenMapInt32Int32; j++) {
+                                            values[j] = byteBuffer.getInt();
+                                        }
+
+                                        for (int idx = 0; idx < lenMapInt32Int32; idx++) {
+                                            mapInt32Int32Value.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-
-                                    for (int idx = 0; idx < lenMapInt32Int32; idx++) {
-                                        mapInt32Int32Value.put(keyArray[idx], values[idx]);
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt32Int32Value);
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt32Int32Value);
-                                }
-                                break;
+                                    break;
 
-                            case FS_MAP_INT32_INT64:
+                                case FS_MAP_INT32_INT64:
 
-                                int lenMapInt32Int64 = byteBuffer.getInt();
-                                Map<Integer, Long> mapInt32Int64Value = new HashMap<>(lenMapInt32Int64);
-                                if (lenMapInt32Int64 > 0) {
-                                    int[] keyArray = new int[lenMapInt32Int64];
+                                    int lenMapInt32Int64 = byteBuffer.getInt();
+                                    Map<Integer, Long> mapInt32Int64Value = new HashMap<>(lenMapInt32Int64);
+                                    if (lenMapInt32Int64 > 0) {
+                                        int[] keyArray = new int[lenMapInt32Int64];
 
-                                    for (int j = 0; j < lenMapInt32Int64; j++) {
-                                        keyArray[j] = byteBuffer.getInt();
+                                        for (int j = 0; j < lenMapInt32Int64; j++) {
+                                            keyArray[j] = byteBuffer.getInt();
+                                        }
+
+                                        long[] values = new long[lenMapInt32Int64];
+                                        for (int j = 0; j < lenMapInt32Int64; j++) {
+                                            values[j] = byteBuffer.getLong();
+                                        }
+
+                                        for (int idx = 0; idx < lenMapInt32Int64; idx++) {
+                                            mapInt32Int64Value.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-
-                                    long[] values = new long[lenMapInt32Int64];
-                                    for (int j = 0; j < lenMapInt32Int64; j++) {
-                                        values[j] = byteBuffer.getLong();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt32Int64Value);
                                     }
+                                    break;
+                                case FS_MAP_INT32_FLOAT:
 
-                                    for (int idx = 0; idx < lenMapInt32Int64; idx++) {
-                                        mapInt32Int64Value.put(keyArray[idx], values[idx]);
+                                    int lenMapInt32Float = byteBuffer.getInt();
+                                    Map<Integer, Float> mapInt32FloatValue = new HashMap<>(lenMapInt32Float);
+                                    if (lenMapInt32Float > 0) {
+                                        int[] keyArray = new int[lenMapInt32Float];
+
+                                        for (int j = 0; j < lenMapInt32Float; j++) {
+                                            keyArray[j] = byteBuffer.getInt();
+                                        }
+
+                                        float[] values = new float[lenMapInt32Float];
+                                        for (int j = 0; j < lenMapInt32Float; j++) {
+                                            values[j] = byteBuffer.getFloat();
+                                        }
+
+                                        for (int idx = 0; idx < lenMapInt32Float; idx++) {
+                                            mapInt32FloatValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt32Int64Value);
-                                }
-                                break;
-                            case FS_MAP_INT32_FLOAT:
-
-                                int lenMapInt32Float = byteBuffer.getInt();
-                                Map<Integer, Float> mapInt32FloatValue = new HashMap<>(lenMapInt32Float);
-                                if (lenMapInt32Float > 0) {
-                                    int[] keyArray = new int[lenMapInt32Float];
-
-                                    for (int j = 0; j < lenMapInt32Float; j++) {
-                                        keyArray[j] = byteBuffer.getInt();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt32FloatValue);
                                     }
+                                    break;
+                                case FS_MAP_INT32_DOUBLE:
 
-                                    float[] values = new float[lenMapInt32Float];
-                                    for (int j = 0; j < lenMapInt32Float; j++) {
-                                        values[j] = byteBuffer.getFloat();
+                                    int lenMapInt32Double = byteBuffer.getInt();
+                                    Map<Integer, Double> mapInt32DoubleValue = new HashMap<>(lenMapInt32Double);
+                                    if (lenMapInt32Double > 0) {
+                                        int[] keyArray = new int[lenMapInt32Double];
+
+                                        for (int j = 0; j < lenMapInt32Double; j++) {
+                                            keyArray[j] = byteBuffer.getInt();
+                                        }
+                                        double[] values = new double[lenMapInt32Double];
+                                        for (int j = 0; j < lenMapInt32Double; j++) {
+                                            values[j] = byteBuffer.getDouble();
+                                        }
+                                        for (int idx = 0; idx < lenMapInt32Double; idx++) {
+                                            mapInt32DoubleValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-
-                                    for (int idx = 0; idx < lenMapInt32Float; idx++) {
-                                        mapInt32FloatValue.put(keyArray[idx], values[idx]);
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt32DoubleValue);
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt32FloatValue);
-                                }
-                                break;
-                            case FS_MAP_INT32_DOUBLE:
+                                    break;
+                                case FS_MAP_INT32_STRING:
 
-                                int lenMapInt32Double = byteBuffer.getInt();
-                                Map<Integer, Double> mapInt32DoubleValue = new HashMap<>(lenMapInt32Double);
-                                if (lenMapInt32Double > 0) {
-                                    int[] keyArray = new int[lenMapInt32Double];
+                                    int lenMapInt32String = byteBuffer.getInt();
+                                    Map<Integer, String> mapInt32StringValue = new HashMap<>(lenMapInt32String);
 
-                                    for (int j = 0; j < lenMapInt32Double; j++) {
-                                        keyArray[j] = byteBuffer.getInt();
+                                    if (lenMapInt32String > 0) {
+                                        int[] keyArray = new int[lenMapInt32String];
+                                        for (int j = 0; j < lenMapInt32String; j++) {
+                                            keyArray[j] = byteBuffer.getInt();
+                                        }
+
+
+                                        String[] values = decodeStringArray(byteBuffer, lenMapInt32String);
+
+                                        for (int idx = 0; idx < lenMapInt32String; idx++) {
+                                            mapInt32StringValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                    double[] values = new double[lenMapInt32Double];
-                                    for (int j = 0; j < lenMapInt32Double; j++) {
-                                        values[j] = byteBuffer.getDouble();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt32StringValue);
                                     }
-                                    for (int idx = 0; idx < lenMapInt32Double; idx++) {
-                                        mapInt32DoubleValue.put(keyArray[idx], values[idx]);
+                                    break;
+                                case FS_MAP_INT64_INT32:
+
+                                    int lenMapInt64Int32 = byteBuffer.getInt();
+                                    Map<Long, Integer> mapInt64Int32Value = new HashMap<>(lenMapInt64Int32);
+                                    if (lenMapInt64Int32 > 0) {
+                                        long[] keyArray = new long[lenMapInt64Int32];
+
+                                        for (int j = 0; j < lenMapInt64Int32; j++) {
+                                            keyArray[j] = byteBuffer.getLong();
+                                        }
+
+                                        int[] values = new int[lenMapInt64Int32];
+                                        for (int j = 0; j < lenMapInt64Int32; j++) {
+                                            values[j] = byteBuffer.getInt();
+                                        }
+
+                                        for (int idx = 0; idx < lenMapInt64Int32; idx++) {
+                                            mapInt64Int32Value.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt32DoubleValue);
-                                }
-                                break;
-                            case FS_MAP_INT32_STRING:
-
-                                int lenMapInt32String = byteBuffer.getInt();
-                                Map<Integer, String> mapInt32StringValue = new HashMap<>(lenMapInt32String);
-
-                                if (lenMapInt32String > 0) {
-                                    int[] keyArray = new int[lenMapInt32String];
-                                    for (int j = 0; j < lenMapInt32String; j++) {
-                                        keyArray[j] = byteBuffer.getInt();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt64Int32Value);
                                     }
+                                    break;
+                                case FS_MAP_INT64_INT64:
 
+                                    int lenMapInt64Int64 = byteBuffer.getInt();
+                                    Map<Long, Long> mapInt64Int64Value = new HashMap<>(lenMapInt64Int64);
+                                    if (lenMapInt64Int64 > 0) {
+                                        long[] keyArray = new long[lenMapInt64Int64];
 
-                                    String[] values = decodeStringArray(byteBuffer, lenMapInt32String);
+                                        for (int j = 0; j < lenMapInt64Int64; j++) {
+                                            keyArray[j] = byteBuffer.getLong();
+                                        }
 
-                                    for (int idx = 0; idx < lenMapInt32String; idx++) {
-                                        mapInt32StringValue.put(keyArray[idx], values[idx]);
+                                        long[] values = new long[lenMapInt64Int64];
+                                        for (int j = 0; j < lenMapInt64Int64; j++) {
+                                            values[j] = byteBuffer.getLong();
+                                        }
+                                        for (int idx = 0; idx < lenMapInt64Int64; idx++) {
+                                            mapInt64Int64Value.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt32StringValue);
-                                }
-                                break;
-                            case FS_MAP_INT64_INT32:
-
-                                int lenMapInt64Int32 = byteBuffer.getInt();
-                                Map<Long, Integer> mapInt64Int32Value = new HashMap<>(lenMapInt64Int32);
-                                if (lenMapInt64Int32 > 0) {
-                                    long[] keyArray = new long[lenMapInt64Int32];
-
-                                    for (int j = 0; j < lenMapInt64Int32; j++) {
-                                        keyArray[j] = byteBuffer.getLong();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt64Int64Value);
                                     }
+                                    break;
+                                case FS_MAP_INT64_FLOAT:
 
-                                    int[] values = new int[lenMapInt64Int32];
-                                    for (int j = 0; j < lenMapInt64Int32; j++) {
-                                        values[j] = byteBuffer.getInt();
+                                    int lenMapInt64Float = byteBuffer.getInt();
+                                    Map<Long, Float> mapInt64FloatValue = new HashMap<>(lenMapInt64Float);
+
+                                    if (lenMapInt64Float > 0) {
+                                        long[] keyArray = new long[lenMapInt64Float];
+                                        for (int j = 0; j < lenMapInt64Float; j++) {
+                                            keyArray[j] = byteBuffer.getLong();
+                                        }
+
+
+                                        float[] values = new float[lenMapInt64Float];
+                                        for (int j = 0; j < lenMapInt64Float; j++) {
+                                            values[j] = byteBuffer.getFloat();
+                                        }
+                                        for (int idx = 0; idx < lenMapInt64Float; idx++) {
+                                            mapInt64FloatValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-
-                                    for (int idx = 0; idx < lenMapInt64Int32; idx++) {
-                                        mapInt64Int32Value.put(keyArray[idx], values[idx]);
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt64FloatValue);
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt64Int32Value);
-                                }
-                                break;
-                            case FS_MAP_INT64_INT64:
+                                    break;
+                                case FS_MAP_INT64_DOUBLE:
 
-                                int lenMapInt64Int64 = byteBuffer.getInt();
-                                Map<Long, Long> mapInt64Int64Value = new HashMap<>(lenMapInt64Int64);
-                                if (lenMapInt64Int64 > 0) {
-                                    long[] keyArray = new long[lenMapInt64Int64];
+                                    int lenMapInt64Double = byteBuffer.getInt();
+                                    Map<Long, Double> mapInt64DoubleValue = new HashMap<>(lenMapInt64Double);
 
-                                    for (int j = 0; j < lenMapInt64Int64; j++) {
-                                        keyArray[j] = byteBuffer.getLong();
+                                    if (lenMapInt64Double > 0) {
+                                        long[] keyArray = new long[lenMapInt64Double];
+                                        for (int j = 0; j < lenMapInt64Double; j++) {
+                                            keyArray[j] = byteBuffer.getLong();
+                                        }
+
+
+                                        double[] values = new double[lenMapInt64Double];
+                                        for (int j = 0; j < lenMapInt64Double; j++) {
+                                            values[j] = byteBuffer.getDouble();
+                                        }
+                                        for (int idx = 0; idx < lenMapInt64Double; idx++) {
+                                            mapInt64DoubleValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-
-                                    long[] values = new long[lenMapInt64Int64];
-                                    for (int j = 0; j < lenMapInt64Int64; j++) {
-                                        values[j] = byteBuffer.getLong();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt64DoubleValue);
                                     }
-                                    for (int idx = 0; idx < lenMapInt64Int64; idx++) {
-                                        mapInt64Int64Value.put(keyArray[idx], values[idx]);
+                                    break;
+                                case FS_MAP_INT64_STRING:
+
+                                    int lenMapInt64String = byteBuffer.getInt();
+                                    Map<Long, String> mapInt64StringValue = new HashMap<>(lenMapInt64String);
+
+                                    if (lenMapInt64String > 0) {
+                                        long[] keyArray = new long[lenMapInt64String];
+                                        for (int j = 0; j < lenMapInt64String; j++) {
+                                            keyArray[j] = byteBuffer.getLong();
+                                        }
+
+
+                                        String[] values = decodeStringArray(byteBuffer, lenMapInt64String);
+
+                                        for (int idx = 0; idx < lenMapInt64String; idx++) {
+                                            mapInt64StringValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt64Int64Value);
-                                }
-                                break;
-                            case FS_MAP_INT64_FLOAT:
-
-                                int lenMapInt64Float = byteBuffer.getInt();
-                                Map<Long, Float> mapInt64FloatValue = new HashMap<>(lenMapInt64Float);
-
-                                if (lenMapInt64Float > 0) {
-                                    long[] keyArray = new long[lenMapInt64Float];
-                                    for (int j = 0; j < lenMapInt64Float; j++) {
-                                        keyArray[j] = byteBuffer.getLong();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapInt64StringValue);
                                     }
+                                    break;
+                                case FS_MAP_STRING_INT32:
+
+                                    int lenMapStringInt32 = byteBuffer.getInt();
+                                    Map<String, Integer> mapStringInt32Value = new HashMap<>(lenMapStringInt32);
+
+                                    if (lenMapStringInt32 > 0) {
+                                        String[] keyArray = decodeStringArray(byteBuffer, lenMapStringInt32);
 
 
-                                    float[] values = new float[lenMapInt64Float];
-                                    for (int j = 0; j < lenMapInt64Float; j++) {
-                                        values[j] = byteBuffer.getFloat();
+                                        int[] values = new int[lenMapStringInt32];
+                                        for (int j = 0; j < lenMapStringInt32; j++) {
+                                            values[j] = byteBuffer.getInt();
+                                        }
+                                        for (int idx = 0; idx < lenMapStringInt32; idx++) {
+                                            mapStringInt32Value.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                    for (int idx = 0; idx < lenMapInt64Float; idx++) {
-                                        mapInt64FloatValue.put(keyArray[idx], values[idx]);
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapStringInt32Value);
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt64FloatValue);
-                                }
-                                break;
-                            case FS_MAP_INT64_DOUBLE:
+                                    break;
+                                case FS_MAP_STRING_INT64:
 
-                                int lenMapInt64Double = byteBuffer.getInt();
-                                Map<Long, Double> mapInt64DoubleValue = new HashMap<>(lenMapInt64Double);
+                                    int lenMapStringInt64 = byteBuffer.getInt();
+                                    Map<String, Long> mapStringInt64Value = new HashMap<>(lenMapStringInt64);
+                                    if (lenMapStringInt64 > 0) {
+                                        String[] keyArray = decodeStringArray(byteBuffer, lenMapStringInt64);
 
-                                if (lenMapInt64Double > 0) {
-                                    long[] keyArray = new long[lenMapInt64Double];
-                                    for (int j = 0; j < lenMapInt64Double; j++) {
-                                        keyArray[j] = byteBuffer.getLong();
+
+                                        long[] values = new long[lenMapStringInt64];
+                                        for (int j = 0; j < lenMapStringInt64; j++) {
+                                            values[j] = byteBuffer.getLong();
+                                        }
+                                        for (int idx = 0; idx < lenMapStringInt64; idx++) {
+                                            mapStringInt64Value.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-
-
-                                    double[] values = new double[lenMapInt64Double];
-                                    for (int j = 0; j < lenMapInt64Double; j++) {
-                                        values[j] = byteBuffer.getDouble();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapStringInt64Value);
                                     }
-                                    for (int idx = 0; idx < lenMapInt64Double; idx++) {
-                                        mapInt64DoubleValue.put(keyArray[idx], values[idx]);
+                                    break;
+                                case FS_MAP_STRING_FLOAT:
+
+                                    int lenMapStringFloat = byteBuffer.getInt();
+                                    Map<String, Float> mapStringFloatValue = new HashMap<>(lenMapStringFloat);
+
+                                    if (lenMapStringFloat > 0) {
+                                        String[] keyArray = decodeStringArray(byteBuffer, lenMapStringFloat);
+
+
+                                        float[] values = new float[lenMapStringFloat];
+                                        for (int j = 0; j < lenMapStringFloat; j++) {
+                                            values[j] = byteBuffer.getFloat();
+                                        }
+                                        for (int idx = 0; idx < lenMapStringFloat; idx++) {
+                                            mapStringFloatValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt64DoubleValue);
-                                }
-                                break;
-                            case FS_MAP_INT64_STRING:
-
-                                int lenMapInt64String = byteBuffer.getInt();
-                                Map<Long, String> mapInt64StringValue = new HashMap<>(lenMapInt64String);
-
-                                if (lenMapInt64String > 0) {
-                                    long[] keyArray = new long[lenMapInt64String];
-                                    for (int j = 0; j < lenMapInt64String; j++) {
-                                        keyArray[j] = byteBuffer.getLong();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapStringFloatValue);
                                     }
+                                    break;
+                                case FS_MAP_STRING_DOUBLE:
+                                    int lenMapStringDouble = byteBuffer.getInt();
+                                    Map<String, Double> mapStringDoubleValue = new HashMap<>(lenMapStringDouble);
+
+                                    if (lenMapStringDouble > 0) {
+                                        String[] keyArray = decodeStringArray(byteBuffer, lenMapStringDouble);
 
 
-                                    String[] values = decodeStringArray(byteBuffer, lenMapInt64String);
-
-                                    for (int idx = 0; idx < lenMapInt64String; idx++) {
-                                        mapInt64StringValue.put(keyArray[idx], values[idx]);
+                                        double[] values = new double[lenMapStringDouble];
+                                        for (int j = 0; j < lenMapStringDouble; j++) {
+                                            values[j] = byteBuffer.getDouble();
+                                        }
+                                        for (int idx = 0; idx < lenMapStringDouble; idx++) {
+                                            mapStringDoubleValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapInt64StringValue);
-                                }
-                                break;
-                            case FS_MAP_STRING_INT32:
-
-                                int lenMapStringInt32 = byteBuffer.getInt();
-                                Map<String, Integer> mapStringInt32Value = new HashMap<>(lenMapStringInt32);
-
-                                if (lenMapStringInt32 > 0) {
-                                    String[] keyArray = decodeStringArray(byteBuffer, lenMapStringInt32);
-
-
-                                    int[] values = new int[lenMapStringInt32];
-                                    for (int j = 0; j < lenMapStringInt32; j++) {
-                                        values[j] = byteBuffer.getInt();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapStringDoubleValue);
                                     }
-                                    for (int idx = 0; idx < lenMapStringInt32; idx++) {
-                                        mapStringInt32Value.put(keyArray[idx], values[idx]);
+                                    break;
+                                case FS_MAP_STRING_STRING:
+
+                                    int length = byteBuffer.getInt();
+                                    Map<String, String> mapStringStringValue = new HashMap<>(length);
+
+                                    if (length > 0) {
+                                        String[] keyArray = decodeStringArray(byteBuffer, length);
+                                        String[] values = decodeStringArray(byteBuffer, length);
+
+                                        for (int idx = 0; idx < length; idx++) {
+                                            mapStringStringValue.put(keyArray[idx], values[idx]);
+                                        }
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapStringInt32Value);
-                                }
-                                break;
-                            case FS_MAP_STRING_INT64:
-
-                                int lenMapStringInt64 = byteBuffer.getInt();
-                                Map<String, Long> mapStringInt64Value = new HashMap<>(lenMapStringInt64);
-                                if (lenMapStringInt64 > 0) {
-                                    String[] keyArray = decodeStringArray(byteBuffer, lenMapStringInt64);
-
-
-                                    long[] values = new long[lenMapStringInt64];
-                                    for (int j = 0; j < lenMapStringInt64; j++) {
-                                        values[j] = byteBuffer.getLong();
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, mapStringStringValue);
                                     }
-                                    for (int idx = 0; idx < lenMapStringInt64; idx++) {
-                                        mapStringInt64Value.put(keyArray[idx], values[idx]);
+                                    break;
+
+                                default:
+                                    int len = byteBuffer.getInt();
+                                    byte[] bytes = new byte[len];
+                                    byteBuffer.get(bytes, 0, len);
+                                    if (selectFieldSet.contains(featureName)) {
+                                        featureMap.put(featureName, new String(bytes));
                                     }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapStringInt64Value);
-                                }
-                                break;
-                            case FS_MAP_STRING_FLOAT:
-
-                                int lenMapStringFloat = byteBuffer.getInt();
-                                Map<String, Float> mapStringFloatValue = new HashMap<>(lenMapStringFloat);
-
-                                if (lenMapStringFloat > 0) {
-                                    String[] keyArray = decodeStringArray(byteBuffer, lenMapStringFloat);
-
-
-                                    float[] values = new float[lenMapStringFloat];
-                                    for (int j = 0; j < lenMapStringFloat; j++) {
-                                        values[j] = byteBuffer.getFloat();
-                                    }
-                                    for (int idx = 0; idx < lenMapStringFloat; idx++) {
-                                        mapStringFloatValue.put(keyArray[idx], values[idx]);
-                                    }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapStringFloatValue);
-                                }
-                                break;
-                            case FS_MAP_STRING_DOUBLE:
-                                int lenMapStringDouble = byteBuffer.getInt();
-                                Map<String, Double> mapStringDoubleValue = new HashMap<>(lenMapStringDouble);
-
-                                if (lenMapStringDouble > 0) {
-                                    String[] keyArray = decodeStringArray(byteBuffer, lenMapStringDouble);
-
-
-                                    double[] values = new double[lenMapStringDouble];
-                                    for (int j = 0; j < lenMapStringDouble; j++) {
-                                        values[j] = byteBuffer.getDouble();
-                                    }
-                                    for (int idx = 0; idx < lenMapStringDouble; idx++) {
-                                        mapStringDoubleValue.put(keyArray[idx], values[idx]);
-                                    }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapStringDoubleValue);
-                                }
-                                break;
-                            case FS_MAP_STRING_STRING:
-
-                                int length = byteBuffer.getInt();
-                                Map<String, String> mapStringStringValue = new HashMap<>(length);
-
-                                if (length > 0) {
-                                    String[] keyArray = decodeStringArray(byteBuffer, length);
-                                    String[] values = decodeStringArray(byteBuffer, length);
-
-                                    for (int idx = 0; idx < length; idx++) {
-                                        mapStringStringValue.put(keyArray[idx], values[idx]);
-                                    }
-                                }
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, mapStringStringValue);
-                                }
-                                break;
-
-                            default:
-                                int len = byteBuffer.getInt();
-                                byte[] bytes = new byte[len];
-                                byteBuffer.get(bytes, 0, len);
-                                if (selectFieldSet.contains(featureName)) {
-                                    featureMap.put(featureName, new String(bytes));
-                                }
-                                break;
-                        }
+                                    break;
+                            }
 
                     }
 
