@@ -111,7 +111,14 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                         if (featureName.equals(this.primaryKeyField)) {
                             continue;
                         }
-                        byte isNull = byteBuffer.get();
+
+                        byte isNull;
+                        if(byteBuffer.hasRemaining()){
+                            isNull= byteBuffer.get();
+                        }else {
+                            isNull=1;
+                        }
+
                         if (1 == isNull) {
                             if (selectFieldSet.contains(featureName)) {
                                 featureMap.put(featureName, null);
