@@ -119,7 +119,7 @@ public class FeatureStoreClient {
 
         if (projectMap.size() > 0) {
             for (Map.Entry<String, Project> entry : projectMap.entrySet()) {
-                this.projects.putIfAbsent(entry.getKey(), entry.getValue());
+                this.projects.put(entry.getKey(), entry.getValue());
             }
         }
     }
