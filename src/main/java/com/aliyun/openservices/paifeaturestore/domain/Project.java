@@ -166,7 +166,7 @@ public class Project {
             ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(this.project.getProjectId()), pageNumber, pageSize);
 
             for (com.aliyun.openservices.paifeaturestore.model.FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
-                if (featureEntity.getProjectId() == project.getProjectId()) {
+                if (featureEntity.getProjectId().equals(project.getProjectId())) {
                     if (!this.featureEntityMap.containsKey(featureEntity.getFeatureEntityName()))  {
                         this.featureEntityMap.put(featureEntity.getFeatureEntityName(), new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
                     }
