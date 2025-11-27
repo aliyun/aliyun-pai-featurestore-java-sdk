@@ -319,6 +319,43 @@ public class FeatureStoreClientTest {
 
     }
 
+
+    @Ignore
+    @org.junit.Test
+    public void readSequenceSideInfoTest() throws Exception {
+        String region="cn-beijing";
+        String projectName = "fs_python_sdk_test";
+        Configuration configuration = new Configuration(region, Constants.accessId, Constants.accessKey, projectName);
+        configuration.setDomain(Constants.host);
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        ApiClient apiClient = new ApiClient(configuration);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject(projectName);
+        if (null == project) {
+            throw new RuntimeException("project not found");
+        }
+
+        String sequenceFeatureViewName = "sequence_side_info";
+        SequenceFeatureView featureView = project.getSeqFeatureView(sequenceFeatureViewName);
+        if (null == featureView) {
+            throw new RuntimeException("featureview not found");
+        }
+
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"122283542", "111287215", "102004103", "139026930", "185954437"}, new String[]{"*"}, null);
+        while (onlineFeatures.next()) {
+            for (String field : onlineFeatures.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, onlineFeatures.getObject(field));
+            }
+            System.out.println();
+        }
+    }
+
+
+
     @Ignore
     @Test
     public void otsDataTest2() throws Exception {
