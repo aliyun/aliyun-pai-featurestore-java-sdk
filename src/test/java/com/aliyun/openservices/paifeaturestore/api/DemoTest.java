@@ -5,10 +5,8 @@ import com.aliyun.openservices.paifeaturestore.domain.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Time;
+import java.util.*;
 
 public class DemoTest {
 
@@ -240,7 +238,7 @@ public class DemoTest {
         System.out.println("-------------------------");
 
 //        仅获取item侧实体包含的数据
-        FeatureResult fr2 = mf1.getOnlineFeaturesWithEntity(mm, "server");
+        FeatureResult fr2 = mf1.getOnlineFeaturesWithEntity(mm, "server", false);
         while (fr2.next()) {
             System.out.println("-------------------------");
             for (String f:fr2.getFeatureFields()) {
@@ -270,6 +268,180 @@ public class DemoTest {
             System.out.println("}");
         }
         System.out.printf("]");
+
+    }
+
+    @Test
+    public void childFeatureEntityTest() throws Exception {
+        String projectName = "test1121";
+        String featureViewName = "item_fv1211";
+        String modelFeatureName = "model_fv8";
+        String childModelFeatureName = "model_fv7";
+        Configuration config = new Configuration("cn-hangzhou",
+                Constants.accessId, Constants.accessKey, projectName);
+        config.setDomain(Constants.preHost);
+        config.setUsername(Constants.username);
+        config.setPassword(Constants.password);
+
+        ApiClient apiClient = new ApiClient(config);
+        FeatureStoreClient client = new FeatureStoreClient(apiClient,true);
+        if (client == null) {
+            throw new RuntimeException("This project is not exist");
+        }
+        Project project = client.getProject(projectName);
+        if (project == null) {
+            throw new RuntimeException("This project is not exist");
+        }
+        FeatureEntity featureEntity = project.getFeatureEntity("author");
+        if (featureEntity == null) {
+            throw new RuntimeException("This featureEntity is not exist");
+        }
+
+        //有上级
+        if (featureEntity.getFeatureEntity().getParentFeatureEntityId() != null && featureEntity.getFeatureEntity().getParentFeatureEntityId() != 0) {
+            FeatureEntity parentChildEntity = project.getFeatureEntity(featureEntity.getFeatureEntity().getParentFeatureEntityName());
+            System.out.println(parentChildEntity);
+        }
+
+
+        FeatureView itemFeatureView = project.getFeatureView(featureViewName);
+        if (itemFeatureView == null){
+            throw new RuntimeException("This featureView is not exist");
+        }
+
+       //写入特征
+        List<Map<String, Object>> writeData = new ArrayList<>();
+        for(int i=0;i<10;i++){
+            HashMap<String, Object> mapData = new HashMap<>();
+            int random = new Random().nextInt(1000000);
+            mapData.put("item_id",i+1);
+            mapData.put("author_id",random);
+            mapData.put("another_id",random*(i+1));
+            mapData.put("event_time",System.currentTimeMillis());
+            writeData.add(mapData);
+        }
+
+        for (Iterator<Map<String, Object>> it = writeData.iterator(); it.hasNext();) {
+            System.out.println(it.next());
+        }
+
+        for (int i=0;i<10;i++){
+            itemFeatureView.writeFeatures(writeData);
+        }
+        Thread.sleep(5000);
+
+
+        FeatureResult onlineFeaturesFv = itemFeatureView.getOnlineFeatures(new String[]{"1", "2", "3"}, new String[]{"*"}, null);
+        while (onlineFeaturesFv.next()) {
+            System.out.println("-------------------------");
+            for (String f:onlineFeaturesFv.getFeatureFields()) {
+                System.out.printf("%s=%s ",f,onlineFeaturesFv.getObject(f));
+            }
+            System.out.println();
+        }
+
+
+        FeatureView userFeatureView = project.getFeatureView("user_fv1216");
+        if (userFeatureView == null){
+            throw new RuntimeException("This featureView is not exist");
+        }
+
+        FeatureResult onlineFeaturesFv2 = userFeatureView.getOnlineFeatures(new String[]{"122195575", "189269449", "105601516"}, new String[]{"*"}, null);
+        while (onlineFeaturesFv2.next()) {
+            System.out.println("-------------------------");
+            for (String f:onlineFeaturesFv2.getFeatureFields()) {
+                System.out.printf("%s=%s ",f,onlineFeaturesFv2.getObject(f));
+            }
+            System.out.println();
+        }
+
+
+//        Model modelFeature = project.getModelFeature(modelFeatureName);
+//        if (modelFeature==null){
+//            throw new RuntimeException("This modelFeature is not exist");
+//        }
+
+
+        //A.所有FeatureEntity的特征数据，默认会一并获取上级entity所包含的下级entity的特征
+//        FeatureResult onlineFeatures = modelFeature.getOnlineFeatures(new HashMap<String, List<String>>(){{
+//            put("user_id",Arrays.asList("122195575", "189269449", "105601516"));
+//            put("item_id",Arrays.asList("1", "2", "3"));
+//        }});
+//        if (onlineFeatures.getFeatureData()!=null){
+//            for (Map<String, Object> m:onlineFeatures.getFeatureData()) {
+//                System.out.println("-------------------------");
+//                for (Object key:m.keySet()) {
+//                    System.out.printf("%s=%s ",key,m.get(key));
+//                }
+//                System.out.println();
+//            }
+//        }
+
+        //B.获取指定（item侧）entity的特征数据
+        //1.创建的model_feature的不包含下级entity的特征
+        //（1）根据传入配置判断是否需要获取上级entity所包含的下级entity的特征
+//        FeatureResult onlineFeatures1 = modelFeature.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
+//            put("user_id",Arrays.asList("122195575", "189269449", "105601516"));
+//            put("item_id",Arrays.asList("1", "2", "3"));}},"item", true);
+//        if (onlineFeatures1.getFeatureData()!=null){
+//            for (Map<String, Object> m:onlineFeatures1.getFeatureData()) {
+//                System.out.println("-------------------------");
+//                for (Object key:m.keySet()) {
+//                    System.out.printf("%s=%s ",key,m.get(key));
+//                }
+//                System.out.println();
+//            }
+//        }
+//
+//
+//        //（2）是否允许get下级entity的特征？
+//        FeatureResult onlineFeatures2 = modelFeature.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
+//            put("user_id",Arrays.asList("122195575", "189269449", "105601516"));
+//            put("author_id",Arrays.asList("", "", ""));}},"item",true);
+//        if (onlineFeatures2.getFeatureData()!=null){
+//            for (Map<String, Object> m:onlineFeatures2.getFeatureData()) {
+//                System.out.println("-------------------------");
+//                for (Object key:m.keySet()) {
+//                    System.out.printf("%s=%s ",key,m.get(key));
+//                }
+//                System.out.println();
+//            }
+//        }
+
+        //2.创建的model_feature的包含下级entity的特征
+        Model modelFeature2 = project.getModelFeature(childModelFeatureName);
+        if (modelFeature2==null){
+            throw new RuntimeException("This modelFeature is not exist");
+        }
+        //（1）根据传入配置判断是否需要获取上级entity所包含的下级entity的特征
+        FeatureResult onlineFeatures3 = modelFeature2.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
+            put("user_id",Arrays.asList("122195575", "189269449", "105601516"));
+            put("item_id",Arrays.asList("1", "2", "3"));}},"item", true);
+        if (onlineFeatures3.getFeatureData()!=null){
+            for (Map<String, Object> m:onlineFeatures3.getFeatureData()) {
+                System.out.println("-------------------------");
+                for (Object key:m.keySet()) {
+                    System.out.printf("%s=%s ",key,m.get(key));
+                }
+                System.out.println();
+            }
+        }
+
+
+//        //（2）get下级entity的特征
+        FeatureResult onlineFeatures4 = modelFeature2.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
+            put("user_id",Arrays.asList("122195575", "189269449", "105601516"));
+            put("author_id",Arrays.asList("199576", "130947", "966202"));}},"author",false);
+        if (onlineFeatures4.getFeatureData()!=null){
+            for (Map<String, Object> m:onlineFeatures4.getFeatureData()) {
+                System.out.println("-------------------------");
+                for (Object key:m.keySet()) {
+                    System.out.printf("%s=%s ",key,m.get(key));
+                }
+                System.out.println();
+            }
+        }
+
 
     }
 }

@@ -48,6 +48,9 @@ public class FeatureEntityApi {
             featureEntity.setFeatureEntityJoinid(entity.getJoinId());
             featureEntity.setProjectName(entity.getProjectName());
             featureEntity.setProjectId(Long.valueOf(entity.getProjectId()));
+            featureEntity.setParentFeatureEntityId(Integer.valueOf(entity.getParentFeatureEntityId()));
+            featureEntity.setParentFeatureEntityName(entity.getParentFeatureEntityName());
+            featureEntity.setParentJoinId(entity.getParentJoinId());
 
             featureEntityList.add(featureEntity);
         }
