@@ -111,7 +111,8 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
         // lazy init
         initializeFeatureView();
 
-        if (value.getRowKind() == RowKind.INSERT) {
+        LOG.debug("before write value:{}, row kind:{}", value, value.getRowKind());
+        if (value.getRowKind() == RowKind.INSERT || value.getRowKind() == RowKind.UPDATE_AFTER) {
             Map<String, Object> data = new HashMap<>(fields.size());
             for (int i = 0; i < this.fields.size(); i++) {
                 RowType.RowField rowField = this.fields.get(i);
