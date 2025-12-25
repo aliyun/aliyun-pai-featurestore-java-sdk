@@ -362,9 +362,8 @@ public class DemoTest {
         if (modelFeature==null){
             throw new RuntimeException("This modelFeature is not exist");
         }
-        //（1）根据传入配置判断是否需要获取上级entity所包含的下级entity的特征
         FeatureResult onlineFeatures1 = modelFeature.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
-            put("item_id",Arrays.asList("1", "2", "3"));}},"item");
+            put("item_id",Arrays.asList("1", "2", "3", "4"));}},"item");
         if (onlineFeatures1.getFeatureData()!=null){
             for (Map<String, Object> m:onlineFeatures1.getFeatureData()) {
                 System.out.println("-------------------------");
@@ -388,7 +387,6 @@ public class DemoTest {
         }
 
 //        //（2）get下级entity的特征
-
         FeatureResult onlineFeatures3 = modelFeature.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
             put("author_id",Arrays.asList("1001", "1002", "1003"));}},"author");
         if (onlineFeatures3.getFeatureData()!=null){
