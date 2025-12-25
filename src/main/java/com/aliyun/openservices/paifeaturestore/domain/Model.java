@@ -170,7 +170,7 @@ public class Model {
                 try {
                     FeatureResult featureResult = new FeatureStoreResult();
                     try {
-                        featureResult = getOnlineFeaturesWithEntity(joinIds, this.entityJoinIdToFeatureEntityMap.get(entry.getKey()).featureEntity.getFeatureEntityName(),true);
+                        featureResult = getOnlineFeaturesWithEntity(joinIds, this.entityJoinIdToFeatureEntityMap.get(entry.getKey()).featureEntity.getFeatureEntityName());
                     } catch (Exception e) {
                         logger.error("featureview get online features error", e);
                     }
@@ -217,7 +217,7 @@ public class Model {
         return featureStoreResult;
     }
 
-    public FeatureResult getOnlineFeaturesWithEntity(Map<String, List<String>> joinIds, String featureEntityName, boolean isGetChildEntityFeatures){
+    public FeatureResult getOnlineFeaturesWithEntity(Map<String, List<String>> joinIds, String featureEntityName){
         FeatureEntity featureEntity = this.featureEntityMap.get(featureEntityName);
         if (featureEntity == null) {
             throw new RuntimeException(String.format("feature entity name:%s not found", featureEntityName));
@@ -230,7 +230,7 @@ public class Model {
         Map<String, IFeatureView> featureViewMap = this.featureEntityJoinIdMap.get(entityJoinId);//得到的是item_id对应的featureView
         Set<String> childFeatureEntitiesJoinid;
         //有下级entity，需要一并获取下级entity的featureViewMap以及entityJoinId
-        if(featureEntity.getFeatureEntity().getParentFeatureEntityId() == 0 && isGetChildEntityFeatures){//上级 item(author、another)
+        if(featureEntity.getFeatureEntity().getParentFeatureEntityId() == 0){//上级 item(author、another)
             if (this.parentHaveChildFeatureEntityMap.containsKey(featureEntity.getFeatureEntity().getFeatureEntityName())){
                 //得到模型特征所有包含的子entity(author、another)
                 childFeatureEntitiesJoinid = this.parentHaveChildFeatureEntityMap.get(featureEntity.getFeatureEntity().getFeatureEntityName());//author_id
@@ -247,6 +247,9 @@ public class Model {
         List<String> featureFields = new CopyOnWriteArrayList<>();
         Map<String, FSType> featureFieldTypeMap = new ConcurrentHashMap<>();
         Map<String, Map<String, Object>> joinIdFeaturMap = new ConcurrentHashMap<>();
+
+
+        HashMap<String, Map<String,String>> joinIdForChildJoinId = new HashMap<>();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (IFeatureView featureView : featureViewMap.values()) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(()->{
@@ -271,22 +274,27 @@ public class Model {
                             }
                         }
 
-                        Map<String, List<String>> childJoinIds = new ConcurrentHashMap<>();//{"author_id":{"xxx","xxxx",......}}
-                        HashMap<String, String> joinIdForChildJoinId = new HashMap<>();
+                        Map<String, Set<String>> childJoinIds = new ConcurrentHashMap<>();//{"author_id":{"xxx","xxxx",......}}
                         for (Map<String, Object> featureData : featureResult.getFeatureData()) {
                             //若有下级entity，则需要将下级entity的featureViewMap中的数据加入joinIdFeaturMap
                             for (String childFeatureEntityJoinId : childFeatureEntitiesJoinid) {
                                 if (featureData.containsKey(childFeatureEntityJoinId) && featureData.get(childFeatureEntityJoinId) != null) {
                                     String childFeatureEntityJoinIdValue = String.valueOf(featureData.get(childFeatureEntityJoinId));
-                                    childJoinIds.computeIfAbsent(childFeatureEntityJoinId, k -> new ArrayList<>()).add(childFeatureEntityJoinIdValue);
-                                    joinIdForChildJoinId.put(String.valueOf(featureData.get(entityJoinId)), childFeatureEntityJoinIdValue);
+                                    childJoinIds.computeIfAbsent(childFeatureEntityJoinId, k -> new HashSet<>()).add(childFeatureEntityJoinIdValue);
+//                                    joinIdForChildJoinId.computeIfAbsent(childFeatureEntityJoinId, k -> new HashMap<>()).put(String.valueOf(featureData.get(entityJoinId)), childFeatureEntityJoinIdValue);
                                 }
                             }
                         }
 
                         //获取下级entity的featureViewMap中的数据
-                        if  (!childJoinIds.isEmpty() && isGetChildEntityFeatures) {
-                            processChildEntityFeatures(childJoinIds,joinIdForChildJoinId, featureFieldTypeMap, joinIdFeaturMap);
+                        if  (!childJoinIds.isEmpty()) {
+                            Map<String, List<FeatureResult>> childFeatureResults = processChildEntityFeatures(childJoinIds);
+                            // 合并子实体特征数据featureResult
+                            for (Map.Entry<String, List<FeatureResult>> entry : childFeatureResults.entrySet()) {
+                                for (FeatureResult childFeatureResult:entry.getValue()){
+                                    mergeChildFeatureData(childFeatureResult, entry.getKey(),featureFieldTypeMap, joinIdFeaturMap);
+                                }
+                            }
                         }
 
                     }
@@ -296,6 +304,7 @@ public class Model {
             }, executorService );
             futures.add(future);
         }
+
 
         List<Map<String, Object>> featureDataList = new ArrayList<>();
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -317,33 +326,35 @@ public class Model {
         return featureStoreResult;
     }
 
-    private void processChildEntityFeatures(Map<String, List<String>> childJoinIds,
-                                            Map<String, String> joinIdForChildJoinId,
-                                            Map<String, FSType> featureFieldTypeMap,
-                                            Map<String, Map<String, Object>> joinIdFeatureMap) {
+    private Map<String,List<FeatureResult>> processChildEntityFeatures(Map<String, Set<String>> childJoinIds) {
+        Map<String, List<FeatureResult>> featureResultsForChildFeatureEntityJoinIdMap = new ConcurrentHashMap<>();
         if (!childJoinIds.isEmpty()) {
+
             List<CompletableFuture<Void>> childFutures = new ArrayList<>();
-            for (Map.Entry<String, List<String>> entry : childJoinIds.entrySet()) {
+            for (Map.Entry<String, Set<String>> entry : childJoinIds.entrySet()) {
                 String childFeatureEntityJoinId = entry.getKey();//author_id
-                List<String> childJoinIdValues = entry.getValue();//{"xxx","xxxx",......}
+                Set<String> childJoinIdValues = entry.getValue();//{"xxx","xxxx",......}
 
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                    processChildFeatureViews(childFeatureEntityJoinId, childJoinIdValues, joinIdForChildJoinId, featureFieldTypeMap, joinIdFeatureMap);
+                    List<FeatureResult> featureResults = processChildFeatureViews(childFeatureEntityJoinId, childJoinIdValues);
+                    featureResultsForChildFeatureEntityJoinIdMap.put(childFeatureEntityJoinId, featureResults);
                 }, executorService);
                 childFutures.add(future);
             }
 
             CompletableFuture.allOf(childFutures.toArray(new CompletableFuture[0])).join();
+
+
         }
+        return featureResultsForChildFeatureEntityJoinIdMap;
     }
 
-    private void processChildFeatureViews(String childFeatureEntityJoinId,
-                                          List<String> childJoinIdValues,
-                                          Map<String, String> joinIdForChildJoinId,
-                                          Map<String, FSType> featureFieldTypeMap,
-                                          Map<String, Map<String, Object>> joinIdFeatureMap) {
+    private List<FeatureResult> processChildFeatureViews(String childFeatureEntityJoinId,
+                                          Set<String> childJoinIdValues) {
+        List<FeatureResult> featureResultsForChildFeatureEntityJoinId = new ArrayList<>();
+        //多张featureView
         Map<String, IFeatureView> childFeatureViewMap = this.featureEntityJoinIdMap.get(childFeatureEntityJoinId);
-        if (childFeatureViewMap != null) {
+        if (childFeatureViewMap != null) {//问题在这里！！！
             for (IFeatureView childFeatureView : childFeatureViewMap.values()) {
                 try {
                     String[] childJoinIdsArray = childJoinIdValues.toArray(new String[0]);
@@ -352,19 +363,17 @@ public class Model {
                             this.featureNamesMap.get(childFeatureView.getFeatureView().getName()).toArray(new String[0]),
                             this.aliasNamesMap.get(childFeatureView.getFeatureView().getName())
                     );
+                    featureResultsForChildFeatureEntityJoinId.add(childFeatureResult);
 
-                    // 合并子实体特征数据
-                    mergeChildFeatureData(childFeatureResult,joinIdForChildJoinId, childFeatureEntityJoinId,
-                            featureFieldTypeMap, joinIdFeatureMap);
                 } catch (Exception e) {
                     logger.error("获取子实体特征失败: " + childFeatureEntityJoinId, e);
                 }
             }
         }
+        return featureResultsForChildFeatureEntityJoinId;
     }
 
     private void mergeChildFeatureData(FeatureResult childFeatureResult,
-                                       Map<String, String> joinIdForChildJoinId,
                                        String childFeatureEntityJoinId,
                                        Map<String, FSType> featureFieldTypeMap,
                                        Map<String, Map<String, Object>> joinIdFeatureMap) {
@@ -383,10 +392,11 @@ public class Model {
                     for(Map.Entry<String,Map<String, Object>> parentFeatureData : joinIdFeatureMap.entrySet()){
                         String key = parentFeatureData.getKey();
                         Map<String, Object> value = parentFeatureData.getValue();
-                        if(joinIdForChildJoinId.containsKey(key) && String.valueOf(value.get(childFeatureEntityJoinId)).equals(joinIdForChildJoinId.get(key))){
-                            value.putAll(filteredData);
+                        if(filteredData.containsKey(childFeatureEntityJoinId) && String.valueOf(value.get(childFeatureEntityJoinId)).equals(filteredData.get(childFeatureEntityJoinId))){
+                            synchronized(value) {
+                                value.putAll(filteredData);
+                            }
                         }
-                        joinIdFeatureMap.put(key,value);
                     }
                 }
             }

@@ -112,7 +112,7 @@ public class FeatureStoreClientTest {
 
         joinids.put("user_id", Arrays.asList(new String[]{"100051703", "100069505"}));
         joinids.put("item_id", Arrays.asList(new String[]{"200034730", "200043342"}));
-        features = model.getOnlineFeaturesWithEntity(joinids, "user",false);
+        features = model.getOnlineFeaturesWithEntity(joinids, "user");
 
         while (features.next()) {
             for (String name : features.getFeatureFields()) {
@@ -235,7 +235,7 @@ public class FeatureStoreClientTest {
         Map<String, List<String>> joinids = new HashMap<>();
 
         joinids.put("user_id", Arrays.asList(new String[]{"100023406", "100020289"}));
-        features = model.getOnlineFeaturesWithEntity(joinids, "user",false);
+        features = model.getOnlineFeaturesWithEntity(joinids, "user");
 
         while (features.next()) {
             for (String name : features.getFeatureFields()) {
@@ -696,7 +696,7 @@ public class FeatureStoreClientTest {
         Map<String, List<String>> joinids = new HashMap<>();
         joinids.put("user_id", joinIds);
         long startTime = System.nanoTime();
-        FeatureResult features = model.getOnlineFeaturesWithEntity(joinids, "user",false);
+        FeatureResult features = model.getOnlineFeaturesWithEntity(joinids, "user");
 
         while (features.next()) {
             for (String name : features.getFeatureFields()) {
