@@ -6,6 +6,7 @@
 
 package com.aliyun.openservices.paifeaturestore.model;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import com.google.gson.annotations.SerializedName;
@@ -36,15 +37,50 @@ public class FeatureEntity {
   @SerializedName("create_time")
   private String createTime = null;
 
+  @SerializedName("parent_id")
+  private Integer ParentFeatureEntityId = null;
+
+  @SerializedName("parent_name")
+  private String ParentFeatureEntityName = null;
+
+  @SerializedName("parent_join_id")
+  private String ParentJoinId = null;
+
+
   public FeatureEntity featureEntityId(Integer featureEntityId) {
     this.featureEntityId = featureEntityId;
     return this;
   }
 
-   /**
+  public Integer getParentFeatureEntityId() {
+    return ParentFeatureEntityId;
+  }
+
+  public void setParentFeatureEntityId(Integer parentFeatureEntityId) {
+    ParentFeatureEntityId = parentFeatureEntityId;
+  }
+
+  public String getParentFeatureEntityName() {
+    return ParentFeatureEntityName;
+  }
+
+  public void setParentFeatureEntityName(String parentFeatureEntityName) {
+    ParentFeatureEntityName = parentFeatureEntityName;
+  }
+
+  public String getParentJoinId() {
+    return ParentJoinId;
+  }
+
+  public void setParentJoinId(String parentJoinId) {
+    ParentJoinId = parentJoinId;
+  }
+
+
+  /**
    * Get featureEntityId
    * @return featureEntityId
-  **/
+   **/
   public Integer getFeatureEntityId() {
     return featureEntityId;
   }
@@ -58,10 +94,10 @@ public class FeatureEntity {
     return this;
   }
 
-   /**
+  /**
    * Get projectId
    * @return projectId
-  **/
+   **/
   public Long getProjectId() {
     return projectId;
   }
@@ -75,10 +111,10 @@ public class FeatureEntity {
     return this;
   }
 
-   /**
+  /**
    * Get projectName
    * @return projectName
-  **/
+   **/
   public String getProjectName() {
     return projectName;
   }
@@ -92,10 +128,10 @@ public class FeatureEntity {
     return this;
   }
 
-   /**
+  /**
    * Get featureEntityName
    * @return featureEntityName
-  **/
+   **/
   public String getFeatureEntityName() {
     return featureEntityName;
   }
@@ -109,10 +145,10 @@ public class FeatureEntity {
     return this;
   }
 
-   /**
+  /**
    * Get featureEntityJoinid
    * @return featureEntityJoinid
-  **/
+   **/
   public String getFeatureEntityJoinid() {
     return featureEntityJoinid;
   }
@@ -126,10 +162,10 @@ public class FeatureEntity {
     return this;
   }
 
-   /**
+  /**
    * Get owner
    * @return owner
-  **/
+   **/
   public String getOwner() {
     return owner;
   }
@@ -143,10 +179,10 @@ public class FeatureEntity {
     return this;
   }
 
-   /**
+  /**
    * Get createTime
    * @return createTime
-  **/
+   **/
   public String getCreateTime() {
     return createTime;
   }
@@ -157,43 +193,41 @@ public class FeatureEntity {
 
 
   @Override
-  public boolean equals(java.lang.Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    FeatureEntity featureEntity = (FeatureEntity) o;
-    return Objects.equals(this.featureEntityId, featureEntity.featureEntityId) &&
-        Objects.equals(this.projectId, featureEntity.projectId) &&
-        Objects.equals(this.projectName, featureEntity.projectName) &&
-        Objects.equals(this.featureEntityName, featureEntity.featureEntityName) &&
-        Objects.equals(this.featureEntityJoinid, featureEntity.featureEntityJoinid) &&
-        Objects.equals(this.owner, featureEntity.owner) &&
-        Objects.equals(this.createTime, featureEntity.createTime);
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    FeatureEntity that = (FeatureEntity) o;
+    return Objects.equals(featureEntityId, that.featureEntityId)
+            && Objects.equals(projectId, that.projectId)
+            && Objects.equals(projectName, that.projectName)
+            && Objects.equals(featureEntityName, that.featureEntityName)
+            && Objects.equals(featureEntityJoinid, that.featureEntityJoinid)
+            && Objects.equals(owner, that.owner)
+            && Objects.equals(createTime, that.createTime)
+            && Objects.equals(ParentFeatureEntityId, that.ParentFeatureEntityId)
+            && Objects.equals(ParentFeatureEntityName, that.ParentFeatureEntityName)
+            && Objects.equals(ParentJoinId, that.ParentJoinId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(featureEntityId, projectId, projectName, featureEntityName, featureEntityJoinid, owner, createTime);
+    return Objects.hash(featureEntityId, projectId, projectName, featureEntityName, featureEntityJoinid, owner, createTime, ParentFeatureEntityId, ParentFeatureEntityName, ParentJoinId);
   }
-
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("class FeatureEntity {\n");
-    
-    sb.append("    featureEntityId: ").append(toIndentedString(featureEntityId)).append("\n");
-    sb.append("    projectId: ").append(toIndentedString(projectId)).append("\n");
-    sb.append("    projectName: ").append(toIndentedString(projectName)).append("\n");
-    sb.append("    featureEntityName: ").append(toIndentedString(featureEntityName)).append("\n");
-    sb.append("    featureEntityJoinid: ").append(toIndentedString(featureEntityJoinid)).append("\n");
-    sb.append("    owner: ").append(toIndentedString(owner)).append("\n");
-    sb.append("    createTime: ").append(toIndentedString(createTime)).append("\n");
-    sb.append("}");
-    return sb.toString();
+    return "FeatureEntity{" +
+            "featureEntityId=" + featureEntityId +
+            ", projectId=" + projectId +
+            ", projectName='" + projectName + '\'' +
+            ", featureEntityName='" + featureEntityName + '\'' +
+            ", featureEntityJoinid='" + featureEntityJoinid + '\'' +
+            ", owner='" + owner + '\'' +
+            ", createTime='" + createTime + '\'' +
+            ", ParentId=" + ParentFeatureEntityId +
+            ", ParentName='" + ParentFeatureEntityName + '\'' +
+            ", ParentJoinId='" + ParentJoinId + '\'' +
+            '}';
   }
 
   /**
