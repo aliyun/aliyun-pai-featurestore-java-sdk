@@ -251,6 +251,10 @@
                       <pattern>okio</pattern>
                       <shadedPattern>featurestore.shade.okio</shadedPattern>
                     </relocation>
+                    <relocation>
+                      <pattern>com.alibaba.ververica.connectors</pattern>
+                      <shadedPattern>featurestore.shade.com.alibaba.ververica.connectors</shadedPattern>
+                    </relocation>
 
                     <!-- 新增：重定位 Kotlin 标准库 -->
                     <relocation>
