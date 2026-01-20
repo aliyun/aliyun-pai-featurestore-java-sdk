@@ -4,7 +4,6 @@ import com.aliyun.openservices.paifeaturestore.model.FeatureViewSeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SequenceInfo;
 import com.aliyun.tea.utils.StringUtils;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.util.HashMap;
 import java.util.List;

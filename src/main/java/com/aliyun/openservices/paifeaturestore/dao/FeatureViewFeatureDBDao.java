@@ -1,6 +1,5 @@
 package com.aliyun.openservices.paifeaturestore.dao;
 
-import com.aliyun.igraph.client.gremlin.gremlin_api.P;
 import com.aliyun.openservices.paifeaturestore.constants.ConstantValue;
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBClient;
@@ -15,13 +14,10 @@ import com.aliyun.openservices.paifeaturestore.model.FeatureViewSeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SequenceInfo;
 import com.aliyun.tea.utils.StringUtils;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.util.Strings;
 
-import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
