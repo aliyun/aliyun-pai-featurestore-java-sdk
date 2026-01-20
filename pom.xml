@@ -5,7 +5,7 @@
   <artifactId>paifeaturestore-sdk</artifactId>
   <packaging>jar</packaging>
   <name>paifeaturestore-sdk</name>
-  <version>1.1.4</version>
+  <version>1.1.5</version>
   <url>>http://maven.apache.org</url>
   <description>SDK for PAI-FeatureStore service</description>
   <scm>
@@ -199,12 +199,83 @@
     </profile>
     <profile>
       <id>flink-1.17</id>
+      <properties>
+        <flinkVvrVersion>1.17-vvr-8.0.8</flinkVvrVersion>
+        <flinkVersion>1.17.2</flinkVersion>
+      </properties>
+      <build>
+        <plugins>
+          <!-- 确保使用maven-shade-plugin将依赖打包到一个uber-jar中 -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+              <!-- 绑定到编译阶段 -->
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>shade</goal>
+                </goals>
+                <configuration>
+                  <filters>
+                    <filter>
+                      <artifact>*:*</artifact>
+                      <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                      </excludes>
+                    </filter>
+                  </filters>
+                  <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                      <!-- Your transformer configuration here -->
+                    </transformer>
+                  </transformers>
+                  <artifactSet>
+                    <excludes>
+                      <!-- 在此处添加Flink和其他不需要包含在最终jar中的依赖 -->
+                    </excludes>
+                  </artifactSet>
+                  <relocations>
+                    <relocation>
+                      <pattern>okhttp3</pattern>
+                      <shadedPattern>featurestore.shade.okhttp3</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>okio</pattern>
+                      <shadedPattern>featurestore.shade.okio</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>com.alibaba.ververica.connectors</pattern>
+                      <shadedPattern>featurestore.shade.com.alibaba.ververica.connectors</shadedPattern>
+                    </relocation>
+
+                    <!-- 新增：重定位 Kotlin 标准库 -->
+                    <relocation>
+                      <pattern>kotlin</pattern>
+                      <shadedPattern>featurestore.shade.kotlin</shadedPattern>
+                    </relocation>
+                  </relocations>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+
+      </build>
+    </profile>
+    <profile>
+      <id>flink-1.20</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <flinkVvrVersion>1.17-vvr-8.0.8</flinkVvrVersion>
-        <flinkVersion>1.17.2</flinkVersion>
+        <flinkVvrVersion>1.20-vvr-11.5.0-jdk11</flinkVvrVersion>
+        <flinkVersion>1.20.3</flinkVersion>
       </properties>
       <build>
         <plugins>
