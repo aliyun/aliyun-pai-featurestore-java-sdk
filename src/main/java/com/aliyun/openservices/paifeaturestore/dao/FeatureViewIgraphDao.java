@@ -175,7 +175,7 @@ public class FeatureViewIgraphDao extends AbstractFeatureViewDao{
             for (String event:events) {
                 List<SequenceInfo> igraphData = getSeqDB(key, selectFields, playtimefilter, event, config, currentime);
 
-                Map<String, String> resultDB = disposeDB(igraphData,selectFields,config,event,currentime);
+                Map<String, String> resultDB = disposeDB(igraphData,selectFields,config,null,event,currentime);
 
                 if (igraphData.size()>0) {
                     keyEventsDatasOnline.putAll(resultDB);

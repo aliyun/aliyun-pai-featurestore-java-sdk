@@ -39,7 +39,7 @@ public abstract class AbstractFeatureViewDao implements FeatureViewDao{
     }
 
 
-    public Map<String, String> disposeDB(List<SequenceInfo> sequenceInfos, String[] selectFields, FeatureViewSeqConfig config, String event, Long currentime) {
+    public Map<String, String> disposeDB(List<SequenceInfo> sequenceInfos, String[] selectFields, FeatureViewSeqConfig config, SeqConfig seqConfig, String event, Long currentime) {
         HashMap<String, String> sequenceFeatures = new HashMap<>();
         HashMap<String, Boolean> sequenceMap = new HashMap<>();
         for (SequenceInfo sequenceInfo : sequenceInfos) {
@@ -98,11 +98,14 @@ public abstract class AbstractFeatureViewDao implements FeatureViewDao{
                 sequenceFeatures.put(tsfields, String.valueOf((currentime - eventTime)));
             }
 
-            for(String f : sequenceInfo.getOnlineBehaviorTableFields().keySet()){
-                if(sequenceFeatures.containsKey(f)){
-                    sequenceFeatures.put(f, sequenceFeatures.get(f) + ";" + sequenceInfo.getOnlineBehaviorTableFields().get(f));
-                }else{
-                    sequenceFeatures.put(f, sequenceInfo.getOnlineBehaviorTableFields().get(f));
+            if(seqConfig != null && sequenceInfo.getOnlineBehaviorTableFields() != null) {
+                for (String f : sequenceInfo.getOnlineBehaviorTableFields().keySet()) {
+                    String curSequenceSubName = (onlineSequenceName + "__" + f);
+                    if (sequenceFeatures.containsKey(curSequenceSubName)) {
+                        sequenceFeatures.put(curSequenceSubName, sequenceFeatures.get(curSequenceSubName) + ";" + sequenceInfo.getOnlineBehaviorTableFields().get(f));
+                    } else {
+                        sequenceFeatures.put(curSequenceSubName, sequenceInfo.getOnlineBehaviorTableFields().get(f));
+                    }
                 }
             }
         }

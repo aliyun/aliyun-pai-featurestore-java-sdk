@@ -184,7 +184,7 @@ public class FeatureViewTableStoreDao extends AbstractFeatureViewDao {
                 //merge
                 seqOnlineDB = MergeOnOfflineSeq(seqOnlineDB, seqOfflineDB, config, event);
 
-                Map<String, String> resultData = disposeDB(seqOnlineDB,selectFields,config,event,currentime);
+                Map<String, String> resultData = disposeDB(seqOnlineDB,selectFields,config,null, event,currentime);
 
                 if (seqOnlineDB.size() > 0) {
                     keyEventsDatasOnline.putAll(resultData);

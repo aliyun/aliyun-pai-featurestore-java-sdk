@@ -345,7 +345,45 @@ public class FeatureStoreClientTest {
             throw new RuntimeException("featureview not found");
         }
 
-        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"122283542", "111287215", "102004103", "139026930", "185954437"}, new String[]{"*"}, null);
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"129525031", "129116424", "190819146", "199665949", "196204912"}, new String[]{"*"}, null);
+//        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"129525031"}, new String[]{"*"}, null);
+
+        while (onlineFeatures.next()) {
+            for (String field : onlineFeatures.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, onlineFeatures.getObject(field));
+            }
+            System.out.println();
+        }
+    }
+
+    @Ignore
+    @org.junit.Test
+    public void readSequenceSideInfoTest2() throws Exception {
+        String region="cn-beijing";
+        String projectName = "fdb_test_case";
+        Configuration configuration = new Configuration(region, Constants.accessId, Constants.accessKey, projectName);
+        configuration.setDomain(Constants.host);
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        ApiClient apiClient = new ApiClient(configuration);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject(projectName);
+        if (null == project) {
+            throw new RuntimeException("project not found");
+        }
+
+        String sequenceFeatureViewName = "seq_fea_side_info";
+        SequenceFeatureView featureView = project.getSeqFeatureView(sequenceFeatureViewName);
+        if (null == featureView) {
+            throw new RuntimeException("featureview not found");
+        }
+
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"122283542", "111287215", "118076221", "144744242", "130682535", "102004103"},new String[]{"*"}, null);
+//        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"122283542"},new String[]{"*"}, null);
+
         while (onlineFeatures.next()) {
             for (String field : onlineFeatures.getFeatureFields()) {
                 System.out.printf("%s = %s\t", field, onlineFeatures.getObject(field));

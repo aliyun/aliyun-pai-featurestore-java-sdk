@@ -642,10 +642,12 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
 
         HashMap<String, ArrayList<SeqConfig>> seqConfigsMap = new HashMap<>();
         HashMap<String, ArrayList<HashMap<String, Boolean>>> seqConfigsBehaviorFieldsMap = new HashMap<>();
+        HashMap<String, Integer> maxSeqLenMap = new HashMap<>();
 
         Boolean withValue= false;
         for (SeqConfig seqConfig : seqConfigs) {
             String key = String.format("%s:%d", seqConfig.getSeqEvent(), seqConfig.getSeqLen());
+            maxSeqLenMap.put(key, seqConfig.getSeqLen());
             if (seqConfigsMap.containsKey(key)){
                 ArrayList<SeqConfig> seqConfigsList = seqConfigsMap.get(key);
                 seqConfigsList.add(seqConfig);
@@ -655,18 +657,20 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
 
             ArrayList<String> currentOnlineBehaviorTableFields = seqConfig.getOnlineBehaviorTableFields();
             HashMap<String, Boolean> currentBehaviorFieldsMap = new HashMap<>();
-            for (String field : currentOnlineBehaviorTableFields) {
-                currentBehaviorFieldsMap.put(field, true);
-            }
-            if (currentBehaviorFieldsMap.size() > 0){
-                withValue=true;
-                if (seqConfigsBehaviorFieldsMap.containsKey(key)){
-                    ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFieldsList = seqConfigsBehaviorFieldsMap.get(key);
-                    seqConfigsBehaviorFieldsList.add(currentBehaviorFieldsMap);
-                }else {
-                    seqConfigsBehaviorFieldsMap.put(key, new ArrayList<>(Arrays.asList(currentBehaviorFieldsMap)));
+            if (currentOnlineBehaviorTableFields != null){
+                for (String field : currentOnlineBehaviorTableFields) {
+                    currentBehaviorFieldsMap.put(field, true);
                 }
+                if (currentBehaviorFieldsMap.size() > 0){
+                    withValue=true;
+                    if (seqConfigsBehaviorFieldsMap.containsKey(key)){
+                        ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFieldsList = seqConfigsBehaviorFieldsMap.get(key);
+                        seqConfigsBehaviorFieldsList.add(currentBehaviorFieldsMap);
+                    }else {
+                        seqConfigsBehaviorFieldsMap.put(key, new ArrayList<>(Arrays.asList(currentBehaviorFieldsMap)));
+                    }
 
+                }
             }
 
         }
@@ -698,21 +702,36 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
 
         for (String key : keys) {
             HashMap<String, String> keyEventsDatasOnline = new HashMap<>();
-            for (String k : seqConfigsMap.keySet()) {
-                if(seqConfigsMap.get(k).size()==0){
+            for (String eventKey : seqConfigsMap.keySet()) {
+                if(seqConfigsMap.get(eventKey).size()==0){
                     continue;
                 }
-                ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFields = new ArrayList<>();
-                if(seqConfigsBehaviorFieldsMap.get(k) != null){
-                    seqConfigsBehaviorFields=seqConfigsBehaviorFieldsMap.get(k);
+
+                ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFields = new ArrayList<>(seqConfigsMap.get(eventKey).size());
+                if(seqConfigsBehaviorFieldsMap.get(eventKey) != null){
+                    seqConfigsBehaviorFields=seqConfigsBehaviorFieldsMap.get(eventKey);
+                }else {
+                    seqConfigsBehaviorFields.add(new HashMap<>());
                 }
 
-                for (String event : events) {
-                    List<SequenceInfo> onlineSequence = fetchData(key, playtimefilter, featureViewSeqConfig, event, userIdField, currentime, true, seqConfigsBehaviorFields.get(0), withValue);
-                    Map<String, String> resultData = disposeDB(onlineSequence, selectFields, featureViewSeqConfig, event, currentime);
-                    if (onlineSequence.size() > 0) {
-                        keyEventsDatasOnline.putAll(resultData);
+                    String[] event= eventKey.split(":");
+                    List<SequenceInfo> onlineSequence = fetchData(key, playtimefilter, featureViewSeqConfig, event[0], userIdField, currentime,
+                            true, seqConfigsBehaviorFields.get(0), withValue, maxSeqLenMap.get(eventKey));
+                    for (SeqConfig seqConfig : seqConfigsMap.get(eventKey)){
+                        List<SequenceInfo> truncatedSequences = new ArrayList<>();
+                        if(seqConfig.getSeqLen() > onlineSequence.size()){
+                            truncatedSequences=onlineSequence;
+                        }else{
+                            truncatedSequences=onlineSequence.subList(0, seqConfig.getSeqLen());
+                        }
+
+                        Map<String, String> resultData = disposeDB(truncatedSequences, selectFields, featureViewSeqConfig, seqConfig, event[0], currentime);
+                        if (onlineSequence.size() > 0) {
+                            keyEventsDatasOnline.putAll(resultData);
+                        }
                     }
+
+
 
                 }
 
@@ -743,7 +762,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                         featureDataList.add(featureData);
                     }
                 }
-            }
+
         }
 
         String[] fields = new String[featureFieldList.size()];
@@ -865,8 +884,8 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
     }
 
 
-    public List<SequenceInfo> fetchData(String key, HashMap<String, Double> playtimefilter, FeatureViewSeqConfig config, String event,
-                                        String userIdFields, Long currentime, boolean useOnlineTable, HashMap<String,Boolean> selectBehaviorFieldsSet, Boolean withValue) {
+    public List<SequenceInfo> fetchData(String key, HashMap<String, Double> playtimefilter, FeatureViewSeqConfig config, String event,String userIdFields, Long currentime, boolean useOnlineTable,
+                                        HashMap<String,Boolean> selectBehaviorFieldsSet, Boolean withValue,Integer maxEventSeqLen) {
         List<SequenceInfo> sequenceInfos = new ArrayList<>();
         List<String> pks = new ArrayList<>();
         for (String e : event.split("\\|")) {
@@ -874,7 +893,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
         }
 
         try {
-            byte[] content = this.featureDBClient.kkvRequestFeatureDB(pks, this.database, this.schema, this.table, config.getSeqLenOnline(), withValue);
+            byte[] content = this.featureDBClient.kkvRequestFeatureDB(pks, this.database, this.schema, this.table, maxEventSeqLen, withValue);
             if (content != null) {
                 KKVRecordBlock kkvRecordBlock = KKVRecordBlock.getRootAsKKVRecordBlock(ByteBuffer.wrap(content));
                 for (int i = 0; i < kkvRecordBlock.valuesLength(); i++) {
