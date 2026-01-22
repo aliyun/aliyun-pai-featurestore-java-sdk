@@ -305,7 +305,7 @@ public class SequenceFeatureView implements IFeatureView{
     }
 
     @Override
-    public FeatureResult getOnlineFeatures(String[] joinIds, String[] features, Map<String, String> aliasFields) throws Exception {
+    public FeatureResult getOnlineFeatures(String[] joinIds, String[] features, Map<String, String> aliasFields) {
 
         FeatureResult sequenceFeatures=new FeatureStoreResult();
         FeatureViewSeqConfig config = this.config;
@@ -333,13 +333,14 @@ public class SequenceFeatureView implements IFeatureView{
                 }
             }
         }
+
         SeqConfig[] seqConfigs = new SeqConfig[onlineseqConfigs.size()];
         for (int k=0;k<onlineseqConfigs.size();k++) {
             seqConfigs[k]=onlineseqConfigs.get(k);
         }
         config.setSeqConfigs(seqConfigs);
 
-        sequenceFeatures = this.featureViewDao.getSequenceFeatures(joinIds, this.userIdField, config);
+        sequenceFeatures = this.featureViewDao.getSequenceFeatures(joinIds, this.userIdField, config, seqConfigs);
         return sequenceFeatures;
     }
 

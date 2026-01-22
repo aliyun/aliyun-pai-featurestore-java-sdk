@@ -237,7 +237,7 @@ public class FeatureDBClient {
         return content;
 
     }
-    public byte[] kkvRequestFeatureDB(List<String> pks, String database, String schema, String table, int length) throws Exception {
+    public byte[] kkvRequestFeatureDB(List<String> pks, String database, String schema, String table, int length, Boolean withValue) throws Exception {
         String onlineAddress = address;
         if (this.getVpcAddress()!= null && !this.getVpcAddress().isEmpty()){
             onlineAddress = this.getVpcAddress();
@@ -246,6 +246,8 @@ public class FeatureDBClient {
         Map<String, Object> map = new HashMap<>();
         map.put("pks", pks);
         map.put("length", length);
+        map.put("with_value", withValue);
+
         String requestBody = gson.toJson(map);
         RequestBody body = RequestBody.create(JSON, requestBody);
         Request request = new Request.Builder()
@@ -283,7 +285,8 @@ public class FeatureDBClient {
         return content;
 
     }
-    public byte[] doRequest(Request request) throws HttpException, IOException {
+
+    public byte[] doRequest(Request request) throws IOException {
         try (Response response  = httpclient.newCall(request).execute()){
             if (response.isSuccessful() && response.body() != null) {
                  try(InputStream inputStream = response.body().byteStream()) {

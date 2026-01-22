@@ -18,7 +18,7 @@ import java.util.*;
 import static org.jooq.impl.DSL.field;
 
 /*  This class defines operations related to Igraph data source access characteristics.*/
-public class FeatureViewIgraphDao implements FeatureViewDao{
+public class FeatureViewIgraphDao extends AbstractFeatureViewDao{
     private Client client;
 
     private String primaryKeyField;
@@ -139,7 +139,7 @@ public class FeatureViewIgraphDao implements FeatureViewDao{
      * @Param config,this class contains the feature view serialization feature configuration information.
      * @return FeatureResult*/
     @Override
-    public FeatureResult getSequenceFeatures(String[] keys, String userIdField, FeatureViewSeqConfig config) {
+    public FeatureResult getSequenceFeatures(String[] keys, String userIdField, FeatureViewSeqConfig config, SeqConfig[] seqConfigs) {
         FeatureStoreResult featureStoreResult = new FeatureStoreResult();
         String[] selectFields=null;
         if (!StringUtils.isEmpty(config.getPlayTimeField())) {
@@ -175,7 +175,7 @@ public class FeatureViewIgraphDao implements FeatureViewDao{
             for (String event:events) {
                 List<SequenceInfo> igraphData = getSeqDB(key, selectFields, playtimefilter, event, config, currentime);
 
-                Map<String, String> resultDB = disposeDB(igraphData,selectFields,config,event,currentime);
+                Map<String, String> resultDB = disposeDB(igraphData,selectFields,config,null,event,currentime);
 
                 if (igraphData.size()>0) {
                     keyEventsDatasOnline.putAll(resultDB);
@@ -276,69 +276,6 @@ public class FeatureViewIgraphDao implements FeatureViewDao{
         return sequenceInfos;
     }
 
-    /* query Offline or Online  data. */
-    public Map<String,String> disposeDB(List<SequenceInfo> sequenceInfos, String[] selectFields, FeatureViewSeqConfig config, String event, Long currentime) {
-        HashMap<String, String> sequenceFeatures = new HashMap<>();
-
-        for (SequenceInfo sequenceInfo:sequenceInfos) {
-            String qz="";
-            for (SeqConfig s:config.getSeqConfigs()) {
-                if (s.getSeqEvent().equals(event)) {
-                    qz=s.getOnlineSeqName();
-                    break;
-                }
-            }
-            for (String name : selectFields) {
-                String newname = qz + "__" + name;
-
-                if (name.equals(config.getItemIdField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getItemIdField());
-                    } else {
-                        sequenceFeatures.put(newname, ""+sequenceInfo.getItemIdField());
-                    }
-                    if (sequenceFeatures.containsKey(qz)) {
-                        sequenceFeatures.put(qz, sequenceFeatures.get(qz) + ";" + sequenceInfo.getItemIdField());
-                    } else {
-                        sequenceFeatures.put(qz, ""+sequenceInfo.getItemIdField());
-                    }
-                } else if (name.equals(config.getTimestampField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getTimestampField());
-                    } else {
-                        sequenceFeatures.put(newname, ""+sequenceInfo.getTimestampField());
-                    }
-                } else if (name.equals(config.getEventField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getEventField());
-                    } else {
-                        sequenceFeatures.put(newname, sequenceInfo.getEventField());
-                    }
-                } else if (name.equals(config.getPlayTimeField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getPlayTimeField());
-                    } else {
-                        sequenceFeatures.put(newname, ""+sequenceInfo.getPlayTimeField());
-                    }
-
-                }
-            }
-            String tsfields = qz + "__ts";//Timestamp from the current time
-            long eventTime = 0;
-            if (!StringUtils.isEmpty(sequenceInfo.getTimestampField())) {
-                eventTime =Long.valueOf(sequenceInfo.getTimestampField());
-            }
-            if (sequenceFeatures.containsKey(tsfields)) {
-                sequenceFeatures.put(tsfields, sequenceFeatures.get(tsfields) + ";" + (currentime - eventTime));
-            } else {
-                sequenceFeatures.put(tsfields, String.valueOf((currentime - eventTime)));
-
-
-            }
-        }
-
-        return sequenceFeatures;
-    }
 
 
 }
