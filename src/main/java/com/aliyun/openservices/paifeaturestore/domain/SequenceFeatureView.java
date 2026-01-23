@@ -60,12 +60,30 @@ public class SequenceFeatureView implements IFeatureView{
                 offOnlineSeqMap.put(seqConfig.getOfflineSeqName(), seqConfig.getOnlineSeqName());
             }
             List<SeqConfig> uniqueSeqConfigs = new ArrayList<>();
+
+            HashMap<String, SeqConfig> nameSeqConfigHashMap = new HashMap<>();
             Set<String> seenConfig = new HashSet<>();
             for (SeqConfig seqConfig : this.config.getSeqConfigs()) {
                 if (!seenConfig.contains(seqConfig.getOnlineSeqName())) {
                     uniqueSeqConfigs.add(seqConfig);
+                    nameSeqConfigHashMap.put(seqConfig.getOnlineSeqName(), seqConfig);
                     seenConfig.add(seqConfig.getOnlineSeqName());
+                }else {
+                    SeqConfig currentSeqConfig = nameSeqConfigHashMap.get(seqConfig.getOnlineSeqName());
+                    if (seqConfig.getOnlineBehaviorTableFields()!=null){
+                        if (currentSeqConfig.getOnlineBehaviorTableFields() != null){
+                            currentSeqConfig.getOnlineBehaviorTableFields().addAll(seqConfig.getOnlineBehaviorTableFields());
+                        }else {
+                            currentSeqConfig.setOnlineBehaviorTableFields(seqConfig.getOnlineBehaviorTableFields());
+                        }
+                        nameSeqConfigHashMap.put(seqConfig.getOnlineSeqName(), currentSeqConfig);
+                    }
+
+
                 }
+            }
+            for (SeqConfig seqConfig : nameSeqConfigHashMap.values()){
+                uniqueSeqConfigs.add(seqConfig);
             }
             this.config.setSeqConfigs(uniqueSeqConfigs.toArray(new SeqConfig[0]));
         }
