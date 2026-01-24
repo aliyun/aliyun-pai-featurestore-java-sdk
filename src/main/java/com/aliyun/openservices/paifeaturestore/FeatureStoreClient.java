@@ -2,6 +2,7 @@ package com.aliyun.openservices.paifeaturestore;
 
 import com.aliyun.openservices.paifeaturestore.api.ApiClient;
 import com.aliyun.openservices.paifeaturestore.api.ListProjectResponse;
+import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.HologresFactory;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
@@ -96,6 +97,10 @@ public class FeatureStoreClient {
 
             Datasource datasource = this.apiClient.getDatasourceApi().getDatasourceById(project.getOnlineDatasourceId());
             datasource.setAk(ak);
+            if (datasource.getType() == DatasourceType.Datasource_Type_Hologres) {
+                datasource.setUser(this.apiClient.getConfiguration().getHologresUsername());
+                datasource.setPwd(this.apiClient.getConfiguration().getHologresPassword());
+            }
             project.setOnlineDataSource(datasource);
 
             Datasource offlineDatasource = this.apiClient.getDatasourceApi().getDatasourceById(project.getOfflineDatasourceId());
