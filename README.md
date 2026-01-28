@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.2.3</version>
+  <version>1.2.4</version>
 </dependency>
 ```
 ## 使用方式
@@ -215,6 +215,9 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.2.4 (2026-01-28)
+* 修复序列特征读取side info 行为数据缺失的错误
+ 
 ### 1.2.3 (2026-01-22)
 * 增加了序列特征side info 行为数据读取的支持
  
