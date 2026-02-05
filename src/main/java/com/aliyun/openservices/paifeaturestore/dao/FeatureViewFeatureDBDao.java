@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.util.Strings;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -974,12 +975,12 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                                         case FS_FLOAT:
                                             float floatValue = dataBuffer.getFloat();
                                             BigDecimal bdf = new BigDecimal(floatValue);
-                                            onlineBehaviorTableFields.put(featureName, bdf.setScale(6, BigDecimal.ROUND_HALF_UP).stripTrailingZeros().toPlainString());
+                                            onlineBehaviorTableFields.put(featureName, bdf.setScale(6, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString());
                                             break;
                                         case FS_DOUBLE:
                                             double doubleValue = dataBuffer.getDouble();
-                                            BigDecimal bd = new BigDecimal(doubleValue);
-                                            onlineBehaviorTableFields.put(featureName, bd.setScale(6, BigDecimal.ROUND_HALF_UP).stripTrailingZeros().toPlainString());
+                                            BigDecimal bd = BigDecimal.valueOf(doubleValue);
+                                            onlineBehaviorTableFields.put(featureName, bd.setScale(6, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString());
                                             break;
                                         case FS_BOOLEAN:
                                             byte boolValue = dataBuffer.get();
