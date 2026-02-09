@@ -20,7 +20,6 @@ import org.bouncycastle.util.Strings;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -62,7 +61,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition condition = lock.newCondition();
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
-    private final ExecutorService sequenceExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+    private final ExecutorService sequenceExecutor = Executors.newFixedThreadPool(Math.max(16, Runtime.getRuntime().availableProcessors() * 2));
     private volatile boolean running = true;
 
     public FeatureViewFeatureDBDao(DaoConfig daoConfig) {
@@ -1064,46 +1063,6 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
         }
         return sequenceInfos;
     }
-
-    private int readStringSafely(ByteBuffer buffer, String fieldName) {
-        int result = 0;
-        try {
-            if (buffer.remaining() < 4) {
-                log.warn("Not enough bytes to read string length for field: " + fieldName);
-                return result;
-            }
-
-            int length = buffer.getInt();
-
-
-            if (length < 0) {
-                log.warn("Invalid negative string length: " + length + " for field: " + fieldName);
-                return result;
-            }
-
-            if (length > 10000) { // 根据实际业务调整这个值
-                log.warn("Unreasonably large string length: " + length + " for field: " + fieldName);
-                return result;
-            }
-
-            if (buffer.remaining() < length) {
-                log.warn("Not enough bytes to read string data. Required: " + length +
-                        ", Available: " + buffer.remaining() + " for field: " + fieldName);
-                return result;
-            }
-
-            if (length > 0) {
-                result = length;
-                return result;
-            } else {
-                return result;
-            }
-        } catch (BufferUnderflowException e) {
-            log.error("Buffer underflow while reading string for field: " + fieldName, e);
-            return result;
-        }
-    }
-
 
 
     private String[] decodeStringArray(ByteBuffer byteBuffer, int length) {
