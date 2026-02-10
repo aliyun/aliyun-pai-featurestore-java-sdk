@@ -20,13 +20,13 @@ import org.bouncycastle.util.Strings;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,6 +61,8 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition condition = lock.newCondition();
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private final ExecutorService sequenceExecutor = Executors.newFixedThreadPool(Math.max(16, Runtime.getRuntime().availableProcessors() * 2));
+    private final ExecutorService eventExecutor = Executors.newFixedThreadPool(Math.max(16, Runtime.getRuntime().availableProcessors() * 2));
     private volatile boolean running = true;
 
     public FeatureViewFeatureDBDao(DaoConfig daoConfig) {
@@ -646,10 +648,16 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
         HashMap<String, ArrayList<HashMap<String, Boolean>>> seqConfigsBehaviorFieldsMap = new HashMap<>();
         HashMap<String, Integer> maxSeqLenMap = new HashMap<>();
 
-        Boolean withValue= false;
+        boolean withValueTemp = false;
         for (SeqConfig seqConfig : seqConfigs) {
             String key = String.format("%s:%d", seqConfig.getSeqEvent(), seqConfig.getSeqLen());
-            maxSeqLenMap.put(key, seqConfig.getSeqLen());
+            // 记录该 key 对应的最大序列长度
+            if (maxSeqLenMap.containsKey(key)) {
+                maxSeqLenMap.put(key, Math.max(maxSeqLenMap.get(key), seqConfig.getSeqLen()));
+            } else {
+                maxSeqLenMap.put(key, seqConfig.getSeqLen());
+            }
+            
             if (seqConfigsMap.containsKey(key)){
                 ArrayList<SeqConfig> seqConfigsList = seqConfigsMap.get(key);
                 seqConfigsList.add(seqConfig);
@@ -664,7 +672,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                     currentBehaviorFieldsMap.put(field, true);
                 }
                 if (currentBehaviorFieldsMap.size() > 0){
-                    withValue=true;
+                    withValueTemp = true;
                     if (seqConfigsBehaviorFieldsMap.containsKey(key)){
                         ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFieldsList = seqConfigsBehaviorFieldsMap.get(key);
                         seqConfigsBehaviorFieldsList.add(currentBehaviorFieldsMap);
@@ -676,8 +684,9 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
             }
 
         }
+        final boolean withValue = withValueTemp;
 
-        String[] selectFields = null;
+        final String[] selectFields;
         if (!StringUtils.isEmpty(featureViewSeqConfig.getPlayTimeField())) {
             selectFields = new String[]{featureViewSeqConfig.getItemIdField(), featureViewSeqConfig.getEventField(), featureViewSeqConfig.getPlayTimeField(), featureViewSeqConfig.getTimestampField()};
         } else {
@@ -699,43 +708,68 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
         for (int i = 0; i < events.length; i++) {
             events[i] = featureViewSeqConfig.getSeqConfigs()[i].getSeqEvent();
         }
-        Set<String> featureFieldList = new HashSet<>();
-        List<Map<String, Object>> featureDataList = new ArrayList<>();
+        Set<String> featureFieldList = Collections.synchronizedSet(new HashSet<>());
+        List<Map<String, Object>> featureDataList = Collections.synchronizedList(new ArrayList<>());
 
+        List<Future<Void>> keyFutures = new ArrayList<>();
+        
         for (String key : keys) {
-            HashMap<String, String> keyEventsDatasOnline = new HashMap<>();
-            for (String eventKey : seqConfigsMap.keySet()) {
-                if(seqConfigsMap.get(eventKey).size()==0){
-                    continue;
-                }
-
-                ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFields = new ArrayList<>(seqConfigsMap.get(eventKey).size());
-                if(seqConfigsBehaviorFieldsMap.get(eventKey) != null){
-                    seqConfigsBehaviorFields=seqConfigsBehaviorFieldsMap.get(eventKey);
-                }else {
-                    seqConfigsBehaviorFields.add(new HashMap<>());
-                }
-
-                    String[] event= eventKey.split(":");
-                    List<SequenceInfo> onlineSequence = fetchData(key, playtimefilter, featureViewSeqConfig, event[0], userIdField, currentime,
-                            true, seqConfigsBehaviorFields.get(0), withValue, maxSeqLenMap.get(eventKey));
-                    for (SeqConfig seqConfig : seqConfigsMap.get(eventKey)){
-                        List<SequenceInfo> truncatedSequences = new ArrayList<>();
-                        if(seqConfig.getSeqLen() > onlineSequence.size()){
-                            truncatedSequences=onlineSequence;
-                        }else{
-                            truncatedSequences=onlineSequence.subList(0, seqConfig.getSeqLen());
-                        }
-
-                        Map<String, String> resultData = disposeDB(truncatedSequences, selectFields, featureViewSeqConfig, seqConfig, event[0], currentime);
-                        if (onlineSequence.size() > 0) {
-                            keyEventsDatasOnline.putAll(resultData);
-                        }
+            Future<Void> keyFuture = sequenceExecutor.submit(() -> {
+                HashMap<String, String> keyEventsDatasOnline = new HashMap<>();
+                
+                List<Future<Map<String, String>>> futures = new ArrayList<>();
+                
+                for (String eventKey : seqConfigsMap.keySet()) {
+                    if (seqConfigsMap.get(eventKey).size() == 0) {
+                        continue;
                     }
 
+                    Future<Map<String, String>> future = eventExecutor.submit(() -> {
+                        HashMap<String, String> eventResults = new HashMap<>();
+                        
+                        ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFields = new ArrayList<>(
+                                seqConfigsMap.get(eventKey).size());
+                        if (seqConfigsBehaviorFieldsMap.get(eventKey) != null) {
+                            seqConfigsBehaviorFields = seqConfigsBehaviorFieldsMap.get(eventKey);
+                        } else {
+                            seqConfigsBehaviorFields.add(new HashMap<>());
+                        }
 
+                        String[] event = eventKey.split(":");
+                        List<SequenceInfo> onlineSequence = fetchData(key, playtimefilter, featureViewSeqConfig, event[0],
+                                userIdField, currentime,
+                                true, seqConfigsBehaviorFields.get(0), withValue, maxSeqLenMap.get(eventKey));
+                        
+                        for (SeqConfig seqConfig : seqConfigsMap.get(eventKey)) {
+                            List<SequenceInfo> truncatedSequences = new ArrayList<>();
+                            if (seqConfig.getSeqLen() > onlineSequence.size()) {
+                                truncatedSequences = onlineSequence;
+                            } else {
+                                truncatedSequences = onlineSequence.subList(0, seqConfig.getSeqLen());
+                            }
 
+                            Map<String, String> resultData = disposeDB(truncatedSequences, selectFields, featureViewSeqConfig,
+                                    seqConfig, event[0], currentime);
+                            if (onlineSequence.size() > 0) {
+                                eventResults.putAll(resultData);
+                            }
+                        }
+                        
+                        return eventResults;
+                    });
+                    
+                    futures.add(future);
                 }
+                
+                try {
+                    for (Future<Map<String, String>> future : futures) {
+                        Map<String, String> eventResults = future.get();
+                        keyEventsDatasOnline.putAll(eventResults);
+                    }
+                } catch (Exception e) {
+                    log.error("Error processing eventKeys concurrently: " + e.getMessage(), e);
+                }
+                
 
                 if (keyEventsDatasOnline.size() > 0) {
                     keyEventsDatasOnline.put(this.primaryKeyField, key);
@@ -745,26 +779,39 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                     featureFieldList.addAll(keyEventsDatasOnline.keySet());
 
                     boolean found = false;
-                    for (Map<String, Object> features : featureDataList) {
-                        if (features.containsKey(keyEventsDatasOnline.get(this.primaryKeyField))) {
-                            for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
-                                features.put(entry.getKey(), entry.getKey());
+                    synchronized (featureDataList) {
+                        for (Map<String, Object> features : featureDataList) {
+                            if (features.containsKey(keyEventsDatasOnline.get(this.primaryKeyField))) {
+                                for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
+                                    features.put(entry.getKey(), entry.getValue());
+                                }
+                                found = true;
+                                break;
                             }
-                            found = true;
-                            break;
                         }
-
-                    }
-
-                    if (!found) {
-                        Map<String, Object> featureData = new HashMap<>();
-                        for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
-                            featureData.put(entry.getKey(), entry.getValue());
+                        
+                        if (!found) {
+                            Map<String, Object> featureData = new HashMap<>();
+                            for (Map.Entry<String, String> entry : keyEventsDatasOnline.entrySet()) {
+                                featureData.put(entry.getKey(), entry.getValue());
+                            }
+                            featureDataList.add(featureData);
                         }
-                        featureDataList.add(featureData);
                     }
                 }
-
+                
+                return null;
+            });
+            
+            keyFutures.add(keyFuture);
+        }
+        
+        try {
+            for (Future<Void> future : keyFutures) {
+                future.get();
+            }
+        } catch (Exception e) {
+            log.error("Error processing keys concurrently: " + e.getMessage(), e);
         }
 
         String[] fields = new String[featureFieldList.size()];
@@ -1018,46 +1065,6 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
         return sequenceInfos;
     }
 
-    private int readStringSafely(ByteBuffer buffer, String fieldName) {
-        int result = 0;
-        try {
-            if (buffer.remaining() < 4) {
-                log.warn("Not enough bytes to read string length for field: " + fieldName);
-                return result;
-            }
-
-            int length = buffer.getInt();
-
-
-            if (length < 0) {
-                log.warn("Invalid negative string length: " + length + " for field: " + fieldName);
-                return result;
-            }
-
-            if (length > 10000) { // 根据实际业务调整这个值
-                log.warn("Unreasonably large string length: " + length + " for field: " + fieldName);
-                return result;
-            }
-
-            if (buffer.remaining() < length) {
-                log.warn("Not enough bytes to read string data. Required: " + length +
-                        ", Available: " + buffer.remaining() + " for field: " + fieldName);
-                return result;
-            }
-
-            if (length > 0) {
-                result = length;
-                return result;
-            } else {
-                return result;
-            }
-        } catch (BufferUnderflowException e) {
-            log.error("Buffer underflow while reading string for field: " + fieldName, e);
-            return result;
-        }
-    }
-
-
 
     private String[] decodeStringArray(ByteBuffer byteBuffer, int length) {
         String[] arrayStringValue = new String[length];
@@ -1093,6 +1100,12 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
         this.writeFlush();
         if (!this.executor.isShutdown()) {
             this.executor.shutdownNow();
+        }
+        if (!this.sequenceExecutor.isShutdown()) {
+            this.sequenceExecutor.shutdownNow();
+        }
+        if (!this.eventExecutor.isShutdown()) {
+            this.eventExecutor.shutdownNow();
         }
     }
 }

@@ -339,13 +339,15 @@ public class SequenceFeatureView implements IFeatureView{
                     onlineseqConfigs=Arrays.asList(config.getSeqConfigs());
                     break;
                 } else {
+                    boolean found = false;
                     for (SeqConfig sc:config.getSeqConfigs()) {
                         if (sc.getOnlineSeqName().equals(f)) {
                             onlineseqConfigs.add(sc);
+                            found = true;
                             break;
                         }
                     }
-                    if (f==null) {
+                    if (!found) {
                         throw new RuntimeException(String.format("sequence feature name :%s not found in feature view config",f));
                     }
                 }
@@ -356,7 +358,8 @@ public class SequenceFeatureView implements IFeatureView{
         for (int k=0;k<onlineseqConfigs.size();k++) {
             seqConfigs[k]=onlineseqConfigs.get(k);
         }
-        config.setSeqConfigs(seqConfigs);
+
+        //config.setSeqConfigs(seqConfigs);
 
         sequenceFeatures = this.featureViewDao.getSequenceFeatures(joinIds, this.userIdField, config, seqConfigs);
         return sequenceFeatures;
