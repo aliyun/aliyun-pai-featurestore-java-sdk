@@ -62,6 +62,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
     private final Condition condition = lock.newCondition();
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
     private final ExecutorService sequenceExecutor = Executors.newFixedThreadPool(Math.max(16, Runtime.getRuntime().availableProcessors() * 2));
+    private final ExecutorService eventExecutor = Executors.newFixedThreadPool(Math.max(16, Runtime.getRuntime().availableProcessors() * 2));
     private volatile boolean running = true;
 
     public FeatureViewFeatureDBDao(DaoConfig daoConfig) {
@@ -723,7 +724,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                         continue;
                     }
 
-                    Future<Map<String, String>> future = sequenceExecutor.submit(() -> {
+                    Future<Map<String, String>> future = eventExecutor.submit(() -> {
                         HashMap<String, String> eventResults = new HashMap<>();
                         
                         ArrayList<HashMap<String, Boolean>> seqConfigsBehaviorFields = new ArrayList<>(
@@ -1102,6 +1103,9 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
         }
         if (!this.sequenceExecutor.isShutdown()) {
             this.sequenceExecutor.shutdownNow();
+        }
+        if (!this.eventExecutor.isShutdown()) {
+            this.eventExecutor.shutdownNow();
         }
     }
 }
