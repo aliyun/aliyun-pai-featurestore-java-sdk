@@ -8,6 +8,7 @@ import com.aliyun.tea.utils.StringUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractFeatureViewDao implements FeatureViewDao{
     /*Merge offline and online data. The duplicate part of the timestamp is offline first.
@@ -40,8 +41,8 @@ public abstract class AbstractFeatureViewDao implements FeatureViewDao{
 
 
     public Map<String, String> disposeDB(List<SequenceInfo> sequenceInfos, String[] selectFields, FeatureViewSeqConfig config, SeqConfig seqConfig, String event, Long currentime) {
-        HashMap<String, String> sequenceFeatures = new HashMap<>();
-        HashMap<String, Boolean> sequenceMap = new HashMap<>();
+        ConcurrentHashMap<String, String> sequenceFeatures = new ConcurrentHashMap<>();
+
         for (SequenceInfo sequenceInfo : sequenceInfos) {
 
             String onlineSequenceName = "";

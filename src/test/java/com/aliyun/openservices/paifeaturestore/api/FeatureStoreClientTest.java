@@ -375,14 +375,15 @@ public class FeatureStoreClientTest {
             throw new RuntimeException("project not found");
         }
 
-        String sequenceFeatureViewName = "seq_fea_side_info_test5";
+//        String sequenceFeatureViewName = "seq_fea_side_info_test5";
+        String sequenceFeatureViewName = "seq_fea_side_info_test2";
         SequenceFeatureView featureView = project.getSeqFeatureView(sequenceFeatureViewName);
         if (null == featureView) {
             throw new RuntimeException("featureview not found");
         }
 
         //FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"122283542", "111287215", "118076221", "144744242", "130682535", "102004103"},new String[]{"*"}, null);
-        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"111470029", "177462874"},new String[]{"*"}, null);
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"113420244"},new String[]{"*"}, null);
 
         while (onlineFeatures.next()) {
             for (String field : onlineFeatures.getFeatureFields()) {
@@ -617,7 +618,7 @@ public class FeatureStoreClientTest {
     }
     @Ignore
     @Test
-    public void featureDBComplexFeatrueReadTest() throws Exception {
+    public void featureDBComplexFeatureReadTest() throws Exception {
         Configuration configuration = new Configuration("cn-shenzhen",
                 Constants.accessId, Constants.accessKey,"fdb_test" );
 

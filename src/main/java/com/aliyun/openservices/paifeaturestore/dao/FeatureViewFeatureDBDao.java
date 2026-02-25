@@ -1006,6 +1006,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                             for (String featureName : this.fields) {
                                 byte isNull = dataBuffer.get();
                                 if (isNull == 1) {
+                                    onlineBehaviorTableFields.put(featureName, "");
                                     continue;
                                 }
 
