@@ -14,11 +14,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class FeatureStoreClientTest {
@@ -393,6 +389,80 @@ public class FeatureStoreClientTest {
         }
     }
 
+    @Ignore
+    @org.junit.Test
+    public void readSequenceSideInfoTest3() throws Exception {
+        String region="cn-beijing";
+        String projectName = "fs_python_test1013";
+        Configuration configuration = new Configuration(region, Constants.accessId, Constants.accessKey, projectName);
+        configuration.setDomain(Constants.host);
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        ApiClient apiClient = new ApiClient(configuration);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject(projectName);
+        if (null == project) {
+            throw new RuntimeException("project not found");
+        }
+
+        String sequenceFeatureViewName = "seq_test60";
+        SequenceFeatureView featureView = project.getSeqFeatureView(sequenceFeatureViewName);
+        if (null == featureView) {
+            throw new RuntimeException("featureview not found");
+        }
+
+        List<Map<String, Object>> writeData = new ArrayList<>();
+        // add more data
+        for (int i = 0; i < 10; i++) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("request_id", 990410182);
+            data.put("user_id", 154377843);
+            data.put("exp_id", "ER2_L2#EG2#E3");
+            double dNum = new Random().nextDouble();
+            if (i % 2 == 0) {
+                int num = new Random().nextInt(10);
+                String str = "23405897" + num;
+                data.put("page", "detail");
+                data.put("net_type", "5g");
+                data.put("item_id", Integer.valueOf(str));
+                data.put("event", "click");
+            } else {
+                int num = new Random().nextInt(10);
+                String str = "27405897" + num;
+                data.put("page", "home");
+                data.put("net_type", "wifi");
+                data.put("item_id", Integer.valueOf(str));
+                data.put("event", "expr");
+            }
+
+            data.put("playtime", dNum);
+            data.put("event_time", 1769081696);
+            writeData.add(data);
+        }
+        featureView.writeFeatures(writeData);
+
+
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"154377843"},new String[]{"*"}, null);
+        while (onlineFeatures.next()) {
+            for (String field : onlineFeatures.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, onlineFeatures.getObject(field));
+            }
+            System.out.println();
+        }
+        Thread.sleep(60000);
+        System.out.println("after 60s");
+        FeatureResult onlineFeatures1 = featureView.getOnlineFeatures(new String[]{"154377843"},new String[]{"*"}, null);
+        while (onlineFeatures1.next()) {
+            for (String field : onlineFeatures1.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, onlineFeatures1.getObject(field));
+            }
+            System.out.println();
+        }
+
+    }
 
 
     @Ignore
