@@ -7,7 +7,7 @@ import java.util.HashMap;
 public class SequenceInfo {
     //item_id
     @SerializedName("item_id_field")
-    private Long ItemIdField;
+    private String ItemIdField;
     //event
     @SerializedName("event_field")
     private String EventField;
@@ -21,11 +21,11 @@ public class SequenceInfo {
     @SerializedName("online_behavior_table_fields")
     private HashMap<String,String> OnlineBehaviorTableFields;
 
-    public Long getItemIdField() {
+    public String getItemIdField() {
         return ItemIdField;
     }
 
-    public void setItemIdField(Long itemIdField) {
+    public void setItemIdField(String itemIdField) {
         ItemIdField = itemIdField;
     }
 

@@ -949,6 +949,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                     KKVData kkvData = new KKVData();
 
                     kkvRecordBlock.values(kkvData, i);
+
                     String pk = kkvData.pk();
                     String[] userIdEvent = pk.split("\u001D");
                     if (userIdEvent.length != 2) {
@@ -969,12 +970,13 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                     }
                     SequenceInfo sequenceInfo = new SequenceInfo();
                     sequenceInfo.setEventField(userIdEvent[1]);
-                    sequenceInfo.setItemIdField(Long.valueOf(itemId));
+                    sequenceInfo.setItemIdField(itemId);
                     sequenceInfo.setPlayTimeField(kkvData.playTime());
                     sequenceInfo.setTimestampField(kkvData.eventTimestamp());
 
 
-                    if (Objects.equals(sequenceInfo.getEventField(), "") || sequenceInfo.getItemIdField() == 0) {
+
+                    if (StringUtils.isEmpty(sequenceInfo.getEventField()) || StringUtils.isEmpty(sequenceInfo.getItemIdField())) {
                         continue;
                     }
 
@@ -986,26 +988,36 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                     }
 
                     ByteBuffer dataBuffer = kkvData.valueAsByteBuffer();
+
                     dataBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
                     // 读取协议头
-                    if (dataBuffer.remaining() >= 2) {
-                            byte protoFlag = dataBuffer.get();
-                            byte protoVersion = dataBuffer.get();
+                    if (dataBuffer.remaining() < 2) {
+                        if (!withValue) {
+                            sequenceInfos.add(sequenceInfo);
+                        }
+                        continue;
+                    }
 
-                            // 验证协议
-                            if (protoFlag != ConstantValue.FeatureDB_Proto_Flag || protoVersion != ConstantValue.FeatureDB_Proto_Version) {
-                                String errMsg = String.format("Invalid proto version, flag: %c, version: %c", protoFlag, protoVersion);
-                                log.warn(errMsg);
-                                continue;
-                            }
+                        byte protoFlag = dataBuffer.get();
+                        byte protoVersion = dataBuffer.get();
+
+                        // 验证协议
+                        if (protoFlag != ConstantValue.FeatureDB_Proto_Flag || protoVersion != ConstantValue.FeatureDB_Proto_Version) {
+                            String errMsg = String.format("Invalid proto version, flag: %c, version: %c", protoFlag, protoVersion);
+                            log.warn(errMsg);
+                            continue;
+                        }
 
                         if (dataBuffer != null && dataBuffer.remaining() > 0) {
 
                             HashMap<String, String> onlineBehaviorTableFields = new HashMap<>();
                             for (String featureName : this.fields) {
                                 byte isNull = dataBuffer.get();
-                                if (isNull == 1) {
+                                if (isNull == 1){
+                                    if (selectBehaviorFieldsSet.get(featureName) != null){
+                                        onlineBehaviorTableFields.put(featureName, "");
+                                    }
                                     continue;
                                 }
 
@@ -1048,10 +1060,8 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                                 }
 
                             }
+                            sequenceInfo.setOnlineBehaviorTableFields(onlineBehaviorTableFields);
 
-                        sequenceInfo.setOnlineBehaviorTableFields(onlineBehaviorTableFields);
-
-                        }
                     }
                     sequenceInfos.add(sequenceInfo);
                 }

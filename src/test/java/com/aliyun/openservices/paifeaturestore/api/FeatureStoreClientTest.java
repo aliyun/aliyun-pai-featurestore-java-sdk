@@ -9,16 +9,13 @@ package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.openservices.paifeaturestore.FeatureStoreClient;
 import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.aliyun.openservices.paifeaturestore.domain.*;
+import org.jooq.meta.derby.sys.Sys;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class FeatureStoreClientTest {
@@ -375,14 +372,15 @@ public class FeatureStoreClientTest {
             throw new RuntimeException("project not found");
         }
 
-        String sequenceFeatureViewName = "seq_fea_side_info_test5";
+//        String sequenceFeatureViewName = "seq_fea_side_info_test5";
+        String sequenceFeatureViewName = "seq_fea_side_info_test2";
         SequenceFeatureView featureView = project.getSeqFeatureView(sequenceFeatureViewName);
         if (null == featureView) {
             throw new RuntimeException("featureview not found");
         }
 
         //FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"122283542", "111287215", "118076221", "144744242", "130682535", "102004103"},new String[]{"*"}, null);
-        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"111470029", "177462874"},new String[]{"*"}, null);
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"113420244"},new String[]{"*"}, null);
 
         while (onlineFeatures.next()) {
             for (String field : onlineFeatures.getFeatureFields()) {
@@ -392,6 +390,80 @@ public class FeatureStoreClientTest {
         }
     }
 
+    @Ignore
+    @org.junit.Test
+    public void readSequenceSideInfoTest3() throws Exception {
+        String region="cn-beijing";
+        String projectName = "fs_python_test1013";
+        Configuration configuration = new Configuration(region, Constants.accessId, Constants.accessKey, projectName);
+        configuration.setDomain(Constants.host);
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        ApiClient apiClient = new ApiClient(configuration);
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(apiClient, Constants.usePublicAddress);
+
+        Project project = featureStoreClient.getProject(projectName);
+        if (null == project) {
+            throw new RuntimeException("project not found");
+        }
+
+        String sequenceFeatureViewName = "seq_test60";
+        SequenceFeatureView featureView = project.getSeqFeatureView(sequenceFeatureViewName);
+        if (null == featureView) {
+            throw new RuntimeException("featureview not found");
+        }
+
+        List<Map<String, Object>> writeData = new ArrayList<>();
+        // add more data
+        for (int i = 0; i < 10; i++) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("request_id", 990410182);
+            data.put("user_id", 184377843);
+            data.put("exp_id", "ER2_L2#EG2#E3");
+            double dNum = new Random().nextDouble();
+            if (i % 2 == 0) {
+                int num = new Random().nextInt(10);
+                String str = "23405897" + num;
+                data.put("page", "detail");
+                data.put("net_type", "5g");
+                data.put("item_id", i);
+                data.put("event", "click");
+            } else {
+                int num = new Random().nextInt(10);
+                String str = "27405897" + num;
+                data.put("page", "home");
+                data.put("net_type", "wifi");
+                data.put("item_id", i);
+                data.put("event", "expr");
+            }
+
+            data.put("playtime", dNum);
+            data.put("event_time", System.currentTimeMillis()/1000);
+            writeData.add(data);
+        }
+        featureView.writeFeatures(writeData);
+        Thread.sleep(3000);
+
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"184377843"},new String[]{"*"}, null);
+        while (onlineFeatures.next()) {
+            for (String field : onlineFeatures.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, onlineFeatures.getObject(field));
+            }
+            System.out.println();
+        }
+        Thread.sleep(60000);
+        System.out.println("after 60s");
+        FeatureResult onlineFeatures1 = featureView.getOnlineFeatures(new String[]{"184377843"},new String[]{"*"}, null);
+        while (onlineFeatures1.next()) {
+            for (String field : onlineFeatures1.getFeatureFields()) {
+                System.out.printf("%s = %s\t", field, onlineFeatures1.getObject(field));
+            }
+            System.out.println();
+        }
+
+    }
 
 
     @Ignore
@@ -617,7 +689,7 @@ public class FeatureStoreClientTest {
     }
     @Ignore
     @Test
-    public void featureDBComplexFeatrueReadTest() throws Exception {
+    public void featureDBComplexFeatureReadTest() throws Exception {
         Configuration configuration = new Configuration("cn-shenzhen",
                 Constants.accessId, Constants.accessKey,"fdb_test" );
 
