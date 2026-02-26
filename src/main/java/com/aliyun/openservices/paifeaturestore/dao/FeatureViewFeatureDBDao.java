@@ -1059,7 +1059,6 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                         if (!withValue) {
                             sequenceInfos.add(sequenceInfo);
                         }
-                        continue;
                     }
                 }
             }
