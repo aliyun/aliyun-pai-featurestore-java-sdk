@@ -1007,8 +1007,10 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                             HashMap<String, String> onlineBehaviorTableFields = new HashMap<>();
                             for (String featureName : this.fields) {
                                 byte isNull = dataBuffer.get();
-                                if (isNull == 1 && selectBehaviorFieldsSet.get(featureName) != null){
-                                    onlineBehaviorTableFields.put(featureName, "");
+                                if (isNull == 1){
+                                    if (selectBehaviorFieldsSet.get(featureName) != null){
+                                        onlineBehaviorTableFields.put(featureName, "");
+                                    }
                                     continue;
                                 }
 
