@@ -1060,10 +1060,10 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                                 }
 
                             }
-
                             sequenceInfo.setOnlineBehaviorTableFields(onlineBehaviorTableFields);
-                            sequenceInfos.add(sequenceInfo);
+
                     }
+                    sequenceInfos.add(sequenceInfo);
                 }
             }
 
