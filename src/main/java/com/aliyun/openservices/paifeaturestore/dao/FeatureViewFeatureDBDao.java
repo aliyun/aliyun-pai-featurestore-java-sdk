@@ -970,12 +970,13 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                     }
                     SequenceInfo sequenceInfo = new SequenceInfo();
                     sequenceInfo.setEventField(userIdEvent[1]);
-                    sequenceInfo.setItemIdField(Long.valueOf(itemId));
+                    sequenceInfo.setItemIdField(itemId);
                     sequenceInfo.setPlayTimeField(kkvData.playTime());
                     sequenceInfo.setTimestampField(kkvData.eventTimestamp());
 
 
-                    if (Objects.equals(sequenceInfo.getEventField(), "") || sequenceInfo.getItemIdField() == 0) {
+
+                    if (StringUtils.isEmpty(sequenceInfo.getEventField()) || StringUtils.isEmpty(sequenceInfo.getItemIdField())) {
                         continue;
                     }
 
@@ -991,7 +992,13 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                     dataBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
                     // 读取协议头
-                    if (dataBuffer.remaining() >= 2) {
+                    if (dataBuffer.remaining() < 2) {
+                        if (!withValue) {
+                            sequenceInfos.add(sequenceInfo);
+                        }
+                        continue;
+                    }
+
                         byte protoFlag = dataBuffer.get();
                         byte protoVersion = dataBuffer.get();
 
@@ -1055,12 +1062,7 @@ public class FeatureViewFeatureDBDao extends AbstractFeatureViewDao {
                             }
 
                             sequenceInfo.setOnlineBehaviorTableFields(onlineBehaviorTableFields);
-
-                        }
-                    }else {
-                        if (!withValue) {
                             sequenceInfos.add(sequenceInfo);
-                        }
                     }
                 }
             }

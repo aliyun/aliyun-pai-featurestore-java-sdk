@@ -255,7 +255,7 @@ public class FeatureViewIgraphDao extends AbstractFeatureViewDao{
             for (String name:selectfields) {
 
                 if (name.equals(config.getItemIdField())) {
-                    Long i = r.getVertex().value(name);
+                    String i = r.getVertex().value(name);
                     sequenceInfo.setItemIdField(i);
                 } else if (name.equals(config.getTimestampField())) {
                     Long et = r.getVertex().value(name);

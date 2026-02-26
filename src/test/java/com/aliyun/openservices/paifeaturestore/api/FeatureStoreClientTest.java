@@ -9,6 +9,7 @@ package com.aliyun.openservices.paifeaturestore.api;
 import com.aliyun.openservices.paifeaturestore.FeatureStoreClient;
 import com.aliyun.openservices.paifeaturestore.constants.InsertMode;
 import com.aliyun.openservices.paifeaturestore.domain.*;
+import org.jooq.meta.derby.sys.Sys;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -419,7 +420,7 @@ public class FeatureStoreClientTest {
         for (int i = 0; i < 10; i++) {
             Map<String, Object> data = new HashMap<>();
             data.put("request_id", 990410182);
-            data.put("user_id", 154377843);
+            data.put("user_id", 184377843);
             data.put("exp_id", "ER2_L2#EG2#E3");
             double dNum = new Random().nextDouble();
             if (i % 2 == 0) {
@@ -427,25 +428,25 @@ public class FeatureStoreClientTest {
                 String str = "23405897" + num;
                 data.put("page", "detail");
                 data.put("net_type", "5g");
-                data.put("item_id", Integer.valueOf(str));
+                data.put("item_id", i);
                 data.put("event", "click");
             } else {
                 int num = new Random().nextInt(10);
                 String str = "27405897" + num;
                 data.put("page", "home");
                 data.put("net_type", "wifi");
-                data.put("item_id", Integer.valueOf(str));
+                data.put("item_id", i);
                 data.put("event", "expr");
             }
 
             data.put("playtime", dNum);
-            data.put("event_time", 1769081696);
+            data.put("event_time", System.currentTimeMillis()/1000);
             writeData.add(data);
         }
         featureView.writeFeatures(writeData);
+        Thread.sleep(3000);
 
-
-        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"154377843"},new String[]{"*"}, null);
+        FeatureResult onlineFeatures = featureView.getOnlineFeatures(new String[]{"184377843"},new String[]{"*"}, null);
         while (onlineFeatures.next()) {
             for (String field : onlineFeatures.getFeatureFields()) {
                 System.out.printf("%s = %s\t", field, onlineFeatures.getObject(field));
@@ -454,7 +455,7 @@ public class FeatureStoreClientTest {
         }
         Thread.sleep(60000);
         System.out.println("after 60s");
-        FeatureResult onlineFeatures1 = featureView.getOnlineFeatures(new String[]{"154377843"},new String[]{"*"}, null);
+        FeatureResult onlineFeatures1 = featureView.getOnlineFeatures(new String[]{"184377843"},new String[]{"*"}, null);
         while (onlineFeatures1.next()) {
             for (String field : onlineFeatures1.getFeatureFields()) {
                 System.out.printf("%s = %s\t", field, onlineFeatures1.getObject(field));

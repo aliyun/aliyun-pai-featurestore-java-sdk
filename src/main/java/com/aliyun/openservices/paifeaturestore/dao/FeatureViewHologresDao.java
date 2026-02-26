@@ -308,7 +308,7 @@ public class FeatureViewHologresDao extends AbstractFeatureViewDao{
                     SequenceInfo sequenceInfo = new SequenceInfo();
                     for (String name:selectFields) {
                         if (name.equals(config.getItemIdField())) {
-                            sequenceInfo.setItemIdField(Long.valueOf(rs.getString(name)));
+                            sequenceInfo.setItemIdField(rs.getString(name));
                         } else if (name.equals(config.getEventField())) {
                             sequenceInfo.setEventField(rs.getString(name));
                         } else if (name.equals(config.getPlayTimeField())) {

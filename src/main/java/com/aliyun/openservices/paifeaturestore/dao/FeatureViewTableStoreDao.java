@@ -301,14 +301,14 @@ public class FeatureViewTableStoreDao extends AbstractFeatureViewDao {
                             break;
                         }
                     }
-                    Long item_id= Long.valueOf(String.valueOf(r.getPrimaryKey().getPrimaryKeyColumn(1).getValue()));
+                    String item_id= String.valueOf(r.getPrimaryKey().getPrimaryKeyColumn(1).getValue());
                     sequenceInfo.setItemIdField(item_id);
                 }
 
                 for (Column c:r.getColumns()) {
                     String result=String.valueOf(c.getValue());
                     if (c.getName().equals(config.getItemIdField())) {
-                        sequenceInfo.setItemIdField(Long.valueOf(result));
+                        sequenceInfo.setItemIdField(result);
                     } else if (c.getName().equals(config.getEventField())) {
                         sequenceInfo.setEventField(result);
                     } else if (c.getName().equals(config.getPlayTimeField())) {
