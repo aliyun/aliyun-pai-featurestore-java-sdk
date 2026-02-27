@@ -130,6 +130,45 @@ public class FeatureStoreClientTest {
 
     @Ignore
     @Test
+    public void hologresDataZeroTrustTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                "", "", "holo_p4" );
+
+        configuration.setHologresUsername(Constants.username);
+        configuration.setHologresPassword(Constants.password);
+
+        configuration.setDomain("paifeaturestore.cn-beijing.aliyuncs.com");
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress );
+
+        Project project = featureStoreClient.getProject("holo_p4");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_fea1");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+        int count = 1;
+        String[] joinIds = new String[count];
+        joinIds[0] = "118866809";
+
+        FeatureResult features = featureView.getOnlineFeatures(joinIds);
+
+        while (features.next()) {
+            for (String name : features.getFeatureFields()) {
+                System.out.print(String.format("%s=%s|%s,", name, features.getObject(name), features.getType(name)));
+            }
+            System.out.println();
+        }
+
+    }
+
+    @Ignore
+    @Test
     public void otsDataTest() throws Exception {
         Configuration configuration = new Configuration("cn-beijing",
                 Constants.accessId, Constants.accessKey,"fs_test_dj" );
@@ -552,6 +591,57 @@ public class FeatureStoreClientTest {
         }
 
         for (int i = 0; i < 100;i++) {
+            long startTime = System.nanoTime();
+            FeatureResult features = featureView.getOnlineFeatures(joinIds  );
+
+            if (features.getFeatureData().size() != count) {
+                //throw new Exception("request size not equal");
+            }
+            while (features.next()) {
+                for (String name : features.getFeatureFields()) {
+                    System.out.print(String.format("%s=%s,", name, features.getObject(name)));
+                }
+                System.out.println("");
+            }
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            double durationInMilliseconds = duration / 1_000_000.0;
+
+            System.out.println("操作耗时：" + durationInMilliseconds + "ms");
+        }
+
+
+    }
+    @Ignore
+    @Test
+    public void featureDBZeroTrustTest() throws Exception {
+        Configuration configuration = new Configuration("cn-beijing",
+                "", "", "featuredb_p3" );
+
+        configuration.setUsername(Constants.username);
+        configuration.setPassword(Constants.password);
+
+        configuration.setDomain("paifeaturestore.cn-beijing.aliyuncs.com");
+
+        ApiClient client = new ApiClient(configuration);
+
+        FeatureStoreClient featureStoreClient = new FeatureStoreClient(client, Constants.usePublicAddress );
+
+        Project project = featureStoreClient.getProject("featuredb_p3");
+        if (null == project) {
+            throw  new RuntimeException("project not found");
+        }
+
+        FeatureView featureView = project.getFeatureView("user_fea1");
+        if (null == featureView) {
+            throw  new RuntimeException("featureview not found");
+        }
+        int count = 1;
+        String[] joinIds = new String[count];
+        joinIds[0] = "118866809";
+
+        for (int i = 0; i < 1;i++) {
             long startTime = System.nanoTime();
             FeatureResult features = featureView.getOnlineFeatures(joinIds  );
 

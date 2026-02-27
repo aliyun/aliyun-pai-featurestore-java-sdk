@@ -393,8 +393,13 @@ public class Datasource {
       String dsn = null;
       switch (type) {
         case Datasource_Type_Hologres:
-          dsn = String.format("jdbc:postgresql://%s/%s?user=%s&password=%s&ApplicationName=PAI-FeatureStore",
+          if (this.user != null && this.pwd != null) {
+            dsn = String.format("jdbc:postgresql://%s/%s?user=%s&password=%s&ApplicationName=PAI-FeatureStore",
+                  this.vpcAddress, this.database, this.user, this.pwd);
+          } else {
+            dsn = String.format("jdbc:postgresql://%s/%s?user=%s&password=%s&ApplicationName=PAI-FeatureStore",
                   this.vpcAddress, this.database, this.ak.getAccessId(), this.ak.getAccessKey());
+          }
           break;
       }
 
