@@ -3,12 +3,10 @@ package com.aliyun.openservices.paifeaturestore.dao;
 import com.aliyun.openservices.paifeaturestore.model.FeatureViewSeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SeqConfig;
 import com.aliyun.openservices.paifeaturestore.model.SequenceInfo;
-import com.aliyun.tea.utils.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractFeatureViewDao implements FeatureViewDao{
     /*Merge offline and online data. The duplicate part of the timestamp is offline first.
@@ -41,77 +39,69 @@ public abstract class AbstractFeatureViewDao implements FeatureViewDao{
 
 
     public Map<String, String> disposeDB(List<SequenceInfo> sequenceInfos, String[] selectFields, FeatureViewSeqConfig config, SeqConfig seqConfig, String event, Long currentime) {
-        ConcurrentHashMap<String, String> sequenceFeatures = new ConcurrentHashMap<>();
+        HashMap<String, StringBuilder> sequenceBuilders = new HashMap<>();
+
+        String onlineSequenceName = "";
+        for (SeqConfig s : config.getSeqConfigs()) {
+            if (s.getSeqEvent().equals(event)) {
+                onlineSequenceName = s.getOnlineSeqName();
+                break;
+            }
+        }
+
+        String tsfields = onlineSequenceName + "__ts";
+        HashMap<String, String> fieldNameCache = new HashMap<>();
+        for (String name : selectFields) {
+            fieldNameCache.put(name, onlineSequenceName + "__" + name);
+        }
 
         for (SequenceInfo sequenceInfo : sequenceInfos) {
-
-            String onlineSequenceName = "";
-            for (SeqConfig s : config.getSeqConfigs()) {
-                if (s.getSeqEvent().equals(event)) {
-                    onlineSequenceName = s.getOnlineSeqName();
-                    break;
-                }
-            }
-
             for (String name : selectFields) {
-                String newname = onlineSequenceName + "__" + name;
+                String newname = fieldNameCache.get(name);
 
                 if (name.equals(config.getItemIdField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getItemIdField());
-                    } else {
-                        sequenceFeatures.put(newname, "" + sequenceInfo.getItemIdField());
-                    }
-                    if (sequenceFeatures.containsKey(onlineSequenceName)) {
-                        sequenceFeatures.put(onlineSequenceName, sequenceFeatures.get(onlineSequenceName) + ";" + sequenceInfo.getItemIdField());
-                    } else {
-                        sequenceFeatures.put(onlineSequenceName, "" + sequenceInfo.getItemIdField());
-                    }
+                    appendToBuilder(sequenceBuilders, newname, sequenceInfo.getItemIdField());
+                    appendToBuilder(sequenceBuilders, onlineSequenceName, sequenceInfo.getItemIdField());
                 } else if (name.equals(config.getTimestampField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getTimestampField());
-                    } else {
-                        sequenceFeatures.put(newname, "" + sequenceInfo.getTimestampField());
-                    }
+                    appendToBuilder(sequenceBuilders, newname, String.valueOf(sequenceInfo.getTimestampField()));
                 } else if (name.equals(config.getEventField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getEventField());
-                    } else {
-                        sequenceFeatures.put(newname, sequenceInfo.getEventField());
-                    }
+                    appendToBuilder(sequenceBuilders, newname, sequenceInfo.getEventField());
                 } else if (name.equals(config.getPlayTimeField())) {
-                    if (sequenceFeatures.containsKey(newname)) {
-                        sequenceFeatures.put(newname, sequenceFeatures.get(newname) + ";" + sequenceInfo.getPlayTimeField());
-                    } else {
-                        sequenceFeatures.put(newname, "" + sequenceInfo.getPlayTimeField());
-                    }
-
+                    appendToBuilder(sequenceBuilders, newname, String.valueOf(sequenceInfo.getPlayTimeField()));
                 }
             }
-            String tsfields = onlineSequenceName + "__ts";//Timestamp from the current time
-            long eventTime = 0;
-            if (!StringUtils.isEmpty(sequenceInfo.getTimestampField())) {
-                eventTime = Long.valueOf(sequenceInfo.getTimestampField());
-            }
-            if (sequenceFeatures.containsKey(tsfields)) {
-                sequenceFeatures.put(tsfields, sequenceFeatures.get(tsfields) + ";" + (currentime - eventTime));
-            } else {
-                sequenceFeatures.put(tsfields, String.valueOf((currentime - eventTime)));
-            }
 
-            if(seqConfig != null && sequenceInfo.getOnlineBehaviorTableFields() != null) {
-                for (String f : sequenceInfo.getOnlineBehaviorTableFields().keySet()) {
-                    String curSequenceSubName = (onlineSequenceName + "__" + f);
-                    if (sequenceFeatures.containsKey(curSequenceSubName)) {
-                        sequenceFeatures.put(curSequenceSubName, sequenceFeatures.get(curSequenceSubName) + ";" + sequenceInfo.getOnlineBehaviorTableFields().get(f));
-                    } else {
-                        sequenceFeatures.put(curSequenceSubName, sequenceInfo.getOnlineBehaviorTableFields().get(f));
-                    }
+            // Timestamp from the current time
+            long eventTime = 0;
+            if (sequenceInfo.getTimestampField() != null) {
+                eventTime = sequenceInfo.getTimestampField();
+            }
+            appendToBuilder(sequenceBuilders, tsfields, String.valueOf(currentime - eventTime));
+
+            if (seqConfig != null && sequenceInfo.getOnlineBehaviorTableFields() != null) {
+                for (Map.Entry<String, String> entry : sequenceInfo.getOnlineBehaviorTableFields().entrySet()) {
+                    String curSequenceSubName = onlineSequenceName + "__" + entry.getKey();
+                    appendToBuilder(sequenceBuilders, curSequenceSubName, entry.getValue());
                 }
             }
         }
 
+        HashMap<String, String> sequenceFeatures = new HashMap<>(sequenceBuilders.size());
+        for (Map.Entry<String, StringBuilder> entry : sequenceBuilders.entrySet()) {
+            sequenceFeatures.put(entry.getKey(), entry.getValue().toString());
+        }
+
         return sequenceFeatures;
+    }
+
+    private void appendToBuilder(HashMap<String, StringBuilder> builders, String key, String value) {
+        StringBuilder sb = builders.get(key);
+        if (sb == null) {
+            sb = new StringBuilder(value != null ? value : "");
+            builders.put(key, sb);
+        } else {
+            sb.append(";").append(value != null ? value : "");
+        }
     }
 
 }
