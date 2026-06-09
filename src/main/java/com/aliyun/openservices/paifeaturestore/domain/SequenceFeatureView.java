@@ -289,7 +289,7 @@ public class SequenceFeatureView implements IFeatureView {
             }
             if (playTimeField != null && !playTimeField.isEmpty()){
                 Object playTimeValue = record.get(playTimeField);
-                if (playTimeValue == null || playTimeValue.toString().isEmpty() ||((Number)playTimeValue).doubleValue() == 0.0){
+                if (playTimeValue == null || playTimeValue.toString().isEmpty() ){
                     LOG.warn("Field '{}' must not be null or empty for one of the records.", playTimeField);
                 }
             }
