@@ -2,10 +2,12 @@ package com.aliyun.openservices.paifeaturestore.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
+
 public class SequenceInfo {
     //item_id
     @SerializedName("item_id_field")
-    private Long ItemIdField;
+    private String ItemIdField;
     //event
     @SerializedName("event_field")
     private String EventField;
@@ -16,11 +18,14 @@ public class SequenceInfo {
     @SerializedName("play_time_field")
     private Double PlayTimeField;
 
-    public Long getItemIdField() {
+    @SerializedName("online_behavior_table_fields")
+    private HashMap<String,String> OnlineBehaviorTableFields;
+
+    public String getItemIdField() {
         return ItemIdField;
     }
 
-    public void setItemIdField(Long itemIdField) {
+    public void setItemIdField(String itemIdField) {
         ItemIdField = itemIdField;
     }
 
@@ -46,5 +51,13 @@ public class SequenceInfo {
 
     public void setPlayTimeField(Double playTimeField) {
         PlayTimeField = playTimeField;
+    }
+
+    public HashMap<String, String> getOnlineBehaviorTableFields() {
+        return OnlineBehaviorTableFields;
+    }
+
+    public void setOnlineBehaviorTableFields(HashMap<String, String> onlineBehaviorTableFields) {
+        OnlineBehaviorTableFields = onlineBehaviorTableFields;
     }
 }

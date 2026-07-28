@@ -60,12 +60,30 @@ public class SequenceFeatureView implements IFeatureView{
                 offOnlineSeqMap.put(seqConfig.getOfflineSeqName(), seqConfig.getOnlineSeqName());
             }
             List<SeqConfig> uniqueSeqConfigs = new ArrayList<>();
+
+            HashMap<String, SeqConfig> nameSeqConfigHashMap = new HashMap<>();
             Set<String> seenConfig = new HashSet<>();
             for (SeqConfig seqConfig : this.config.getSeqConfigs()) {
                 if (!seenConfig.contains(seqConfig.getOnlineSeqName())) {
                     uniqueSeqConfigs.add(seqConfig);
+                    nameSeqConfigHashMap.put(seqConfig.getOnlineSeqName(), seqConfig);
                     seenConfig.add(seqConfig.getOnlineSeqName());
+                }else {
+                    SeqConfig currentSeqConfig = nameSeqConfigHashMap.get(seqConfig.getOnlineSeqName());
+                    if (seqConfig.getOnlineBehaviorTableFields()!=null){
+                        if (currentSeqConfig.getOnlineBehaviorTableFields() != null){
+                            currentSeqConfig.getOnlineBehaviorTableFields().addAll(seqConfig.getOnlineBehaviorTableFields());
+                        }else {
+                            currentSeqConfig.setOnlineBehaviorTableFields(seqConfig.getOnlineBehaviorTableFields());
+                        }
+                        nameSeqConfigHashMap.put(seqConfig.getOnlineSeqName(), currentSeqConfig);
+                    }
+
+
                 }
+            }
+            for (SeqConfig seqConfig : nameSeqConfigHashMap.values()){
+                uniqueSeqConfigs.add(seqConfig);
             }
             this.config.setSeqConfigs(uniqueSeqConfigs.toArray(new SeqConfig[0]));
         }
@@ -305,7 +323,7 @@ public class SequenceFeatureView implements IFeatureView{
     }
 
     @Override
-    public FeatureResult getOnlineFeatures(String[] joinIds, String[] features, Map<String, String> aliasFields) throws Exception {
+    public FeatureResult getOnlineFeatures(String[] joinIds, String[] features, Map<String, String> aliasFields) {
 
         FeatureResult sequenceFeatures=new FeatureStoreResult();
         FeatureViewSeqConfig config = this.config;
@@ -321,25 +339,29 @@ public class SequenceFeatureView implements IFeatureView{
                     onlineseqConfigs=Arrays.asList(config.getSeqConfigs());
                     break;
                 } else {
+                    boolean found = false;
                     for (SeqConfig sc:config.getSeqConfigs()) {
                         if (sc.getOnlineSeqName().equals(f)) {
                             onlineseqConfigs.add(sc);
+                            found = true;
                             break;
                         }
                     }
-                    if (f==null) {
+                    if (!found) {
                         throw new RuntimeException(String.format("sequence feature name :%s not found in feature view config",f));
                     }
                 }
             }
         }
+
         SeqConfig[] seqConfigs = new SeqConfig[onlineseqConfigs.size()];
         for (int k=0;k<onlineseqConfigs.size();k++) {
             seqConfigs[k]=onlineseqConfigs.get(k);
         }
-        config.setSeqConfigs(seqConfigs);
 
-        sequenceFeatures = this.featureViewDao.getSequenceFeatures(joinIds, this.userIdField, config);
+        //config.setSeqConfigs(seqConfigs);
+
+        sequenceFeatures = this.featureViewDao.getSequenceFeatures(joinIds, this.userIdField, config, seqConfigs);
         return sequenceFeatures;
     }
 

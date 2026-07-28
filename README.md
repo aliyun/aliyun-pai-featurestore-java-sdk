@@ -8,7 +8,7 @@
 <dependency>
   <groupId>com.aliyun.openservices.aiservice</groupId>
   <artifactId>paifeaturestore-sdk</artifactId>
-  <version>1.2.2</version>
+  <version>1.2.8</version>
 </dependency>
 ```
 ## 使用方式
@@ -215,6 +215,22 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.2.7 (2026-02-26)
+* 修复读取序列行为表的数据为空值，导致长度无法对齐的问题
+* 修复行为序列边界条件数据过期，读取为空的问题
+ 
+### 1.2.6 (2026-02-09)
+* 优化获取序列特征的性能，使用并发读取，提高性能 
+
+### 1.2.5 (2026-02-05)
+* 修复序列特征读取side info 浮点数类型数据格式化问题
+
+### 1.2.4 (2026-01-28)
+* 修复序列特征读取side info 行为数据缺失的错误
+ 
+### 1.2.3 (2026-01-22)
+* 增加了序列特征side info 行为数据读取的支持
+ 
 ### 1.2.2 (2025-08-25)
 * 增加了loopData的支持，可以控制不轮询数据 
 * 线程的调整优化，写线程close时也能正常结束
