@@ -346,7 +346,7 @@
     <junit-version>4.13.1</junit-version>
     <jooq.version>3.13.6</jooq.version>
     <postgresql-version>42.6.0</postgresql-version>
-    <paifeaturestore20230621-version>5.0.2</paifeaturestore20230621-version>
+    <paifeaturestore20230621-version>6.0.5</paifeaturestore20230621-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
