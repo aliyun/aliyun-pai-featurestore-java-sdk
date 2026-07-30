@@ -6,9 +6,7 @@
 
 package com.aliyun.openservices.paifeaturestore.model;
 
-import java.util.ArrayList;
 import java.util.Objects;
-
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -38,13 +36,13 @@ public class FeatureEntity {
   private String createTime = null;
 
   @SerializedName("parent_id")
-  private Integer ParentFeatureEntityId = null;
+  private Integer parentFeatureEntityId = null;
 
   @SerializedName("parent_name")
-  private String ParentFeatureEntityName = null;
+  private String parentFeatureEntityName = null;
 
   @SerializedName("parent_join_id")
-  private String ParentJoinId = null;
+  private String parentJoinId = null;
 
 
   public FeatureEntity featureEntityId(Integer featureEntityId) {
@@ -53,27 +51,27 @@ public class FeatureEntity {
   }
 
   public Integer getParentFeatureEntityId() {
-    return ParentFeatureEntityId;
+    return parentFeatureEntityId;
   }
 
   public void setParentFeatureEntityId(Integer parentFeatureEntityId) {
-    ParentFeatureEntityId = parentFeatureEntityId;
+    this.parentFeatureEntityId = parentFeatureEntityId;
   }
 
   public String getParentFeatureEntityName() {
-    return ParentFeatureEntityName;
+    return parentFeatureEntityName;
   }
 
   public void setParentFeatureEntityName(String parentFeatureEntityName) {
-    ParentFeatureEntityName = parentFeatureEntityName;
+    this.parentFeatureEntityName = parentFeatureEntityName;
   }
 
   public String getParentJoinId() {
-    return ParentJoinId;
+    return parentJoinId;
   }
 
   public void setParentJoinId(String parentJoinId) {
-    ParentJoinId = parentJoinId;
+    this.parentJoinId = parentJoinId;
   }
 
 
@@ -204,14 +202,14 @@ public class FeatureEntity {
             && Objects.equals(featureEntityJoinid, that.featureEntityJoinid)
             && Objects.equals(owner, that.owner)
             && Objects.equals(createTime, that.createTime)
-            && Objects.equals(ParentFeatureEntityId, that.ParentFeatureEntityId)
-            && Objects.equals(ParentFeatureEntityName, that.ParentFeatureEntityName)
-            && Objects.equals(ParentJoinId, that.ParentJoinId);
+            && Objects.equals(parentFeatureEntityId, that.parentFeatureEntityId)
+            && Objects.equals(parentFeatureEntityName, that.parentFeatureEntityName)
+            && Objects.equals(parentJoinId, that.parentJoinId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(featureEntityId, projectId, projectName, featureEntityName, featureEntityJoinid, owner, createTime, ParentFeatureEntityId, ParentFeatureEntityName, ParentJoinId);
+    return Objects.hash(featureEntityId, projectId, projectName, featureEntityName, featureEntityJoinid, owner, createTime, parentFeatureEntityId, parentFeatureEntityName, parentJoinId);
   }
 
   @Override
@@ -224,9 +222,9 @@ public class FeatureEntity {
             ", featureEntityJoinid='" + featureEntityJoinid + '\'' +
             ", owner='" + owner + '\'' +
             ", createTime='" + createTime + '\'' +
-            ", ParentId=" + ParentFeatureEntityId +
-            ", ParentName='" + ParentFeatureEntityName + '\'' +
-            ", ParentJoinId='" + ParentJoinId + '\'' +
+            ", parentFeatureEntityId=" + parentFeatureEntityId +
+            ", parentFeatureEntityName='" + parentFeatureEntityName + '\'' +
+            ", parentJoinId='" + parentJoinId + '\'' +
             '}';
   }
 

@@ -362,8 +362,25 @@ public class DemoTest {
         if (modelFeature==null){
             throw new RuntimeException("This modelFeature is not exist");
         }
+        System.out.println("-----------【model_with_child_entity】相关-----------------");
+
+        System.out.println("----------- getOnlineFeatures()-----------------");
+        HashMap<String, List<String>> allJoinIds = new HashMap<>();
+        allJoinIds.put("item_id", Arrays.asList("1", "2", "3"));
+        FeatureResult onlineFeaturesAll = modelFeature.getOnlineFeatures(allJoinIds);
+        if (onlineFeaturesAll.getFeatureData() != null) {
+            for (Map<String, Object> m : onlineFeaturesAll.getFeatureData()) {
+                 System.out.println("-------------------------");
+                 for (Object key : m.keySet()) {
+                     System.out.printf("%s=%s ", key, m.get(key));
+                 }
+                 System.out.println();
+            }
+        }
+
+        System.out.println("----------- getOnlineFeaturesWithEntity()-----------------");
         FeatureResult onlineFeatures1 = modelFeature.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
-            put("item_id",Arrays.asList("1", "2", "3", "4"));}},"item");
+            put("item_id",Arrays.asList("1", "2", "3", "4", "5", "6","7"));}},"item");
         if (onlineFeatures1.getFeatureData()!=null){
             for (Map<String, Object> m:onlineFeatures1.getFeatureData()) {
                 System.out.println("-------------------------");
@@ -374,22 +391,11 @@ public class DemoTest {
             }
         }
 
-        FeatureResult onlineFeatures2 = modelFeature.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
-            put("item_id",Arrays.asList("4", "5", "6","7"));}},"item");
-        if (onlineFeatures2.getFeatureData()!=null){
-            for (Map<String, Object> m:onlineFeatures2.getFeatureData()) {
-                System.out.println("-------------------------");
-                for (Object key:m.keySet()) {
-                    System.out.printf("%s=%s ",key,m.get(key));
-                }
-                System.out.println();
-            }
-        }
-
 //        //（2）get下级entity的特征
+        System.out.println("-----------get下级entity的特征（author）-----------------");
         FeatureResult onlineFeatures3 = modelFeature.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
             put("author_id",Arrays.asList("1001", "1002", "1003"));}},"author");
-        if (onlineFeatures3.getFeatureData()!=null){
+        if (onlineFeatures3.getFeatureData() != null){
             for (Map<String, Object> m:onlineFeatures3.getFeatureData()) {
                 System.out.println("-------------------------");
                 for (Object key:m.keySet()) {
@@ -399,11 +405,13 @@ public class DemoTest {
             }
         }
 
+        System.out.println("-----------【model_with_child_entity2】相关-----------------");
         Model modelFeature2 = project.getModelFeature(childModelFeatureName2);
         if (modelFeature2==null){
             throw new RuntimeException("This modelFeature is not exist");
         }
 
+        System.out.println("----------- getOnlineFeaturesWithEntity()-----------------");
         FeatureResult onlineFeatures4 = modelFeature2.getOnlineFeaturesWithEntity(new HashMap<String, List<String>>(){{
             put("item_id",Arrays.asList("1", "2", "3", "4", "6", "8", "9"));}},"item");
         if (onlineFeatures4.getFeatureData()!=null){
@@ -415,8 +423,6 @@ public class DemoTest {
                 System.out.println();
             }
         }
-
-
 
     }
 }
