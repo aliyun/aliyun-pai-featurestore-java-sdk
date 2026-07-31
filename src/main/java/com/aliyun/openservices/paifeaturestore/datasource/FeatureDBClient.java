@@ -38,7 +38,8 @@ public class FeatureDBClient {
     private String token = null;
     private String vpcAddress = null;
     private String signature = null;
-    private int retryCount = 3;
+    // 1 = no retry, single request only; a failed read returns null
+    private int retryCount = 1;
 
     // 创建一个全局Gson实例
     private static final Gson gson = new Gson();
