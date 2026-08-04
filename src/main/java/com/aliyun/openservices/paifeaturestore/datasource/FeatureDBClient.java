@@ -234,6 +234,7 @@ public class FeatureDBClient {
         map.put("write_mode", insertMode);
         String requestBody = gson.toJson(map);
         RequestBody body = RequestBody.create(requestBody, JSON);
+        // 请求只构造一次:上面已经把 __insert_mode__ 从 data 里移除了,重试时无法再解析出 write_mode
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
@@ -241,6 +242,33 @@ public class FeatureDBClient {
                 .addHeader("Auth", signature)
                 .build();
 
+        // retryCount 可能被外部设成 0,至少要尝试一次,否则数据会被静默丢弃
+        int maxAttempts = Math.max(1, retryCount);
+        for (int i = 0; i < maxAttempts; i++) {
+            try {
+                this.doWriteRequest(request);
+                return;
+            } catch (HttpException e) {
+                String errorMessage = String.format("URL: %s, code: %d, error: %s", url, e.getCode(), e.getMessage());
+                // 4xx 是请求本身的问题,重试也不会成功
+                if (i >= maxAttempts - 1 || !isRetryableStatusCode(e.getCode())) {
+                    log.error(errorMessage);
+                    throw e;
+                }
+                log.debug(errorMessage);
+            } catch (IOException e) {
+                String errorMessage = String.format("URL: %s, error: %s", url, e.getMessage());
+                if (i >= maxAttempts - 1) {
+                    log.error(errorMessage);
+                    throw e;
+                }
+                log.debug(errorMessage);
+            }
+        }
+    }
+
+    // 非 private 以便测试注入失败,验证重试行为
+    protected void doWriteRequest(Request request) throws HttpException, IOException {
         try(Response response = this.httpclient.newCall(request).execute()) {
            if (!response.isSuccessful() || response.code() != 200) {
                int errorCode = response.code();
@@ -250,6 +278,10 @@ public class FeatureDBClient {
                }
            }
         }
+    }
 
+    // 限流和服务端错误可以重试,其余状态码重试也不会成功
+    private static boolean isRetryableStatusCode(int statusCode) {
+        return statusCode == 429 || statusCode >= 500;
     }
 }

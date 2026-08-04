@@ -13,6 +13,7 @@ import com.aliyun.openservices.paifeaturestore.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 /* This class is a yes operation. FeatureStore is a FS client to be configured.*/
 public class FeatureStoreClient {
 
@@ -71,7 +72,8 @@ public class FeatureStoreClient {
                 ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(project.getProjectId()), pageNumber, pageSize);
 
                 for (FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
-                    if (featureEntity.getProjectId() == project.getProjectId()) {
+                    // projectId 是 Long，== 比的是引用，真实 id 超出 Long 缓存范围后恒为 false
+                    if (Objects.equals(featureEntity.getProjectId(), project.getProjectId())) {
                         domainProject.addFeatureEntity(featureEntity.getFeatureEntityName(), new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
                     }
                 }
