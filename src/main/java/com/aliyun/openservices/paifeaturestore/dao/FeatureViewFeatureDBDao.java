@@ -22,8 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -42,12 +40,18 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
     public Map<String, FSType> fieldTypeMap;
 
     private List<String> fields;
+
+    // 缓冲区攒够这么多行就立刻写出，同时也是单次请求的行数上限
+    private static final int FLUSH_MAX_ROWS = 200;
+
+    // 距上次写出超过这么久就把剩余数据写出，保证低流量时的时效性
+    private static final int FLUSH_INTERVAL_MILLIS = 50;
+
     private final List<Map<String, Object>> writeData = new ArrayList<>();
 
     private final ReentrantLock lock = new ReentrantLock();
 
     private final Condition condition = lock.newCondition();
-    private final ExecutorService executor = Executors.newFixedThreadPool(8);
     public FeatureViewFeatureDBDao(DaoConfig daoConfig) {
         this.database = daoConfig.featureDBDatabase;
         this.schema = daoConfig.featureDBSchema;
@@ -625,8 +629,10 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
         lock.lock();
         try {
             writeData.addAll(data);
-            if (writeData.size() >= 20) {
-                condition.signal();
+            if (writeData.size() >= FLUSH_MAX_ROWS) {
+                // 攒够一批就在当前线程里同步写出。调用方因此被下游的写入速度限制，
+                // 反压自然传导回上游，缓冲区也不会无限增长
+                doWriteFeatures();
             }
         } finally {
             lock.unlock();
@@ -639,7 +645,7 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
             while (true) {
                 lock.lock();
                 try {
-                    condition.await(50, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    condition.await(FLUSH_INTERVAL_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS);
                     if (!writeData.isEmpty()) {
                         doWriteFeatures();
                     }
@@ -653,17 +659,22 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
     }
 
     private void doWriteFeatures() {
-        List<Map<String, Object>> tempList = new ArrayList<>(writeData);
-        writeData.clear();
+        try {
+            // 按 FLUSH_MAX_ROWS 切片，避免突发流量下积压的数据合成一个超大请求
+            for (int start = 0; start < writeData.size(); start += FLUSH_MAX_ROWS) {
+                int end = Math.min(start + FLUSH_MAX_ROWS, writeData.size());
+                List<Map<String, Object>> tempList = new ArrayList<>(writeData.subList(start, end));
 
-        // 异步处理 tempList
-        this.executor.submit(()->{
-            try {
-                this.featureDBClient.writeFeatureDB(tempList, this.database, this.schema, this.table);
-            } catch (Exception e) {
-                log.error(String.format("request featuredb error:%s", e.getMessage()));
+                try {
+                    this.featureDBClient.writeFeatureDB(tempList, this.database, this.schema, this.table);
+                } catch (Exception e) {
+                    log.error(String.format("request featuredb error:%s", e.getMessage()));
+                }
             }
-        });
+        } finally {
+            // 无论写入过程中是否抛异常，都不把已经处理过的数据留在缓冲区里
+            writeData.clear();
+        }
     }
 
     private String[] decodeStringArray(ByteBuffer byteBuffer, int length) {
