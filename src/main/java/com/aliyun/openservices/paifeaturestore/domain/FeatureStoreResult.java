@@ -3,6 +3,7 @@ package com.aliyun.openservices.paifeaturestore.domain;
 import com.aliyun.openservices.paifeaturestore.constants.FSType;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ public class FeatureStoreResult implements FeatureResult {
 
     private Map<String, FSType> featureFieldTypeMap;
 
-    private List<Map<String, Object>> featureDataList;
+    private List<Map<String, Object>> featureDataList = new ArrayList<>();
 
 
     public FSType getType(String featureName) {

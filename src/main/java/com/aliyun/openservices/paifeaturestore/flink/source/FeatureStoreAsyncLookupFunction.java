@@ -162,7 +162,7 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
         try {
             FeatureResult featureResult = featureView.getOnlineFeatures(new String[]{joinId});
 
-            if (featureResult != null && featureResult.getFeatureData() != null && featureResult.getFeatureData().size() > 0) {
+            if (featureResult != null && featureResult.getFeatureData().size() > 0) {
                 featureResult.next();
                 GenericRowData resultRow = new GenericRowData(fieldNames.size());
                 for (int i = 0; i < fieldNames.size(); i++) {
