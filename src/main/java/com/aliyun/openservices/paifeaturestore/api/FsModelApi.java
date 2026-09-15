@@ -67,6 +67,8 @@ public class FsModelApi {
                 feature.setType(FSType.FS_BOOLEAN);
             } else if (field.getType().equals("TIMESTAMP")) {
                 feature.setType(FSType.FS_TIMESTAMP);
+            } else if (field.getType().equals("BINARY")) {
+                feature.setType(FSType.FS_BINARY);
             }
 
             features.add(feature);

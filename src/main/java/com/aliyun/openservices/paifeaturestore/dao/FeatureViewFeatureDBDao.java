@@ -594,6 +594,16 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
                                 }
                                 break;
 
+                            case FS_BINARY:
+                                // Binary uses the same wire layout as string: a uint32 length prefix followed by raw bytes.
+                                int lenBinary = byteBuffer.getInt();
+                                byte[] binaryValue = new byte[lenBinary];
+                                byteBuffer.get(binaryValue, 0, lenBinary);
+                                if (selectFieldSet.contains(featureName)) {
+                                    featureMap.put(featureName, binaryValue);
+                                }
+                                break;
+
                             default:
                                 int len = byteBuffer.getInt();
                                 byte[] bytes = new byte[len];
@@ -613,7 +623,7 @@ public class FeatureViewFeatureDBDao implements FeatureViewDao {
 
             featureResult.setFeatureDataList(featuresList);
         } catch (Exception e) {
-            log.error(String.format("request featuredb error:%s", e.getMessage()));
+            log.error("request featuredb error", e);
             return featureResult;
         }
 
