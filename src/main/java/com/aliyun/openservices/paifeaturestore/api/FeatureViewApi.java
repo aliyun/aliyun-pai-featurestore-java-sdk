@@ -188,6 +188,8 @@ public class FeatureViewApi {
                 field.setType(FSType.FS_MAP_STRING_DOUBLE);
             } else if (f.getType().equals("MAP<STRING,STRING>")){
                 field.setType(FSType.FS_MAP_STRING_STRING);
+            } else if (f.getType().equals("BINARY")){
+                field.setType(FSType.FS_BINARY);
             }
 
             if (null != f.getAttributes()) {

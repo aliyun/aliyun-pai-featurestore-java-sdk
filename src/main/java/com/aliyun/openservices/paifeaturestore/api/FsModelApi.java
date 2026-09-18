@@ -109,6 +109,8 @@ public class FsModelApi {
                 feature.setType(FSType.FS_MAP_STRING_STRING);
             } else if (field.getType().equals("MAP<STRING,FLOAT>")){
                 feature.setType(FSType.FS_MAP_STRING_FLOAT);
+            } else if (field.getType().equals("BINARY")){
+                feature.setType(FSType.FS_BINARY);
             }
 
             features.add(feature);

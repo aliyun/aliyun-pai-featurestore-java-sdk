@@ -215,6 +215,10 @@ FeatureResult featureResult3 = model.getOnlineFeaturesWithEntity(m3,"user");
 
 
 ## 版本说明
+### 1.2.9 (2026-09-15)
+* 支持 BINARY 数据类型（fs type），仅用于 batch 特征视图，从 FeatureDB 读取时返回原始二进制数据
+* 修复错误路径下特征结果集未初始化导致的空指针问题
+
 ### 1.2.7 (2026-02-26)
 * 修复读取序列行为表的数据为空值，导致长度无法对齐的问题
 * 修复行为序列边界条件数据过期，读取为空的问题
