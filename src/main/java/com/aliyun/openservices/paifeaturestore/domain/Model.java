@@ -55,8 +55,11 @@ public class Model {
         this.project = project;
 
         for (ModelFeatures feature : this.model.getFeatures()) {
-            //IFeatureView featureView = project.getFeatureView(feature.getFeatureViewName());
-            IFeatureView featureView = project.getFeatureViewMap().get(feature.getFeatureViewName());
+            // 按需加载：getFeatureView 内部会在缓存 miss 时从 server 拉取
+            IFeatureView featureView = project.getFeatureView(feature.getFeatureViewName());
+            if (null == featureView) {
+                featureView = project.getSeqFeatureView(feature.getFeatureViewName());
+            }
             FeatureEntity featureEntity = project.getFeatureEntity(featureView.getFeatureView().getFeatureEntityName());
 
             this.featureViewMap.put(feature.getFeatureViewName(), featureView);
