@@ -49,7 +49,8 @@ public class FeatureStoreClient {
             project.setOfflineDataSource(offlineDatasource);
 
             project.createSignature(this.apiClient.getConfiguration().getUsername(), this.apiClient.getConfiguration().getPassword());
-            Project domainProject = new Project(project,usePublicAddress);
+            // apiClient 构造注入，供 Project 懒加载 featureView/entity/model 元数据使用
+            Project domainProject = new Project(project, usePublicAddress, this.apiClient);
 
             domainProject.setUsePublicAddress(usePublicAddress);
 
@@ -58,15 +59,12 @@ public class FeatureStoreClient {
                 domainProject.registerFeatrueDB(featureDBDataSource);
             }
 
-            // featureView / featureEntity / model 改为按需懒加载（见 domain.Project），
-            // 这里只注入 apiClient，不再全量拉取
-            domainProject.setApiClient(this.apiClient);
-
             projectMap.put(project.getProjectName(), domainProject);
         }
 
         if (projectMap.size() > 0) {
-            this.projects = projectMap;
+            // 拷贝进 ConcurrentHashMap，而不是把字段整体换成普通 HashMap
+            this.projects = new ConcurrentHashMap<>(projectMap);
         }
     }
 

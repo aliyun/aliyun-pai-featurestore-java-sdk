@@ -37,7 +37,8 @@ public class Project {
 
     private Datasource featureDBDatasource = null;
 
-    private ApiClient apiClient;
+    // 懒加载元数据的 API 入口，构造时注入，不允许为 null
+    private final ApiClient apiClient;
 
     // 懒加载锁：避免 Flink 多线程并发触发同一元数据的重复 API 请求
     private final Object loadLock = new Object();
@@ -45,7 +46,11 @@ public class Project {
     // featureEntity 是否已完成过一次全量加载（project 可能没有 entity，不能用 map.isEmpty() 判断）
     private volatile boolean featureEntitiesLoaded = false;
 
-    public Project(com.aliyun.openservices.paifeaturestore.model.Project project,boolean usePublicAddress) throws Exception {
+    public Project(com.aliyun.openservices.paifeaturestore.model.Project project, boolean usePublicAddress, ApiClient apiClient) throws Exception {
+        if (null == apiClient) {
+            throw new IllegalArgumentException("apiClient is required for lazy loading metadata");
+        }
+        this.apiClient = apiClient;
         this.project = project;
         this.signature = project.getSignature();
         switch (project.getOnlineDatasourceType()) {
@@ -150,7 +155,15 @@ public class Project {
                         featureView.setRegisterDatasource(registerDatasource);
                     }
 
-                    IFeatureView domainFeatureView = FeatureViewFactory.getFeatureView(featureView, this, this.getFeatureEntity(featureView.getFeatureEntityName()));
+                    FeatureEntity featureEntity = this.getFeatureEntity(featureView.getFeatureEntityName());
+                    if (null == featureEntity) {
+                        // 中止加载并抛出，避免把 entity 缺失的半初始化 FeatureView 放进缓存
+                        // (缓存后 containsKey 恒为 true，坏对象将永不重载)
+                        throw new IllegalStateException(String.format("feature entity %s of feature view %s not found in project %s",
+                                featureView.getFeatureEntityName(), featureView.getName(), project.getProjectName()));
+                    }
+
+                    IFeatureView domainFeatureView = FeatureViewFactory.getFeatureView(featureView, this, featureEntity);
 
                     this.addFeatureView(featureView.getName(), domainFeatureView);
                 }
@@ -299,10 +312,6 @@ public class Project {
         }
 
         return this.onlineStore.getDatasourceName();
-    }
-
-    public void setApiClient(ApiClient apiClient) {
-        this.apiClient = apiClient;
     }
 
     public ApiClient getApiClient() {
