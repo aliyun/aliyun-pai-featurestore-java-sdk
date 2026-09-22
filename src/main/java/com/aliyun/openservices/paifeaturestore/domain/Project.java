@@ -155,7 +155,7 @@ public class Project {
                     this.addFeatureView(featureView.getName(), domainFeatureView);
                 }
 
-                if (listFeatureViewsResponse.getFeatureViews().size() == 0 || pageNumber * pageSize > listFeatureViewsResponse.getTotalCount()) {
+                if (listFeatureViewsResponse.getFeatureViews().size() == 0 || pageNumber * pageSize >= listFeatureViewsResponse.getTotalCount()) {
                     break;
                 }
 
@@ -196,7 +196,7 @@ public class Project {
                                 new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
                     }
                 }
-                if (listFeatureEntitiesResponse.getFeatureEntities().size() == 0 || pageNumber * pageSize > listFeatureEntitiesResponse.getTotalCount()) {
+                if (listFeatureEntitiesResponse.getFeatureEntities().size() == 0 || pageNumber * pageSize >= listFeatureEntitiesResponse.getTotalCount()) {
                     break;
                 }
                 pageNumber++;
@@ -231,10 +231,10 @@ public class Project {
                 ListModesResponse listModesResponse = this.apiClient.getFsModelApi().listModelsByName(name, String.valueOf(project.getProjectId()), pageNumber, pageSize);
                 for (com.aliyun.openservices.paifeaturestore.model.Model m : listModesResponse.getModels()) {
                     com.aliyun.openservices.paifeaturestore.model.Model model = this.apiClient.getFsModelApi().getModelById(String.valueOf(m.getModelId()));
-                    com.aliyun.openservices.paifeaturestore.domain.Model domianModel = new com.aliyun.openservices.paifeaturestore.domain.Model(model, this);
-                    this.addModel(model.getName(), domianModel);
+                    com.aliyun.openservices.paifeaturestore.domain.Model domainModel = new com.aliyun.openservices.paifeaturestore.domain.Model(model, this);
+                    this.addModel(model.getName(), domainModel);
                 }
-                if (listModesResponse.getModels().size() == 0 || pageNumber * pageSize > listModesResponse.getTotalCount()) {
+                if (listModesResponse.getModels().size() == 0 || pageNumber * pageSize >= listModesResponse.getTotalCount()) {
                     break;
                 }
                 pageNumber++;
@@ -277,8 +277,8 @@ public class Project {
 
     }
 
-    public void addModel(String name, Model domianModel) {
-        this.modelMap.put(name, domianModel);
+    public void addModel(String name, Model domainModel) {
+        this.modelMap.put(name, domainModel);
     }
 
 
