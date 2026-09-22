@@ -1,5 +1,9 @@
 package com.aliyun.openservices.paifeaturestore.domain;
 
+import com.aliyun.openservices.paifeaturestore.api.ApiClient;
+import com.aliyun.openservices.paifeaturestore.api.ListFeatureEntitiesResponse;
+import com.aliyun.openservices.paifeaturestore.api.ListFeatureViewsResponse;
+import com.aliyun.openservices.paifeaturestore.api.ListModesResponse;
 import com.aliyun.openservices.paifeaturestore.constants.DatasourceType;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBClient;
 import com.aliyun.openservices.paifeaturestore.datasource.FeatureDBFactory;
@@ -8,22 +12,24 @@ import com.aliyun.openservices.paifeaturestore.datasource.HologresFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.IGraphFactory;
 import com.aliyun.openservices.paifeaturestore.datasource.TableStoreFactory;
 import com.aliyun.openservices.paifeaturestore.model.Datasource;
-import com.aliyun.tea.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Project {
+    public static Logger logger = LoggerFactory.getLogger(Project.class);
+
     com.aliyun.openservices.paifeaturestore.model.Project project;
 
     private final OnlineStore onlineStore;
 
-    private final Map<String, IFeatureView> featureViewMap = new HashMap<>();
+    private final Map<String, IFeatureView> featureViewMap = new ConcurrentHashMap<>();
 
-    private final Map<String, FeatureEntity> featureEntityMap = new HashMap<>();
+    private final Map<String, FeatureEntity> featureEntityMap = new ConcurrentHashMap<>();
 
-    private final Map<String, Model> modelMap = new HashMap<>();
+    private final Map<String, Model> modelMap = new ConcurrentHashMap<>();
 
     private boolean usePublicAddress = false;
 
@@ -31,7 +37,20 @@ public class Project {
 
     private Datasource featureDBDatasource = null;
 
-    public Project(com.aliyun.openservices.paifeaturestore.model.Project project,boolean usePublicAddress) throws Exception {
+    // 懒加载元数据的 API 入口，构造时注入，不允许为 null
+    private final ApiClient apiClient;
+
+    // 懒加载锁：避免 Flink 多线程并发触发同一元数据的重复 API 请求
+    private final Object loadLock = new Object();
+
+    // featureEntity 是否已完成过一次全量加载（project 可能没有 entity，不能用 map.isEmpty() 判断）
+    private volatile boolean featureEntitiesLoaded = false;
+
+    public Project(com.aliyun.openservices.paifeaturestore.model.Project project, boolean usePublicAddress, ApiClient apiClient) throws Exception {
+        if (null == apiClient) {
+            throw new IllegalArgumentException("apiClient is required for lazy loading metadata");
+        }
+        this.apiClient = apiClient;
         this.project = project;
         this.signature = project.getSignature();
         switch (project.getOnlineDatasourceType()) {
@@ -83,6 +102,16 @@ public class Project {
     }
 
     public FeatureView getFeatureView(String name) {
+        if (!this.featureViewMap.containsKey(name)) {
+            try {
+                this.loadFeatureView(name);
+            } catch (Exception e) {
+                // fail-fast：加载失败(网络/权限/server 错误)时抛出并保留原始 cause，
+                // 避免吞掉异常后下游拿到 null 产生远离根因的 NPE
+                logger.error("load feature view {} error", name, e);
+                throw new IllegalStateException(String.format("load feature view %s of project %s error", name, project.getProjectName()), e);
+            }
+        }
         IFeatureView featureView =  this.featureViewMap.get(name);
         if (featureView instanceof FeatureView) {
             return (FeatureView) featureView;
@@ -91,6 +120,14 @@ public class Project {
     }
 
     public SequenceFeatureView getSeqFeatureView(String name) {
+        if (!this.featureViewMap.containsKey(name)) {
+            try {
+                this.loadFeatureView(name);
+            } catch (Exception e) {
+                logger.error("load feature view {} error", name, e);
+                throw new IllegalStateException(String.format("load feature view %s of project %s error", name, project.getProjectName()), e);
+            }
+        }
         IFeatureView featureView = this.featureViewMap.get(name);
         if (featureView instanceof SequenceFeatureView) {
             return (SequenceFeatureView) featureView;
@@ -98,16 +135,128 @@ public class Project {
         return null;
     }
 
+    /**
+     * 按名字从 FS server 拉取单个 featureView 并缓存到内存。
+     * double-checked locking：并发调用同名时只有一个线程真正发起 API 请求。
+     */
+    private void loadFeatureView(String name) throws Exception {
+        synchronized (loadLock) {
+            if (this.featureViewMap.containsKey(name)) {
+                return;
+            }
+            int pageNumber = 1;
+            int pageSize = 100;
+            do {
+                ListFeatureViewsResponse listFeatureViewsResponse = this.apiClient.getFeatureViewApi().listFeatureViewsByName(name, String.valueOf(project.getProjectId()), pageNumber, pageSize);
+                for (com.aliyun.openservices.paifeaturestore.model.FeatureView view : listFeatureViewsResponse.getFeatureViews()) {
+                    com.aliyun.openservices.paifeaturestore.model.FeatureView featureView = this.apiClient.getFeatureViewApi().getFeatureViewById(String.valueOf(view.getFeatureViewId()));
+                    if (featureView.getRegisterDatasourceId() > 0) {
+                        Datasource registerDatasource = this.apiClient.getDatasourceApi().getDatasourceById(featureView.getRegisterDatasourceId());
+                        featureView.setRegisterDatasource(registerDatasource);
+                    }
+
+                    FeatureEntity featureEntity = this.getFeatureEntity(featureView.getFeatureEntityName());
+                    if (null == featureEntity) {
+                        // 中止加载并抛出，避免把 entity 缺失的半初始化 FeatureView 放进缓存
+                        // (缓存后 containsKey 恒为 true，坏对象将永不重载)
+                        throw new IllegalStateException(String.format("feature entity %s of feature view %s not found in project %s",
+                                featureView.getFeatureEntityName(), featureView.getName(), project.getProjectName()));
+                    }
+
+                    IFeatureView domainFeatureView = FeatureViewFactory.getFeatureView(featureView, this, featureEntity);
+
+                    this.addFeatureView(featureView.getName(), domainFeatureView);
+                }
+
+                if (listFeatureViewsResponse.getFeatureViews().size() == 0 || pageNumber * pageSize >= listFeatureViewsResponse.getTotalCount()) {
+                    break;
+                }
+
+                pageNumber++;
+            } while (true);
+        }
+    }
+
     public FeatureEntity getFeatureEntity(String name) {
+        if (!this.featureEntityMap.containsKey(name) && !this.featureEntitiesLoaded) {
+            try {
+                this.loadFeatureEntities();
+            } catch (Exception e) {
+                logger.error("load feature entity {} error", name, e);
+                throw new IllegalStateException(String.format("load feature entity %s of project %s error", name, project.getProjectName()), e);
+            }
+        }
         return this.featureEntityMap.get(name);
     }
 
+    /**
+     * featureEntity 数量少，miss 时一次性分页拉全并缓存。
+     */
+    private void loadFeatureEntities() throws Exception {
+        synchronized (loadLock) {
+            if (this.featureEntitiesLoaded) {
+                return;
+            }
+            int pageNumber = 1;
+            int pageSize = 100;
+            do {
+                ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(this.project.getProjectId()), pageNumber, pageSize);
+
+                for (com.aliyun.openservices.paifeaturestore.model.FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
+                    // projectId 是 Long，== 比的是引用，超出 Long 缓存范围后恒为 false，必须用 equals
+                    if (featureEntity.getProjectId() != null && featureEntity.getProjectId().equals(project.getProjectId())) {
+                        this.featureEntityMap.putIfAbsent(featureEntity.getFeatureEntityName(),
+                                new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
+                    }
+                }
+                if (listFeatureEntitiesResponse.getFeatureEntities().size() == 0 || pageNumber * pageSize >= listFeatureEntitiesResponse.getTotalCount()) {
+                    break;
+                }
+                pageNumber++;
+            } while (true);
+            this.featureEntitiesLoaded = true;
+        }
+    }
+
     public Model getModel(String name) {
+        if (!this.modelMap.containsKey(name)) {
+            try {
+                this.loadModelFeature(name);
+            } catch (Exception e) {
+                logger.error("load modelFeature {} error", name, e);
+                throw new IllegalStateException(String.format("load model feature %s of project %s error", name, project.getProjectName()), e);
+            }
+        }
         return this.modelMap.get(name);
     }
 
+    /**
+     * 按名字从 FS server 拉取单个 model 并缓存到内存。
+     */
+    private void loadModelFeature(String name) throws Exception {
+        synchronized (loadLock) {
+            if (this.modelMap.containsKey(name)) {
+                return;
+            }
+            int pageNumber = 1;
+            int pageSize = 100;
+            do {
+                ListModesResponse listModesResponse = this.apiClient.getFsModelApi().listModelsByName(name, String.valueOf(project.getProjectId()), pageNumber, pageSize);
+                for (com.aliyun.openservices.paifeaturestore.model.Model m : listModesResponse.getModels()) {
+                    com.aliyun.openservices.paifeaturestore.model.Model model = this.apiClient.getFsModelApi().getModelById(String.valueOf(m.getModelId()));
+                    com.aliyun.openservices.paifeaturestore.domain.Model domainModel = new com.aliyun.openservices.paifeaturestore.domain.Model(model, this);
+                    this.addModel(model.getName(), domainModel);
+                }
+                if (listModesResponse.getModels().size() == 0 || pageNumber * pageSize >= listModesResponse.getTotalCount()) {
+                    break;
+                }
+                pageNumber++;
+            } while (true);
+        }
+    }
+
     public Model getModelFeature(String name) {
-        return this.modelMap.get(name);
+        return this.getModel(name);
     }
 
     public com.aliyun.openservices.paifeaturestore.model.Project getProject() {
@@ -141,8 +290,8 @@ public class Project {
 
     }
 
-    public void addModel(String name, Model domianModel) {
-        this.modelMap.put(name, domianModel);
+    public void addModel(String name, Model domainModel) {
+        this.modelMap.put(name, domainModel);
     }
 
 
@@ -163,5 +312,9 @@ public class Project {
         }
 
         return this.onlineStore.getDatasourceName();
+    }
+
+    public ApiClient getApiClient() {
+        return apiClient;
     }
 }

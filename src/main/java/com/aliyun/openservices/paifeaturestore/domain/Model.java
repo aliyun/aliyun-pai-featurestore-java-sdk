@@ -55,9 +55,21 @@ public class Model {
         this.project = project;
 
         for (ModelFeatures feature : this.model.getFeatures()) {
-            //IFeatureView featureView = project.getFeatureView(feature.getFeatureViewName());
-            IFeatureView featureView = project.getFeatureViewMap().get(feature.getFeatureViewName());
+            // 按需加载：getFeatureView 内部会在缓存 miss 时从 server 拉取
+            IFeatureView featureView = project.getFeatureView(feature.getFeatureViewName());
+            if (null == featureView) {
+                featureView = project.getSeqFeatureView(feature.getFeatureViewName());
+            }
+            if (null == featureView) {
+                throw new IllegalStateException(String.format("feature view %s referenced by model %s not found in project %s",
+                        feature.getFeatureViewName(), model.getName(), project.getProject().getProjectName()));
+            }
             FeatureEntity featureEntity = project.getFeatureEntity(featureView.getFeatureView().getFeatureEntityName());
+            if (null == featureEntity) {
+                throw new IllegalStateException(String.format("feature entity %s of feature view %s (model %s) not found in project %s",
+                        featureView.getFeatureView().getFeatureEntityName(), feature.getFeatureViewName(), model.getName(),
+                        project.getProject().getProjectName()));
+            }
 
             this.featureViewMap.put(feature.getFeatureViewName(), featureView);
             this.featureEntityMap.put(featureView.getFeatureView().getFeatureEntityName(), featureEntity);

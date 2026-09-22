@@ -1,25 +1,19 @@
 package com.aliyun.openservices.paifeaturestore;
 
 import com.aliyun.openservices.paifeaturestore.api.ApiClient;
-import com.aliyun.openservices.paifeaturestore.api.ListFeatureEntitiesResponse;
-import com.aliyun.openservices.paifeaturestore.api.ListFeatureViewsResponse;
-import com.aliyun.openservices.paifeaturestore.api.ListModesResponse;
 import com.aliyun.openservices.paifeaturestore.api.ListProjectResponse;
-import com.aliyun.openservices.paifeaturestore.domain.FeatureViewFactory;
-import com.aliyun.openservices.paifeaturestore.domain.IFeatureView;
 import com.aliyun.openservices.paifeaturestore.domain.Project;
-import com.aliyun.openservices.paifeaturestore.domain.SequenceFeatureView;
 import com.aliyun.openservices.paifeaturestore.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 /* This class is a yes operation. FeatureStore is a FS client to be configured.*/
 public class FeatureStoreClient {
 
     private ApiClient apiClient;
 
-    private Map<String, Project> projects = new HashMap<>();
+    private Map<String, Project> projects = new ConcurrentHashMap<>();
 
     public FeatureStoreClient(ApiClient apiClient, boolean usePublicAddress ) throws Exception {
         this.apiClient = apiClient;
@@ -55,7 +49,8 @@ public class FeatureStoreClient {
             project.setOfflineDataSource(offlineDatasource);
 
             project.createSignature(this.apiClient.getConfiguration().getUsername(), this.apiClient.getConfiguration().getPassword());
-            Project domainProject = new Project(project,usePublicAddress);
+            // apiClient 构造注入，供 Project 懒加载 featureView/entity/model 元数据使用
+            Project domainProject = new Project(project, usePublicAddress, this.apiClient);
 
             domainProject.setUsePublicAddress(usePublicAddress);
 
@@ -65,68 +60,11 @@ public class FeatureStoreClient {
             }
 
             projectMap.put(project.getProjectName(), domainProject);
-
-            int pageNumber = 1;
-            int pageSize = 100;
-            do {
-                ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(project.getProjectId()), pageNumber, pageSize);
-
-                for (FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
-                    // projectId 是 Long，== 比的是引用，真实 id 超出 Long 缓存范围后恒为 false
-                    if (Objects.equals(featureEntity.getProjectId(), project.getProjectId())) {
-                        domainProject.addFeatureEntity(featureEntity.getFeatureEntityName(), new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
-                    }
-                }
-                if (listFeatureEntitiesResponse.getFeatureEntities().size() == 0 || pageNumber * pageSize > listFeatureEntitiesResponse.getTotalCount()) {
-                    break;
-                }
-                pageNumber++;
-            } while (true);
-
-             pageNumber = 1;
-            do {
-
-                ListFeatureViewsResponse listFeatureViewsResponse =  this.apiClient.getFeatureViewApi().listFeatureViews(String.valueOf(project.getProjectId()), pageNumber, pageSize);
-                for (FeatureView view: listFeatureViewsResponse.getFeatureViews()) {
-
-                    FeatureView featureView = this.apiClient.getFeatureViewApi().getFeatureViewById(String.valueOf(view.getFeatureViewId()));
-                    if (featureView.getRegisterDatasourceId() > 0) {
-                        Datasource registerDatasource = this.apiClient.getDatasourceApi().getDatasourceById(featureView.getRegisterDatasourceId());
-                        featureView.setRegisterDatasource(registerDatasource);
-                    }
-
-                    IFeatureView domainFeatureView = FeatureViewFactory.getFeatureView(featureView, domainProject, domainProject.getFeatureEntityMap().get(featureView.getFeatureEntityName()) );
-
-                    domainProject.addFeatureView(featureView.getName(), domainFeatureView);
-
-                }
-
-
-                if (listFeatureViewsResponse.getFeatureViews().size() == 0 || pageNumber * pageSize > listFeatureViewsResponse.getTotalCount()) {
-                    break;
-                }
-
-                pageNumber++;
-            } while (true);
-
-            pageNumber = 1;
-            do {
-                ListModesResponse listModesResponse = this.apiClient.getFsModelApi().listModels(String.valueOf(project.getProjectId()), pageNumber, pageSize);
-                for (Model m : listModesResponse.getModels()) {
-                    Model model = this.apiClient.getFsModelApi().getModelById(String.valueOf(m.getModelId()));
-                    com.aliyun.openservices.paifeaturestore.domain.Model domianModel = new com.aliyun.openservices.paifeaturestore.domain.Model(model, domainProject);
-
-                    domainProject.addModel(model.getName(), domianModel);
-                }
-                if (listModesResponse.getModels().size() == 0 || pageNumber * pageSize > listModesResponse.getTotalCount()) {
-                    break;
-                }
-                pageNumber++;
-            } while (true);
         }
 
         if (projectMap.size() > 0) {
-            this.projects = projectMap;
+            // 拷贝进 ConcurrentHashMap，而不是把字段整体换成普通 HashMap
+            this.projects = new ConcurrentHashMap<>(projectMap);
         }
     }
 
