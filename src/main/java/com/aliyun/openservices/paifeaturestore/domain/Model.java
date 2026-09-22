@@ -60,7 +60,16 @@ public class Model {
             if (null == featureView) {
                 featureView = project.getSeqFeatureView(feature.getFeatureViewName());
             }
+            if (null == featureView) {
+                throw new IllegalStateException(String.format("feature view %s referenced by model %s not found in project %s",
+                        feature.getFeatureViewName(), model.getName(), project.getProject().getProjectName()));
+            }
             FeatureEntity featureEntity = project.getFeatureEntity(featureView.getFeatureView().getFeatureEntityName());
+            if (null == featureEntity) {
+                throw new IllegalStateException(String.format("feature entity %s of feature view %s (model %s) not found in project %s",
+                        featureView.getFeatureView().getFeatureEntityName(), feature.getFeatureViewName(), model.getName(),
+                        project.getProject().getProjectName()));
+            }
 
             this.featureViewMap.put(feature.getFeatureViewName(), featureView);
             this.featureEntityMap.put(featureView.getFeatureView().getFeatureEntityName(), featureEntity);

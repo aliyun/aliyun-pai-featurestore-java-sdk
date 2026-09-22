@@ -101,7 +101,10 @@ public class Project {
             try {
                 this.loadFeatureView(name);
             } catch (Exception e) {
+                // fail-fast：加载失败(网络/权限/server 错误)时抛出并保留原始 cause，
+                // 避免吞掉异常后下游拿到 null 产生远离根因的 NPE
                 logger.error("load feature view {} error", name, e);
+                throw new IllegalStateException(String.format("load feature view %s of project %s error", name, project.getProjectName()), e);
             }
         }
         IFeatureView featureView =  this.featureViewMap.get(name);
@@ -117,6 +120,7 @@ public class Project {
                 this.loadFeatureView(name);
             } catch (Exception e) {
                 logger.error("load feature view {} error", name, e);
+                throw new IllegalStateException(String.format("load feature view %s of project %s error", name, project.getProjectName()), e);
             }
         }
         IFeatureView featureView = this.featureViewMap.get(name);
@@ -161,11 +165,12 @@ public class Project {
     }
 
     public FeatureEntity getFeatureEntity(String name) {
-        if (!this.featureEntityMap.containsKey(name)) {
+        if (!this.featureEntityMap.containsKey(name) && !this.featureEntitiesLoaded) {
             try {
                 this.loadFeatureEntities();
             } catch (Exception e) {
                 logger.error("load feature entity {} error", name, e);
+                throw new IllegalStateException(String.format("load feature entity %s of project %s error", name, project.getProjectName()), e);
             }
         }
         return this.featureEntityMap.get(name);
@@ -206,6 +211,7 @@ public class Project {
                 this.loadModelFeature(name);
             } catch (Exception e) {
                 logger.error("load modelFeature {} error", name, e);
+                throw new IllegalStateException(String.format("load model feature %s of project %s error", name, project.getProjectName()), e);
             }
         }
         return this.modelMap.get(name);
