@@ -77,17 +77,23 @@ public class FeatureViewApi {
 
         List<FeatureView> featureViewList = new ArrayList<>();
 
-        listFeatureViewsResponse.setTotalCount(response.getBody().totalCount);
+        Long totalCount = response.getBody() != null ? response.getBody().getTotalCount() : null;
+        listFeatureViewsResponse.setTotalCount(totalCount != null ? totalCount : 0L);
+        List<ListFeatureViewsResponseBody.ListFeatureViewsResponseBodyFeatureViews> responseFeatureViews =
+                response.getBody() != null ? response.getBody().getFeatureViews() : null;
         //  Traverse all characteristic views of the response set.
-        for (ListFeatureViewsResponseBody.ListFeatureViewsResponseBodyFeatureViews view: response.getBody().getFeatureViews()) {
-            FeatureView featureView = new FeatureView();
-            featureView.setFeatureViewId(Long.valueOf(view.getFeatureViewId()));
-            featureView.setType(view.getType());
-            featureView.setFeatureEntityName(view.getFeatureEntityName());
-            featureView.setProjectName(view.getProjectName());
-            featureView.setProjectId(Long.valueOf(view.getProjectId()));
-            featureView.setWriteToFeaturedb(view.getWriteToFeatureDB());
-            featureViewList.add(featureView);
+        if (responseFeatureViews != null) {
+            for (ListFeatureViewsResponseBody.ListFeatureViewsResponseBodyFeatureViews view : responseFeatureViews) {
+                FeatureView featureView = new FeatureView();
+                featureView.setFeatureViewId(Long.valueOf(view.getFeatureViewId()));
+                featureView.setName(view.getName());
+                featureView.setType(view.getType());
+                featureView.setFeatureEntityName(view.getFeatureEntityName());
+                featureView.setProjectName(view.getProjectName());
+                featureView.setProjectId(Long.valueOf(view.getProjectId()));
+                featureView.setWriteToFeaturedb(view.getWriteToFeatureDB());
+                featureViewList.add(featureView);
+            }
         }
         listFeatureViewsResponse.setFeatureViews(featureViewList);
         return listFeatureViewsResponse;

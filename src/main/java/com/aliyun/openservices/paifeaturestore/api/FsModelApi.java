@@ -130,15 +130,20 @@ public class FsModelApi {
 
         List<Model> modelList = new ArrayList<>();
 
-        listModesResponse.setTotalCount(response.getBody().getTotalCount());
+        Long totalCount = response.getBody() != null ? response.getBody().getTotalCount() : null;
+        listModesResponse.setTotalCount(totalCount != null ? totalCount : 0L);
+        List<ListModelFeaturesResponseBody.ListModelFeaturesResponseBodyModelFeatures> modelFeatures =
+                response.getBody() != null ? response.getBody().getModelFeatures() : null;
         //  The model features are obtained by traversing the response body.
-        for (ListModelFeaturesResponseBody.ListModelFeaturesResponseBodyModelFeatures modelFeature : response.getBody().getModelFeatures()) {
-            Model model = new Model();
-            model.setModelId(Long.valueOf(modelFeature.getModelFeatureId()));
-            model.setName(modelFeature.getName());
-            model.setProjectId(Long.valueOf(modelFeature.getProjectId()));
-            model.setProjectName(modelFeature.getProjectName());
-            modelList.add(model);
+        if (modelFeatures != null) {
+            for (ListModelFeaturesResponseBody.ListModelFeaturesResponseBodyModelFeatures modelFeature : modelFeatures) {
+                Model model = new Model();
+                model.setModelId(Long.valueOf(modelFeature.getModelFeatureId()));
+                model.setName(modelFeature.getName());
+                model.setProjectId(Long.valueOf(modelFeature.getProjectId()));
+                model.setProjectName(modelFeature.getProjectName());
+                modelList.add(model);
+            }
         }
 
         listModesResponse.setModels(modelList);

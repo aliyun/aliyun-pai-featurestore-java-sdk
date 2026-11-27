@@ -102,6 +102,9 @@ public class Project {
     }
 
     public FeatureView getFeatureView(String name) {
+        if (null == name) {
+            return null;
+        }
         if (!this.featureViewMap.containsKey(name)) {
             try {
                 this.loadFeatureView(name);
@@ -120,6 +123,9 @@ public class Project {
     }
 
     public SequenceFeatureView getSeqFeatureView(String name) {
+        if (null == name) {
+            return null;
+        }
         if (!this.featureViewMap.containsKey(name)) {
             try {
                 this.loadFeatureView(name);
@@ -148,8 +154,18 @@ public class Project {
             int pageSize = 100;
             do {
                 ListFeatureViewsResponse listFeatureViewsResponse = this.apiClient.getFeatureViewApi().listFeatureViewsByName(name, String.valueOf(project.getProjectId()), pageNumber, pageSize);
+                if (null == listFeatureViewsResponse || null == listFeatureViewsResponse.getFeatureViews() || listFeatureViewsResponse.getFeatureViews().isEmpty()) {
+                    break;
+                }
                 for (com.aliyun.openservices.paifeaturestore.model.FeatureView view : listFeatureViewsResponse.getFeatureViews()) {
+                    // listFeatureViewsByName 可能为模糊匹配，仅精确加载目标名称，避免多余 RPC 及无关坏元数据连坐失败
+                    if (view.getName() != null && !name.equals(view.getName())) {
+                        continue;
+                    }
                     com.aliyun.openservices.paifeaturestore.model.FeatureView featureView = this.apiClient.getFeatureViewApi().getFeatureViewById(String.valueOf(view.getFeatureViewId()));
+                    if (null == featureView || !name.equals(featureView.getName())) {
+                        continue;
+                    }
                     if (featureView.getRegisterDatasourceId() > 0) {
                         Datasource registerDatasource = this.apiClient.getDatasourceApi().getDatasourceById(featureView.getRegisterDatasourceId());
                         featureView.setRegisterDatasource(registerDatasource);
@@ -166,9 +182,11 @@ public class Project {
                     IFeatureView domainFeatureView = FeatureViewFactory.getFeatureView(featureView, this, featureEntity);
 
                     this.addFeatureView(featureView.getName(), domainFeatureView);
+                    return;
                 }
 
-                if (listFeatureViewsResponse.getFeatureViews().size() == 0 || pageNumber * pageSize >= listFeatureViewsResponse.getTotalCount()) {
+                Long totalCount = listFeatureViewsResponse.getTotalCount();
+                if (null == totalCount || (long) pageNumber * pageSize >= totalCount) {
                     break;
                 }
 
@@ -178,6 +196,9 @@ public class Project {
     }
 
     public FeatureEntity getFeatureEntity(String name) {
+        if (null == name) {
+            return null;
+        }
         if (!this.featureEntityMap.containsKey(name) && !this.featureEntitiesLoaded) {
             try {
                 this.loadFeatureEntities();
@@ -201,15 +222,20 @@ public class Project {
             int pageSize = 100;
             do {
                 ListFeatureEntitiesResponse listFeatureEntitiesResponse = this.apiClient.getFeatureEntityApi().listFeatureEntities(String.valueOf(this.project.getProjectId()), pageNumber, pageSize);
+                if (null == listFeatureEntitiesResponse || null == listFeatureEntitiesResponse.getFeatureEntities() || listFeatureEntitiesResponse.getFeatureEntities().isEmpty()) {
+                    break;
+                }
 
                 for (com.aliyun.openservices.paifeaturestore.model.FeatureEntity featureEntity : listFeatureEntitiesResponse.getFeatureEntities()) {
                     // projectId 是 Long，== 比的是引用，超出 Long 缓存范围后恒为 false，必须用 equals
-                    if (featureEntity.getProjectId() != null && featureEntity.getProjectId().equals(project.getProjectId())) {
+                    if (featureEntity.getProjectId() != null && featureEntity.getProjectId().equals(project.getProjectId())
+                            && featureEntity.getFeatureEntityName() != null) {
                         this.featureEntityMap.putIfAbsent(featureEntity.getFeatureEntityName(),
                                 new com.aliyun.openservices.paifeaturestore.domain.FeatureEntity(featureEntity));
                     }
                 }
-                if (listFeatureEntitiesResponse.getFeatureEntities().size() == 0 || pageNumber * pageSize >= listFeatureEntitiesResponse.getTotalCount()) {
+                Integer totalCount = listFeatureEntitiesResponse.getTotalCount();
+                if (null == totalCount || (long) pageNumber * pageSize >= totalCount) {
                     break;
                 }
                 pageNumber++;
@@ -219,6 +245,9 @@ public class Project {
     }
 
     public Model getModel(String name) {
+        if (null == name) {
+            return null;
+        }
         if (!this.modelMap.containsKey(name)) {
             try {
                 this.loadModelFeature(name);
@@ -242,12 +271,24 @@ public class Project {
             int pageSize = 100;
             do {
                 ListModesResponse listModesResponse = this.apiClient.getFsModelApi().listModelsByName(name, String.valueOf(project.getProjectId()), pageNumber, pageSize);
+                if (null == listModesResponse || null == listModesResponse.getModels() || listModesResponse.getModels().isEmpty()) {
+                    break;
+                }
                 for (com.aliyun.openservices.paifeaturestore.model.Model m : listModesResponse.getModels()) {
+                    // listModelsByName 可能为模糊匹配，仅精确加载目标名称，避免无关 model 级联加载或异常连坐
+                    if (m.getName() != null && !name.equals(m.getName())) {
+                        continue;
+                    }
                     com.aliyun.openservices.paifeaturestore.model.Model model = this.apiClient.getFsModelApi().getModelById(String.valueOf(m.getModelId()));
+                    if (null == model || !name.equals(model.getName())) {
+                        continue;
+                    }
                     com.aliyun.openservices.paifeaturestore.domain.Model domainModel = new com.aliyun.openservices.paifeaturestore.domain.Model(model, this);
                     this.addModel(model.getName(), domainModel);
+                    return;
                 }
-                if (listModesResponse.getModels().size() == 0 || pageNumber * pageSize >= listModesResponse.getTotalCount()) {
+                Long totalCount = listModesResponse.getTotalCount();
+                if (null == totalCount || (long) pageNumber * pageSize >= totalCount) {
                     break;
                 }
                 pageNumber++;
