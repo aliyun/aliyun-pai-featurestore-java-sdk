@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +33,11 @@ public class FeatureDBClient {
     private String token = null;
     private String signature = null;
     private int retryCount = 3;
+
+    static final int VPC_HEALTH_CHECK_ATTEMPTS = 3;
+    static final long VPC_HEALTH_CHECK_INTERVAL_MS = 50L;
+    static final int VPC_HEALTH_CHECK_CONNECT_TIMEOUT_MS = 200;
+    static final int VPC_HEALTH_CHECK_TIMEOUT_MS = 500;
 
     // 创建一个全局Gson实例
     private static final Gson gson = new Gson();
@@ -141,6 +147,113 @@ public class FeatureDBClient {
 
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
+    }
+
+    /**
+     * Probes the PrivateLink /health endpoint during initialization and switches
+     * the client address to PVL when healthy, keeping the original address otherwise.
+     */
+    public boolean selectVpcAddress(String vpcAddress) {
+        String normalizedAddress = normalizeVpcAddress(vpcAddress);
+        if (normalizedAddress == null) {
+            log.warn("FeatureDB uses normal address because PVL address is empty or invalid");
+            return false;
+        }
+        if (this.httpclient == null) {
+            log.warn("FeatureDB uses normal address because HTTP client is not initialized");
+            return false;
+        }
+
+        String healthUrl = normalizedAddress + "/health";
+        Request request;
+        try {
+            request = new Request.Builder()
+                    .url(healthUrl)
+                    .get()
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+        } catch (IllegalArgumentException e) {
+            log.warn(String.format("FeatureDB uses normal address because PVL address is invalid (%s): %s",
+                    vpcAddress, e.getMessage()));
+            return false;
+        }
+
+        OkHttpClient healthClient = this.httpclient.newBuilder()
+                .connectTimeout(VPC_HEALTH_CHECK_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .readTimeout(VPC_HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .writeTimeout(VPC_HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .callTimeout(VPC_HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .retryOnConnectionFailure(false)
+                .build();
+
+        String lastError = null;
+        for (int attempt = 0; attempt < VPC_HEALTH_CHECK_ATTEMPTS; attempt++) {
+            boolean retryable;
+            try (Response response = healthClient.newCall(request).execute()) {
+                int statusCode = response.code();
+                if (statusCode != 200 && statusCode < 500) {
+                    lastError = "status code: " + statusCode;
+                    retryable = false;
+                } else {
+                    if (response.body() != null) {
+                        drainResponseBody(response.body().byteStream());
+                    }
+                    if (statusCode == 200) {
+                        this.address = normalizedAddress;
+                        log.info("FeatureDB uses PVL address: " + normalizedAddress);
+                        return true;
+                    }
+                    lastError = "status code: " + statusCode;
+                    retryable = true;
+                }
+            } catch (IOException e) {
+                lastError = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+                retryable = true;
+            }
+
+            if (!retryable || attempt == VPC_HEALTH_CHECK_ATTEMPTS - 1) {
+                break;
+            }
+            try {
+                Thread.sleep(VPC_HEALTH_CHECK_INTERVAL_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                lastError = "interrupted during PVL health check";
+                break;
+            }
+        }
+
+        log.warn(String.format("FeatureDB uses normal address because PVL health check failed (%s): %s",
+                healthUrl, lastError));
+        return false;
+    }
+
+    static String normalizeVpcAddress(String rawAddress) {
+        if (rawAddress == null) {
+            return null;
+        }
+        String normalized = rawAddress.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        if (normalized.isEmpty() || "http:".equalsIgnoreCase(normalized) || "https:".equalsIgnoreCase(normalized)) {
+            return null;
+        }
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+            normalized = "http://" + normalized;
+        }
+        return normalized;
+    }
+
+    private static void drainResponseBody(InputStream inputStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        while (inputStream.read(buffer) != -1) {
+            // Drain body so connections can be reused and truncated responses fail the check.
+        }
     }
 
     public byte[] requestFeatureDB(List<String> keys, String database, String schema, String table) throws Exception {

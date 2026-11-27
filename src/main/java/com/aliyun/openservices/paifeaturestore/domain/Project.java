@@ -86,7 +86,8 @@ public class Project {
                 featureDBOnlinestore.setDatasource(project.getOnlineDataSource());
                 this.onlineStore = featureDBOnlinestore;
                 if (null == FeatureDBFactory.get(this.onlineStore.getDatasourceName())) {
-                    FeatureDBClient featureDBClient = featureDBOnlinestore.getDatasource().generateFeatureDBClient(usePublicAddress);
+                    FeatureDBClient featureDBClient = featureDBOnlinestore.getDatasource()
+                            .generateFeatureDBClient(usePublicAddress, this.apiClient.getConfiguration().isUsePrivateLink());
                     featureDBClient.setSignature(this.signature);
                     FeatureDBFactory.register(featureDBOnlinestore.getDatasourceName(), featureDBClient);
                 }
@@ -340,7 +341,8 @@ public class Project {
         if (null != featureDBDataSource) {
             this.featureDBDatasource = featureDBDataSource;
             if (null == FeatureDBFactory.get(featureDBDataSource.getName())) {
-                FeatureDBClient featureDBClient = featureDBDataSource.generateFeatureDBClient(usePublicAddress);
+                FeatureDBClient featureDBClient = featureDBDataSource
+                        .generateFeatureDBClient(usePublicAddress, this.apiClient.getConfiguration().isUsePrivateLink());
                 featureDBClient.setSignature(this.signature);
                 FeatureDBFactory.register(featureDBDataSource.getName(), featureDBClient);
             }

@@ -52,6 +52,8 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
 
     private boolean usePublicAddress = false;
 
+    private boolean usePrivateLink = false;
+
     private String insertMode;
     private transient FeatureStoreClient featureStoreClient;
 
@@ -59,7 +61,7 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
     private transient SequenceFeatureView sequenceFeatureView;
 
     private List<RowType.RowField> fields = new ArrayList<>();
-    public FeatureStoreSinkFunction(String regionId, String accessId, String accessKey, String project, String featureViewName, String username, String password, String host, boolean usePublicAddress, DataType dataType, String insertMode) {
+    public FeatureStoreSinkFunction(String regionId, String accessId, String accessKey, String project, String featureViewName, String username, String password, String host, boolean usePublicAddress, boolean usePrivateLink, DataType dataType, String insertMode) {
         this.regionId = regionId;
         this.accessId = accessId;
         this.accessKey = accessKey;
@@ -69,6 +71,7 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
         this.password = password;
         this.host = host;
         this.usePublicAddress = usePublicAddress;
+        this.usePrivateLink = usePrivateLink;
         this.insertMode = insertMode;
         RowType rowType = (RowType) dataType.getLogicalType();
 
@@ -84,6 +87,7 @@ public class FeatureStoreSinkFunction implements SinkFunction<RowData> {
             }
             configuration.setPassword(password);
             configuration.setUsername(username);
+            configuration.setUsePrivateLink(usePrivateLink);
 
             ApiClient client = null;
             try {
