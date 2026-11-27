@@ -58,6 +58,9 @@ public class Datasource {
   @SerializedName("endpoint")
   private String endpoint = null;
 
+  @SerializedName("fdb_vpc_plk_address")
+  private String fdbVpcAddress = null;
+
   private AK ak;
 
   public AK getAk() {
@@ -409,13 +412,27 @@ public class Datasource {
     return client;
   }
 
-  public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress) {
+  public String getFdbVpcAddress() {
+    return fdbVpcAddress;
+  }
 
+  public void setFdbVpcAddress(String fdbVpcAddress) {
+    this.fdbVpcAddress = fdbVpcAddress;
+  }
+
+  public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress) {
+    return generateFeatureDBClient(usePublicAddress, false);
+  }
+
+  public FeatureDBClient generateFeatureDBClient(boolean usePublicAddress, boolean usePrivateLink) {
     FeatureDBClient featureDBClient = new FeatureDBClient(new HttpConfig());
     if (usePublicAddress) {
       featureDBClient.setAddress(this.publicAddress);
     } else {
       featureDBClient.setAddress(this.vpcAddress);
+      if (usePrivateLink) {
+        featureDBClient.selectVpcAddress(this.fdbVpcAddress);
+      }
     }
     featureDBClient.setToken(this.token);
 

@@ -47,6 +47,9 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
     public static final ConfigOption<Boolean> USEPUBLICADDRESS = ConfigOptions.key("use_public_address")
             .booleanType()
             .defaultValue(false);
+    public static final ConfigOption<Boolean> USE_PRIVATE_LINK = ConfigOptions.key("use_private_link")
+            .booleanType()
+            .defaultValue(false);
     public static final ConfigOption<String> INSERT_MODE = ConfigOptions.key("insert_mode")
             .stringType()
             .defaultValue("full_row_write");
@@ -74,6 +77,7 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
         if (options.getOptional(USEPUBLICADDRESS).isPresent()) {
             usePublicAddress = options.get(USEPUBLICADDRESS);
         }
+        final boolean usePrivateLink = options.get(USE_PRIVATE_LINK);
         String host = null;
         if (options.getOptional(HOST).isPresent()) {
             host = options.get(HOST);
@@ -82,7 +86,7 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
         final String insertMode = options.get(INSERT_MODE);
         final DataType producedDataType =
                 context.getCatalogTable().getResolvedSchema().toPhysicalRowDataType();
-        return new FeatureStoreDynamicTableSink(regionId, accessId, accessKey, project, featureView, username, password, producedDataType, host, usePublicAddress, insertMode);
+        return new FeatureStoreDynamicTableSink(regionId, accessId, accessKey, project, featureView, username, password, producedDataType, host, usePublicAddress, usePrivateLink, insertMode);
     }
 
     @Override
@@ -108,6 +112,7 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
         final Set<ConfigOption<?>> options = new HashSet<>();
         options.add(HOST);
         options.add(USEPUBLICADDRESS);
+        options.add(USE_PRIVATE_LINK);
         options.add(INSERT_MODE);
         options.add(CACHE_SIZE);
         options.add(CACHE_TIME_IN_SECOND);
@@ -133,6 +138,7 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
         if (options.getOptional(USEPUBLICADDRESS).isPresent()) {
             usePublicAddress = options.get(USEPUBLICADDRESS);
         }
+        final boolean usePrivateLink = options.get(USE_PRIVATE_LINK);
         String host = null;
         if (options.getOptional(HOST).isPresent()) {
             host = options.get(HOST);
@@ -140,6 +146,6 @@ public class FeatureStoreTableFactory implements DynamicTableSinkFactory, Dynami
 
         TableSchema schema =
                 TableSchemaUtils.getPhysicalSchema(context.getCatalogTable().getSchema());
-        return new FeatureStoreDynamicTableSource(regionId, accessId, accessKey, project, featureView, username, password,  host, usePublicAddress, cacheSize, cacheTime,  schema);
+        return new FeatureStoreDynamicTableSource(regionId, accessId, accessKey, project, featureView, username, password, host, usePublicAddress, usePrivateLink, cacheSize, cacheTime, schema);
     }
 }

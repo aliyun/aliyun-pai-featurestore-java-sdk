@@ -12,6 +12,8 @@ public class Configuration {
 
     private String password = null;
 
+    private boolean usePrivateLink = false;
+
     /*  Initial configuration information (region ID, AK account, AK password, and project name)    */
     public Configuration(String regionId, String accessKeyId, String accessKeySecret, String projectName) {
         this.config = new Config();
@@ -64,5 +66,13 @@ public class Configuration {
 
     public String getPassword() {
         return password;
+    }
+
+    public boolean isUsePrivateLink() {
+        return usePrivateLink;
+    }
+
+    public void setUsePrivateLink(boolean usePrivateLink) {
+        this.usePrivateLink = usePrivateLink;
     }
 }

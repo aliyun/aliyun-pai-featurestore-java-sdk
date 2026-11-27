@@ -59,6 +59,8 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
 
     private boolean usePublicAddress = false;
 
+    private boolean usePrivateLink = false;
+
     private Long cacheSize;
 
     private Long cacheTime;
@@ -75,7 +77,7 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
 
     private List<LogicalType> fieldTypes;
     private String primaryKeyColumn;
-    public FeatureStoreAsyncLookupFunction(String regionId, String accessId, String accessKey, String project, String featureViewName, String username, String password, String host, boolean usePublicAddress, Long cacheSize, Long cacheTime, TableSchema tableSchema) {
+    public FeatureStoreAsyncLookupFunction(String regionId, String accessId, String accessKey, String project, String featureViewName, String username, String password, String host, boolean usePublicAddress, boolean usePrivateLink, Long cacheSize, Long cacheTime, TableSchema tableSchema) {
         this.regionId = regionId;
         this.accessId = accessId;
         this.accessKey = accessKey;
@@ -85,6 +87,7 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
         this.password = password;
         this.host = host;
         this.usePublicAddress = usePublicAddress;
+        this.usePrivateLink = usePrivateLink;
         this.cacheSize = cacheSize;
         this.cacheTime = cacheTime;
         this.fieldNames = Arrays.asList(tableSchema.getFieldNames());
@@ -120,6 +123,7 @@ public class FeatureStoreAsyncLookupFunction extends RichAsyncFunction<RowData, 
             }
             configuration.setPassword(password);
             configuration.setUsername(username);
+            configuration.setUsePrivateLink(usePrivateLink);
 
             ApiClient client = null;
             try {
