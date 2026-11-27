@@ -39,17 +39,22 @@ public class FeatureEntityApi {
                 this.apiClient.getInstanceId(), request);
 
         List<FeatureEntity> featureEntityList = new ArrayList<>();
-        listFeatureEntitiesResponse.setTotalCount(response.getBody().totalCount);
+        Integer totalCount = response.getBody() != null ? response.getBody().getTotalCount() : null;
+        listFeatureEntitiesResponse.setTotalCount(totalCount != null ? totalCount : 0);
+        List<ListFeatureEntitiesResponseBody.ListFeatureEntitiesResponseBodyFeatureEntities> responseEntities =
+                response.getBody() != null ? response.getBody().getFeatureEntities() : null;
         // Traverse all characteristic entities of the response set.
-        for (ListFeatureEntitiesResponseBody.ListFeatureEntitiesResponseBodyFeatureEntities entity: response.getBody().getFeatureEntities()) {
-            FeatureEntity featureEntity = new FeatureEntity();
-            featureEntity.setFeatureEntityId(Integer.valueOf(entity.getFeatureEntityId()));
-            featureEntity.setFeatureEntityName( entity.getName());
-            featureEntity.setFeatureEntityJoinid(entity.getJoinId());
-            featureEntity.setProjectName(entity.getProjectName());
-            featureEntity.setProjectId(Long.valueOf(entity.getProjectId()));
+        if (responseEntities != null) {
+            for (ListFeatureEntitiesResponseBody.ListFeatureEntitiesResponseBodyFeatureEntities entity : responseEntities) {
+                FeatureEntity featureEntity = new FeatureEntity();
+                featureEntity.setFeatureEntityId(Integer.valueOf(entity.getFeatureEntityId()));
+                featureEntity.setFeatureEntityName(entity.getName());
+                featureEntity.setFeatureEntityJoinid(entity.getJoinId());
+                featureEntity.setProjectName(entity.getProjectName());
+                featureEntity.setProjectId(Long.valueOf(entity.getProjectId()));
 
-            featureEntityList.add(featureEntity);
+                featureEntityList.add(featureEntity);
+            }
         }
 
         listFeatureEntitiesResponse.setFeatureEntities(featureEntityList);

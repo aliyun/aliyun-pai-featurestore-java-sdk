@@ -109,4 +109,44 @@ public class FsModelApi {
         listModesResponse.setModels(modelList);
         return listModesResponse;
     }
+
+    /*
+    * Get the model feature set by name, project id, page number and page size.
+    * Used for on-demand (lazy) loading of a single model feature.
+    * @Param modelFeatureName(@code String)
+    * @Param projectId(@code String)
+    * @Param pageNumber(@code int)
+    * @Param pageSize(@code int)*/
+    public ListModesResponse listModelsByName(String modelFeatureName, String projectId, int pageNumber, int pageSize) throws Exception {
+        ListModesResponse listModesResponse = new ListModesResponse();
+        ListModelFeaturesRequest request = new ListModelFeaturesRequest();
+        request.setProjectId(projectId);
+        request.setName(modelFeatureName);
+        request.setPageSize(pageSize);
+        request.setPageNumber(pageNumber);
+
+        com.aliyun.paifeaturestore20230621.models.ListModelFeaturesResponse response = this.apiClient.getClient().listModelFeatures(
+                this.apiClient.getInstanceId(), request);
+
+        List<Model> modelList = new ArrayList<>();
+
+        Long totalCount = response.getBody() != null ? response.getBody().getTotalCount() : null;
+        listModesResponse.setTotalCount(totalCount != null ? totalCount : 0L);
+        List<ListModelFeaturesResponseBody.ListModelFeaturesResponseBodyModelFeatures> modelFeatures =
+                response.getBody() != null ? response.getBody().getModelFeatures() : null;
+        //  The model features are obtained by traversing the response body.
+        if (modelFeatures != null) {
+            for (ListModelFeaturesResponseBody.ListModelFeaturesResponseBodyModelFeatures modelFeature : modelFeatures) {
+                Model model = new Model();
+                model.setModelId(Long.valueOf(modelFeature.getModelFeatureId()));
+                model.setName(modelFeature.getName());
+                model.setProjectId(Long.valueOf(modelFeature.getProjectId()));
+                model.setProjectName(modelFeature.getProjectName());
+                modelList.add(model);
+            }
+        }
+
+        listModesResponse.setModels(modelList);
+        return listModesResponse;
+    }
 }
